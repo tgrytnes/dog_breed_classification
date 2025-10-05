@@ -1,0 +1,15 @@
+seed: 42
+paths:
+  raw_data: data/raw
+  artifacts: artifacts
+task: your_project_task
+train:
+  target: y
+  test_size: 0.25
+  date_col: null  # Optional: specify date column for chronological split
+  # Model choice: logreg_baseline | logreg_l1 | logreg_l2 | random_forest | xgboost
+  model: "logreg_baseline"
+  # Optional: specify features list, or leave empty to use all columns except target
+  # features: ["feature1", "feature2"]
+  # Model-specific args (can override defaults)
+  model_args: {}
