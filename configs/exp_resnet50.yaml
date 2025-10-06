@@ -1,0 +1,35 @@
+# ResNet50 Transfer Learning - Baseline Experiment
+# Expected performance: 75-82% validation accuracy
+
+# Experiment metadata
+experiment_name: "ResNet50 Transfer Learning"
+experiment_description: "Transfer learning with frozen ResNet50 base, 20 epochs, baseline experiment"
+experiment_tags: ["baseline", "resnet50", "transfer", "frozen"]
+
+paths:
+  data: "data/raw"
+  artifacts: "artifacts"
+  experiments: "experiments"
+
+train:
+  # Model architecture
+  model_type: "transfer"
+  base_model: "resnet50"
+  trainable_base: false   # Freeze base for initial training
+
+  # Training parameters
+  batch_size: 32
+  epochs: 20
+  learning_rate: 0.001
+  optimizer: "adam"
+
+  # Regularization
+  dropout: 0.5
+
+  # Early stopping
+  early_stopping: true
+  patience: 5
+
+  # Data
+  image_size: [224, 224]
+  num_classes: 120

@@ -1,0 +1,29 @@
+# CPU-friendly configuration for testing on Mac Mini
+# Smaller model and fewer epochs for quick iteration
+
+paths:
+  data: "data/raw"
+  artifacts: "artifacts"
+
+train:
+  # Model architecture
+  model_type: "transfer"
+  base_model: "resnet50"  # ResNet50 is faster than EfficientNet on CPU
+  trainable_base: false
+
+  # Training parameters - REDUCED for CPU
+  batch_size: 16          # Smaller batch (was 32)
+  epochs: 5               # Just 5 epochs for testing (was 20)
+  learning_rate: 0.001
+  optimizer: "adam"
+
+  # Regularization
+  dropout: 0.5
+
+  # Early stopping
+  early_stopping: true
+  patience: 3             # Reduced patience
+
+  # Data
+  image_size: [224, 224]
+  num_classes: 120

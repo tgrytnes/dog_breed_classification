@@ -1,0 +1,70 @@
+{
+  "experiments": [
+    {
+      "experiment_id": "exp_20251006_193829",
+      "name": "Smoke Test",
+      "description": "Quick verification test - 2 epochs, 80 images",
+      "tags": [
+        "smoke_test",
+        "resnet50",
+        "resnet50",
+        "transfer"
+      ],
+      "created_at": "2025-10-06T19:38:29",
+      "status": "completed",
+      "config": {
+        "experiment_name": "Smoke Test",
+        "experiment_description": "Quick verification test - 2 epochs, 80 images",
+        "experiment_tags": [
+          "smoke_test",
+          "resnet50",
+          "resnet50",
+          "transfer"
+        ],
+        "paths": {
+          "data": "data/raw",
+          "artifacts": "artifacts",
+          "experiments": "experiments"
+        },
+        "train": {
+          "model_type": "transfer",
+          "base_model": "resnet50",
+          "trainable_base": false,
+          "batch_size": 8,
+          "epochs": 2,
+          "learning_rate": 0.001,
+          "optimizer": "adam",
+          "dropout": 0.5,
+          "early_stopping": false,
+          "patience": 3,
+          "image_size": [
+            224,
+            224
+          ],
+          "num_classes": 120,
+          "limit_train_batches": 10,
+          "limit_val_batches": 5
+        }
+      },
+      "final_results": {
+        "experiment_id": "exp_20251006_193829",
+        "model_type": "transfer",
+        "base_model": "resnet50",
+        "val_loss": 4.874390125274658,
+        "val_accuracy": 0.00810412596911192,
+        "val_top5_accuracy": 0.045677799731492996,
+        "epochs_trained": 2,
+        "batch_size": 8,
+        "learning_rate": 0.001,
+        "image_size": [
+          224,
+          224
+        ],
+        "timestamp": "2025-10-06T19:39:59",
+        "config_path": "configs/cnn_smoke_test.yaml",
+        "checkpoint_path": "experiments/exp_20251006_193829/checkpoints/best_model.keras",
+        "completed_at": "2025-10-06T19:39:59"
+      }
+    }
+  ]
+}

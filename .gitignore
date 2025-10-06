@@ -8,6 +8,7 @@ __pycache__/
 # Artifacts & data
 artifacts/
 data/processed/
+data/raw/
 # OS
 .DS_Store
 # Environments

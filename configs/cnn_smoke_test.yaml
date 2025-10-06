@@ -1,0 +1,40 @@
+# Smoke test configuration - VERY small scale for quick CPU testing
+# Should complete in 5-10 minutes on Mac Mini
+# This is just to verify the pipeline works before full training
+
+# Experiment metadata
+experiment_name: "Smoke Test"
+experiment_description: "Quick verification test - 2 epochs, 80 images"
+experiment_tags: ["smoke_test", "resnet50"]
+
+paths:
+  data: "data/raw"
+  artifacts: "artifacts"  # Use main artifacts (has train/val metadata)
+  experiments: "experiments"
+
+train:
+  # Model architecture
+  model_type: "transfer"
+  base_model: "resnet50"
+  trainable_base: false
+
+  # Training parameters - MINIMAL for smoke test
+  batch_size: 8           # Very small batch
+  epochs: 2               # Just 2 epochs to verify training loop
+  learning_rate: 0.001
+  optimizer: "adam"
+
+  # Regularization
+  dropout: 0.5
+
+  # Early stopping - disabled for smoke test
+  early_stopping: false
+  patience: 3
+
+  # Data
+  image_size: [224, 224]
+  num_classes: 120
+
+  # TESTING ONLY - limit data (we'll add this to the code)
+  limit_train_batches: 10   # Only use 10 batches per epoch (10 * 8 = 80 images)
+  limit_val_batches: 5      # Only use 5 validation batches

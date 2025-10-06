@@ -65,5 +65,5 @@ execute:
   message: false
 
 metadata:
-  title: "Project Template: End-to-End AI/ML Pipeline"
-  subtitle: "A reusable notebook scaffold for DS projects — ingestion, preprocessing, EDA, modeling, training, evaluation"
+  title: "Fine-Grained Dog Breed Classification: A Deep Learning Approach"
+  subtitle: "Building State-of-the-Art CNN Models for 120-Class Visual Recognition"

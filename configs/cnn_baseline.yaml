@@ -1,0 +1,35 @@
+# Baseline CNN configuration for dog breed classification
+# Transfer learning with ResNet50
+
+# Experiment metadata
+experiment_name: "ResNet50 Baseline"
+experiment_description: "Transfer learning with frozen ResNet50 base, 20 epochs"
+experiment_tags: ["baseline", "resnet50", "transfer"]
+
+paths:
+  data: "data/raw"
+  artifacts: "artifacts"
+  experiments: "experiments"
+
+train:
+  # Model architecture
+  model_type: "transfer"  # 'transfer' for transfer learning, 'custom' for custom CNN
+  base_model: "resnet50"  # resnet50, vgg16, or efficientnetb0
+  trainable_base: false   # Keep base frozen for initial training
+
+  # Training parameters
+  batch_size: 32
+  epochs: 20
+  learning_rate: 0.001
+  optimizer: "adam"
+
+  # Regularization
+  dropout: 0.5
+
+  # Early stopping
+  early_stopping: true
+  patience: 5
+
+  # Data
+  image_size: [224, 224]
+  num_classes: 120
