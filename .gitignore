@@ -26,3 +26,6 @@ venv/
 notebooks/out/
 configs/*.local
 *.keras
+# Model files (too large for GitHub)
+*.h5
+*.keras

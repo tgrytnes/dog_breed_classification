@@ -150,7 +150,7 @@ def train_model(config_path: str = "configs/cnn_baseline.yaml"):
     callbacks = []
 
     # Model checkpoint - save best model
-    checkpoint_path = checkpoint_dir / "best_model.keras"
+    checkpoint_path = checkpoint_dir / "best_model.h5"
     checkpoint_cb = keras.callbacks.ModelCheckpoint(
         filepath=str(checkpoint_path),
         monitor='val_accuracy',
@@ -257,7 +257,7 @@ def train_model(config_path: str = "configs/cnn_baseline.yaml"):
     save_json(history_data, artifacts_history)
 
     # Save final model
-    final_model_path = checkpoint_dir / "final_model.keras"
+    final_model_path = checkpoint_dir / "final_model.h5"
     model.save(final_model_path)
     print(f"Saved final model to {final_model_path}")
 

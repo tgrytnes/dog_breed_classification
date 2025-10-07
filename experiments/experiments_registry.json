@@ -65,6 +65,370 @@
         "checkpoint_path": "experiments/exp_20251006_193829/checkpoints/best_model.keras",
         "completed_at": "2025-10-06T19:39:59"
       }
+    },
+    {
+      "experiment_id": "exp_20251007_060204",
+      "name": "ResNet50 Transfer Learning",
+      "description": "Transfer learning with frozen ResNet50 base, 20 epochs, baseline experiment",
+      "tags": [
+        "baseline",
+        "resnet50",
+        "transfer",
+        "frozen",
+        "resnet50",
+        "transfer"
+      ],
+      "created_at": "2025-10-07T06:02:04",
+      "status": "configured",
+      "config": {
+        "experiment_name": "ResNet50 Transfer Learning",
+        "experiment_description": "Transfer learning with frozen ResNet50 base, 20 epochs, baseline experiment",
+        "experiment_tags": [
+          "baseline",
+          "resnet50",
+          "transfer",
+          "frozen",
+          "resnet50",
+          "transfer"
+        ],
+        "paths": {
+          "data": "data/raw",
+          "artifacts": "artifacts",
+          "experiments": "experiments"
+        },
+        "train": {
+          "model_type": "transfer",
+          "base_model": "resnet50",
+          "trainable_base": false,
+          "batch_size": 32,
+          "epochs": 20,
+          "learning_rate": 0.001,
+          "optimizer": "adam",
+          "dropout": 0.5,
+          "early_stopping": true,
+          "patience": 5,
+          "image_size": [
+            224,
+            224
+          ],
+          "num_classes": 120
+        }
+      }
+    },
+    {
+      "experiment_id": "exp_20251007_060520",
+      "name": "ResNet50 Transfer Learning",
+      "description": "Transfer learning with frozen ResNet50 base, 20 epochs, baseline experiment",
+      "tags": [
+        "baseline",
+        "resnet50",
+        "transfer",
+        "frozen",
+        "resnet50",
+        "transfer"
+      ],
+      "created_at": "2025-10-07T06:05:20",
+      "status": "configured",
+      "config": {
+        "experiment_name": "ResNet50 Transfer Learning",
+        "experiment_description": "Transfer learning with frozen ResNet50 base, 20 epochs, baseline experiment",
+        "experiment_tags": [
+          "baseline",
+          "resnet50",
+          "transfer",
+          "frozen",
+          "resnet50",
+          "transfer"
+        ],
+        "paths": {
+          "data": "data/raw",
+          "artifacts": "artifacts",
+          "experiments": "experiments"
+        },
+        "train": {
+          "model_type": "transfer",
+          "base_model": "resnet50",
+          "trainable_base": false,
+          "batch_size": 32,
+          "epochs": 20,
+          "learning_rate": 0.001,
+          "optimizer": "adam",
+          "dropout": 0.5,
+          "early_stopping": true,
+          "patience": 5,
+          "image_size": [
+            224,
+            224
+          ],
+          "num_classes": 120
+        }
+      }
+    },
+    {
+      "experiment_id": "exp_20251007_062026",
+      "name": "ResNet50 Transfer Learning",
+      "description": "Transfer learning with frozen ResNet50 base, 20 epochs, baseline experiment",
+      "tags": [
+        "baseline",
+        "resnet50",
+        "transfer",
+        "frozen",
+        "resnet50",
+        "transfer"
+      ],
+      "created_at": "2025-10-07T06:20:26",
+      "status": "configured",
+      "config": {
+        "experiment_name": "ResNet50 Transfer Learning",
+        "experiment_description": "Transfer learning with frozen ResNet50 base, 20 epochs, baseline experiment",
+        "experiment_tags": [
+          "baseline",
+          "resnet50",
+          "transfer",
+          "frozen",
+          "resnet50",
+          "transfer"
+        ],
+        "paths": {
+          "data": "data/raw",
+          "artifacts": "artifacts",
+          "experiments": "experiments"
+        },
+        "train": {
+          "model_type": "transfer",
+          "base_model": "resnet50",
+          "trainable_base": false,
+          "batch_size": 32,
+          "epochs": 20,
+          "learning_rate": 0.001,
+          "optimizer": "adam",
+          "dropout": 0.5,
+          "early_stopping": true,
+          "patience": 5,
+          "image_size": [
+            224,
+            224
+          ],
+          "num_classes": 120
+        }
+      }
+    },
+    {
+      "experiment_id": "exp_20251007_062038",
+      "name": "VGG16 Transfer Learning",
+      "description": "Transfer learning with frozen VGG16 base, 20 epochs, comparison to ResNet50",
+      "tags": [
+        "baseline",
+        "vgg16",
+        "transfer",
+        "frozen",
+        "vgg16",
+        "transfer"
+      ],
+      "created_at": "2025-10-07T06:20:38",
+      "status": "configured",
+      "config": {
+        "experiment_name": "VGG16 Transfer Learning",
+        "experiment_description": "Transfer learning with frozen VGG16 base, 20 epochs, comparison to ResNet50",
+        "experiment_tags": [
+          "baseline",
+          "vgg16",
+          "transfer",
+          "frozen",
+          "vgg16",
+          "transfer"
+        ],
+        "paths": {
+          "data": "data/raw",
+          "artifacts": "artifacts",
+          "experiments": "experiments"
+        },
+        "train": {
+          "model_type": "transfer",
+          "base_model": "vgg16",
+          "trainable_base": false,
+          "batch_size": 32,
+          "epochs": 20,
+          "learning_rate": 0.001,
+          "optimizer": "adam",
+          "dropout": 0.5,
+          "early_stopping": true,
+          "patience": 5,
+          "image_size": [
+            224,
+            224
+          ],
+          "num_classes": 120
+        }
+      }
+    },
+    {
+      "experiment_id": "exp_20251007_062045",
+      "name": "EfficientNetB0 Transfer Learning",
+      "description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+      "tags": [
+        "baseline",
+        "efficientnet",
+        "efficientnetb0",
+        "transfer",
+        "frozen",
+        "efficientnetb0",
+        "transfer"
+      ],
+      "created_at": "2025-10-07T06:20:45",
+      "status": "configured",
+      "config": {
+        "experiment_name": "EfficientNetB0 Transfer Learning",
+        "experiment_description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+        "experiment_tags": [
+          "baseline",
+          "efficientnet",
+          "efficientnetb0",
+          "transfer",
+          "frozen",
+          "efficientnetb0",
+          "transfer"
+        ],
+        "paths": {
+          "data": "data/raw",
+          "artifacts": "artifacts",
+          "experiments": "experiments"
+        },
+        "train": {
+          "model_type": "transfer",
+          "base_model": "efficientnetb0",
+          "trainable_base": false,
+          "batch_size": 32,
+          "epochs": 20,
+          "learning_rate": 0.001,
+          "optimizer": "adam",
+          "dropout": 0.5,
+          "early_stopping": true,
+          "patience": 5,
+          "image_size": [
+            224,
+            224
+          ],
+          "num_classes": 120
+        }
+      }
+    },
+    {
+      "experiment_id": "exp_20251007_062146",
+      "name": "ResNet50 Transfer Learning",
+      "description": "Transfer learning with frozen ResNet50 base, 20 epochs, baseline experiment",
+      "tags": [
+        "baseline",
+        "resnet50",
+        "transfer",
+        "frozen",
+        "resnet50",
+        "transfer"
+      ],
+      "created_at": "2025-10-07T06:21:46",
+      "status": "configured",
+      "config": {
+        "experiment_name": "ResNet50 Transfer Learning",
+        "experiment_description": "Transfer learning with frozen ResNet50 base, 20 epochs, baseline experiment",
+        "experiment_tags": [
+          "baseline",
+          "resnet50",
+          "transfer",
+          "frozen",
+          "resnet50",
+          "transfer"
+        ],
+        "paths": {
+          "data": "data/raw",
+          "artifacts": "artifacts",
+          "experiments": "experiments"
+        },
+        "train": {
+          "model_type": "transfer",
+          "base_model": "resnet50",
+          "trainable_base": false,
+          "batch_size": 32,
+          "epochs": 20,
+          "learning_rate": 0.001,
+          "optimizer": "adam",
+          "dropout": 0.5,
+          "early_stopping": true,
+          "patience": 5,
+          "image_size": [
+            224,
+            224
+          ],
+          "num_classes": 120
+        }
+      }
+    },
+    {
+      "experiment_id": "exp_20251007_063425",
+      "name": "ResNet50 Transfer Learning",
+      "description": "Transfer learning with frozen ResNet50 base, 20 epochs, baseline experiment",
+      "tags": [
+        "baseline",
+        "resnet50",
+        "transfer",
+        "frozen",
+        "resnet50",
+        "transfer"
+      ],
+      "created_at": "2025-10-07T06:34:25",
+      "status": "completed",
+      "config": {
+        "experiment_name": "ResNet50 Transfer Learning",
+        "experiment_description": "Transfer learning with frozen ResNet50 base, 20 epochs, baseline experiment",
+        "experiment_tags": [
+          "baseline",
+          "resnet50",
+          "transfer",
+          "frozen",
+          "resnet50",
+          "transfer"
+        ],
+        "paths": {
+          "data": "data/raw",
+          "artifacts": "artifacts",
+          "experiments": "experiments"
+        },
+        "train": {
+          "model_type": "transfer",
+          "base_model": "resnet50",
+          "trainable_base": false,
+          "batch_size": 32,
+          "epochs": 20,
+          "learning_rate": 0.001,
+          "optimizer": "adam",
+          "dropout": 0.5,
+          "early_stopping": true,
+          "patience": 5,
+          "image_size": [
+            224,
+            224
+          ],
+          "num_classes": 120
+        }
+      },
+      "final_results": {
+        "experiment_id": "exp_20251007_063425",
+        "model_type": "transfer",
+        "base_model": "resnet50",
+        "val_loss": 4.421583652496338,
+        "val_accuracy": 0.04371316358447075,
+        "val_top5_accuracy": 0.18492141366004944,
+        "epochs_trained": 19,
+        "batch_size": 32,
+        "learning_rate": 0.001,
+        "image_size": [
+          224,
+          224
+        ],
+        "timestamp": "2025-10-07T07:22:24",
+        "config_path": "configs/exp_resnet50.yaml",
+        "checkpoint_path": "experiments/exp_20251007_063425/checkpoints/best_model.h5",
+        "completed_at": "2025-10-07T07:22:24"
+      }
     }
   ]
 }
