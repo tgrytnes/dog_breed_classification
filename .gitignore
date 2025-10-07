@@ -25,3 +25,4 @@ venv/
 .quarto/
 notebooks/out/
 configs/*.local
+*.keras
