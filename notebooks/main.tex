@@ -223,19 +223,6 @@
 \@ifpackageloaded{caption}{}{\usepackage{caption}}
 \@ifpackageloaded{subcaption}{}{\usepackage{subcaption}}
 \makeatother
-\makeatletter
-\definecolor{QuartoInternalColor6}{rgb}{0.00,0.00,1.00}
-\definecolor{QuartoInternalColor4}{rgb}{0.00,0.64,0.31}
-\definecolor{QuartoInternalColor7}{rgb}{0.38,0.38,0.38}
-\definecolor{QuartoInternalColor10}{rgb}{0.00,0.40,0.79}
-\definecolor{QuartoInternalColor3}{rgb}{0.00,0.45,0.15}
-\definecolor{QuartoInternalColor5}{rgb}{0.00,0.40,0.00}
-\definecolor{QuartoInternalColor2}{rgb}{0,0,0}
-\definecolor{QuartoInternalColor8}{rgb}{0.60,0.00,0.00}
-\definecolor{QuartoInternalColor11}{rgb}{0.74,0.74,0.74}
-\definecolor{QuartoInternalColor1}{rgb}{0.70,0.17,0.19}
-\definecolor{QuartoInternalColor9}{rgb}{0.15,0.56,0.56}
-\makeatother
 \usepackage{bookmark}
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
 \urlstyle{same}
@@ -360,6 +347,40 @@ recognition.
 accuracy on the test set, comprehensive comparison of different
 architectures, and insights into what makes certain breeds easier or
 harder to classify.
+
+\subsection{Hardware Requirements \& Cost
+Considerations}\label{hardware-requirements-cost-considerations}
+
+Deep learning for image classification is \textbf{compute-intensive} and
+requires GPU acceleration for practical training times.
+
+\subsubsection{Hardware Requirements}\label{hardware-requirements}
+
+\textbf{GPU (Essential)}: - \textbf{Minimum}: NVIDIA GPU with 8GB+ VRAM
+- \textbf{Recommended}: 16GB+ VRAM (A40, A100, RTX 3090/4090) - Training
+on CPU would take 50-100× longer (days instead of hours)
+
+\subsubsection{Training Costs (RunPod Cloud
+GPU)}\label{training-costs-runpod-cloud-gpu}
+
+\textbf{Current Setup}: 1× NVIDIA A40 (46GB)
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Training Stage & Time & Cost \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Frozen baseline (completed) & 48 min & \$0.32 \\
+Fine-tuning unfrozen (next) & 3-5 hours & \$1.50-2.00 \\
+Full project & 5-10 hours & \$2-5 \\
+\end{longtable}
+
+\textbf{GPU Upgrade Options}: - \textbf{A40}: \$0.40-0.60/hour (current,
+baseline performance) - \textbf{H100}: \$2.50-4.00/hour (3-4× faster -
+good for rapid iteration) - \textbf{2× A40}: \$0.80-1.20/hour (parallel
+training - good for testing multiple models)
 
 \section{Data Loading \& Initial
 Inspection}\label{data-loading-initial-inspection}
@@ -688,6 +709,34 @@ Data Cleaning Pipeline
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{\# Show the one non{-}RGB image}
+\ControlFlowTok{if} \BuiltInTok{len}\NormalTok{(non\_rgb) }\OperatorTok{\textgreater{}} \DecValTok{0}\NormalTok{:}
+\NormalTok{    img\_path }\OperatorTok{=}\NormalTok{ Path(}\StringTok{".."}\NormalTok{) }\OperatorTok{/}\NormalTok{ non\_rgb.iloc[}\DecValTok{0}\NormalTok{][}\StringTok{\textquotesingle{}absolute\_path\textquotesingle{}}\NormalTok{]}
+\NormalTok{    img }\OperatorTok{=}\NormalTok{ Image.}\BuiltInTok{open}\NormalTok{(img\_path)}
+\NormalTok{    plt.figure(figsize}\OperatorTok{=}\NormalTok{(}\DecValTok{6}\NormalTok{, }\DecValTok{6}\NormalTok{))}
+\NormalTok{    plt.imshow(img)}
+\NormalTok{    plt.title(}\SpecialStringTok{f"Non{-}RGB Image: }\SpecialCharTok{\{}\NormalTok{non\_rgb}\SpecialCharTok{.}\NormalTok{iloc[}\DecValTok{0}\NormalTok{][}\StringTok{\textquotesingle{}mode\textquotesingle{}}\NormalTok{]}\SpecialCharTok{\}}\SpecialStringTok{ mode}\CharTok{\textbackslash{}n}\SpecialCharTok{\{}\NormalTok{non\_rgb}\SpecialCharTok{.}\NormalTok{iloc[}\DecValTok{0}\NormalTok{][}\StringTok{\textquotesingle{}filename\textquotesingle{}}\NormalTok{]}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
+\NormalTok{    plt.axis(}\StringTok{\textquotesingle{}off\textquotesingle{}}\NormalTok{)}
+\NormalTok{    plt.tight\_layout()}
+\NormalTok{    plt.show()}
+    
+    \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{   Decision: The 1 RGBA image will be automatically converted to RGB"}\NormalTok{)}
+    \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"   during data loading (see data\_loader.py). No manual fixing needed."}\NormalTok{)}
+    \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"   This is better than modifying raw data files."}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{main_files/figure-pdf/cell-4-output-1.png}}
+
+\begin{verbatim}
+
+   Decision: The 1 RGBA image will be automatically converted to RGB
+   during data loading (see data_loader.py). No manual fixing needed.
+   This is better than modifying raw data files.
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
 \CommentTok{\# Step 5: Extreme aspect ratios}
 \NormalTok{scan\_df[}\StringTok{\textquotesingle{}aspect\_ratio\textquotesingle{}}\NormalTok{] }\OperatorTok{=}\NormalTok{ scan\_df[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{] }\OperatorTok{/}\NormalTok{ scan\_df[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{]}
 \NormalTok{extreme\_ratios }\OperatorTok{=}\NormalTok{ scan\_df[}
@@ -729,108 +778,548 @@ Removal rate:      0.00%
 ✓ Dataset is clean and ready for training!
 \end{verbatim}
 
-\subsection{Image Preprocessing \&
-Validation}\label{image-preprocessing-validation}
+\subsection{Cleaning Results Summary}\label{cleaning-results-summary}
 
-\textbf{What we did}:
+\textbf{Perfect Dataset Quality} - All 20,580 images passed validation
+with zero issues:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{0 corrupt images} - All files load successfully
+\item
+  \textbf{0 duplicates} - No data leakage risk\\
+\item
+  \textbf{0 size violations} - All images meet dimension and file size
+  requirements
+\item
+  \textbf{1 RGBA image} - Will be auto-converted to RGB during loading
+\end{itemize}
+
+\textbf{Label Indexing Fix Applied}:
+
+The breed mapping assigns \texttt{class\_id} values from 1-120
+(human-readable format), but Keras neural networks require 0-indexed
+labels (0-119). This is handled automatically in the data loading
+pipeline:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Source data}: \texttt{breed\_mapping.csv} has
+  \texttt{class\_id} = 1-120
+\item
+  \textbf{Training pipeline}: \texttt{data\_loader.py} subtracts 1 to
+  convert to 0-119
+\item
+  \textbf{Implementation}: See \texttt{data\_loader.py:106} -
+  \texttt{return\ img\_array,\ row{[}\textquotesingle{}class\_id\textquotesingle{}{]}\ -\ 1,\ breed\_name}
+\end{itemize}
+
+This ensures compatibility with Keras while keeping human-readable breed
+mappings in the raw data.
+
+\textbf{Conclusion:} The dataset is exceptionally clean and ready for
+the data loading pipeline.
+
+\section{Exploratory Data Analysis}\label{exploratory-data-analysis}
+
+In this section, we explore the dataset characteristics to understand:
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
 \tightlist
 \item
-  \textbf{Scanned all images} (20,580 total):
-
-  \begin{itemize}
-  \tightlist
-  \item
-    Validated file existence and readability
-  \item
-    Checked for corruption by loading pixel data
-  \item
-    Extracted metadata: dimensions, format, color mode, file size
-  \end{itemize}
+  \textbf{Sample images}: Visual inspection of different breeds
 \item
-  \textbf{Validated image properties}:
-
-  \begin{itemize}
-  \tightlist
-  \item
-    Dimensions: width, height, aspect ratio
-  \item
-    File format: JPEG, PNG
-  \item
-    Color mode: RGB, RGBA, grayscale
-  \item
-    File size in KB
-  \end{itemize}
+  \textbf{Class distribution}: How balanced are the 120 breed classes?
 \item
-  \textbf{Applied comprehensive cleaning filters}:
-
-  \begin{itemize}
-  \tightlist
-  \item
-    ✓ \textbf{Corrupt image detection}: Remove images that can't be
-    loaded or have invalid pixel data
-  \item
-    ✓ \textbf{Duplicate removal}: Remove duplicate filenames (keeps
-    first occurrence)
-  \item
-    ✓ \textbf{Size constraints}:
-
-    \begin{itemize}
-    \tightlist
-    \item
-      Minimum dimensions: 50×50 pixels (ensure sufficient detail)
-    \item
-      Maximum file size: 10MB (prevent memory issues)
-    \end{itemize}
-  \item
-    ✓ \textbf{Aspect ratio check}: Flag extreme ratios (\textless{} 0.2
-    or \textgreater{} 5.0) that may need special handling
-  \item
-    ✓ \textbf{Color mode handling}: Keep RGBA/grayscale images, convert
-    to RGB during training
-  \end{itemize}
+  \textbf{Image dimensions}: Variation in image sizes and aspect ratios
 \item
-  \textbf{Results}:
-
-  \begin{itemize}
-  \tightlist
-  \item
-    All 20,580 images passed validation ✓
-  \item
-    0 corrupt images removed
-  \item
-    0 duplicates removed\\
-  \item
-    0 size violations
-  \item
-    Dataset is clean and ready for training!
-  \end{itemize}
+  \textbf{Data quality}: Any patterns or issues to address before
+  training
 \end{enumerate}
 
-\textbf{Why we did it}: - \textbf{Prevents training errors}: Ensures all
-images load successfully without crashes - \textbf{Data quality}:
-Identifies and removes corrupt, duplicate, or problematic images early -
-\textbf{Informed preprocessing}: Documents image characteristics to
-guide model input preparation - \textbf{Reproducibility}: Clean dataset
-with tracked statistics enables consistent experiments
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Visualize sample images from different breeds}
+\KeywordTok{def}\NormalTok{ show\_sample\_images(train\_df, n\_breeds}\OperatorTok{=}\DecValTok{4}\NormalTok{, images\_per\_breed}\OperatorTok{=}\DecValTok{3}\NormalTok{):}
+    \CommentTok{"""Display sample images from random breeds"""}
+    
+    \CommentTok{\# Sample random breeds}
+\NormalTok{    breeds }\OperatorTok{=}\NormalTok{ train\_df[}\StringTok{\textquotesingle{}breed\_name\textquotesingle{}}\NormalTok{].unique()}
+\NormalTok{    sample\_breeds }\OperatorTok{=}\NormalTok{ np.random.choice(breeds, size}\OperatorTok{=}\BuiltInTok{min}\NormalTok{(n\_breeds, }\BuiltInTok{len}\NormalTok{(breeds)), replace}\OperatorTok{=}\VariableTok{False}\NormalTok{)}
+    
+\NormalTok{    fig, axes }\OperatorTok{=}\NormalTok{ plt.subplots(n\_breeds, images\_per\_breed, figsize}\OperatorTok{=}\NormalTok{(}\DecValTok{12}\NormalTok{, n\_breeds}\OperatorTok{*}\DecValTok{3}\NormalTok{))}
+    
+    \ControlFlowTok{for}\NormalTok{ i, breed }\KeywordTok{in} \BuiltInTok{enumerate}\NormalTok{(sample\_breeds):}
+\NormalTok{        breed\_images }\OperatorTok{=}\NormalTok{ train\_df[train\_df[}\StringTok{\textquotesingle{}breed\_name\textquotesingle{}}\NormalTok{] }\OperatorTok{==}\NormalTok{ breed].sample(n}\OperatorTok{=}\NormalTok{images\_per\_breed)}
+        
+        \ControlFlowTok{for}\NormalTok{ j, (\_, row) }\KeywordTok{in} \BuiltInTok{enumerate}\NormalTok{(breed\_images.iterrows()):}
+            \CommentTok{\# Use absolute\_path which has full path from project root}
+\NormalTok{            img\_path }\OperatorTok{=}\NormalTok{ Path(}\StringTok{".."}\NormalTok{) }\OperatorTok{/} \StringTok{"data"} \OperatorTok{/} \StringTok{"raw"} \OperatorTok{/}\NormalTok{ row[}\StringTok{\textquotesingle{}file\_path\textquotesingle{}}\NormalTok{]}
+\NormalTok{            img }\OperatorTok{=}\NormalTok{ Image.}\BuiltInTok{open}\NormalTok{(img\_path)}
+            
+\NormalTok{            ax }\OperatorTok{=}\NormalTok{ axes[i, j] }\ControlFlowTok{if}\NormalTok{ n\_breeds }\OperatorTok{\textgreater{}} \DecValTok{1} \ControlFlowTok{else}\NormalTok{ axes[j]}
+\NormalTok{            ax.imshow(img)}
+\NormalTok{            ax.axis(}\StringTok{\textquotesingle{}off\textquotesingle{}}\NormalTok{)}
+            
+            \ControlFlowTok{if}\NormalTok{ j }\OperatorTok{==} \DecValTok{0}\NormalTok{:}
+\NormalTok{                ax.set\_title(}\SpecialStringTok{f"}\SpecialCharTok{\{}\NormalTok{breed}\SpecialCharTok{\}}\CharTok{\textbackslash{}n}\SpecialCharTok{\{}\NormalTok{img}\SpecialCharTok{.}\NormalTok{size[}\DecValTok{0}\NormalTok{]}\SpecialCharTok{\}}\SpecialStringTok{×}\SpecialCharTok{\{}\NormalTok{img}\SpecialCharTok{.}\NormalTok{size[}\DecValTok{1}\NormalTok{]}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{, fontsize}\OperatorTok{=}\DecValTok{10}\NormalTok{)}
+            \ControlFlowTok{else}\NormalTok{:}
+\NormalTok{                ax.set\_title(}\SpecialStringTok{f"}\SpecialCharTok{\{}\NormalTok{img}\SpecialCharTok{.}\NormalTok{size[}\DecValTok{0}\NormalTok{]}\SpecialCharTok{\}}\SpecialStringTok{×}\SpecialCharTok{\{}\NormalTok{img}\SpecialCharTok{.}\NormalTok{size[}\DecValTok{1}\NormalTok{]}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{, fontsize}\OperatorTok{=}\DecValTok{9}\NormalTok{)}
+    
+\NormalTok{    plt.tight\_layout()}
+\NormalTok{    plt.savefig(}\StringTok{"../artifacts/figures/sample\_images.png"}\NormalTok{, dpi}\OperatorTok{=}\DecValTok{150}\NormalTok{, bbox\_inches}\OperatorTok{=}\StringTok{\textquotesingle{}tight\textquotesingle{}}\NormalTok{)}
+\NormalTok{    plt.show()}
 
-\textbf{Status}: ✅ Complete - Data cleaning finished, ready for model
-input pipeline (see next section)
+\CommentTok{\# Create figures directory}
+\NormalTok{Path(}\StringTok{"../artifacts/figures"}\NormalTok{).mkdir(parents}\OperatorTok{=}\VariableTok{True}\NormalTok{, exist\_ok}\OperatorTok{=}\VariableTok{True}\NormalTok{)}
 
-\subsection{Data Loading \& Augmentation
+\CommentTok{\# Show samples}
+\NormalTok{np.random.seed(}\DecValTok{42}\NormalTok{)}
+\NormalTok{show\_sample\_images(train\_df, n\_breeds}\OperatorTok{=}\DecValTok{4}\NormalTok{, images\_per\_breed}\OperatorTok{=}\DecValTok{3}\NormalTok{)}
+
+\BuiltInTok{print}\NormalTok{(}\StringTok{"}\CharTok{\textbackslash{}n}\StringTok{Sample images showing variety in:"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\StringTok{"  {-} Breed appearance (different sizes, coat colors, facial features)"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\StringTok{"  {-} Image dimensions (various aspect ratios and resolutions)"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\StringTok{"  {-} Photography conditions (backgrounds, lighting, angles)"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{main_files/figure-pdf/cell-6-output-1.png}}
+
+\begin{verbatim}
+
+Sample images showing variety in:
+  - Breed appearance (different sizes, coat colors, facial features)
+  - Image dimensions (various aspect ratios and resolutions)
+  - Photography conditions (backgrounds, lighting, angles)
+\end{verbatim}
+
+\subsection{Image Dimension Analysis}\label{image-dimension-analysis}
+
+Understanding image sizes helps us choose appropriate preprocessing
+strategies
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Analyze image dimensions}
+\NormalTok{fig, axes }\OperatorTok{=}\NormalTok{ plt.subplots(}\DecValTok{1}\NormalTok{, }\DecValTok{3}\NormalTok{, figsize}\OperatorTok{=}\NormalTok{(}\DecValTok{18}\NormalTok{, }\DecValTok{5}\NormalTok{))}
+
+\CommentTok{\# Width distribution}
+\NormalTok{axes[}\DecValTok{0}\NormalTok{].hist(train\_df[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{], bins}\OperatorTok{=}\DecValTok{50}\NormalTok{, edgecolor}\OperatorTok{=}\StringTok{\textquotesingle{}black\textquotesingle{}}\NormalTok{, alpha}\OperatorTok{=}\FloatTok{0.7}\NormalTok{)}
+\NormalTok{axes[}\DecValTok{0}\NormalTok{].axvline(train\_df[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{].mean(), color}\OperatorTok{=}\StringTok{\textquotesingle{}red\textquotesingle{}}\NormalTok{, linestyle}\OperatorTok{=}\StringTok{\textquotesingle{}{-}{-}\textquotesingle{}}\NormalTok{,}
+\NormalTok{                   label}\OperatorTok{=}\SpecialStringTok{f\textquotesingle{}Mean: }\SpecialCharTok{\{}\NormalTok{train\_df[}\StringTok{"width"}\NormalTok{]}\SpecialCharTok{.}\NormalTok{mean()}\SpecialCharTok{:.0f\}}\SpecialStringTok{\textquotesingle{}}\NormalTok{)}
+\NormalTok{axes[}\DecValTok{0}\NormalTok{].set\_xlabel(}\StringTok{\textquotesingle{}Width (pixels)\textquotesingle{}}\NormalTok{)}
+\NormalTok{axes[}\DecValTok{0}\NormalTok{].set\_ylabel(}\StringTok{\textquotesingle{}Frequency\textquotesingle{}}\NormalTok{)}
+\NormalTok{axes[}\DecValTok{0}\NormalTok{].set\_title(}\StringTok{\textquotesingle{}Image Width Distribution\textquotesingle{}}\NormalTok{)}
+\NormalTok{axes[}\DecValTok{0}\NormalTok{].legend()}
+\NormalTok{axes[}\DecValTok{0}\NormalTok{].grid(alpha}\OperatorTok{=}\FloatTok{0.3}\NormalTok{)}
+
+\CommentTok{\# Height distribution}
+\NormalTok{axes[}\DecValTok{1}\NormalTok{].hist(train\_df[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{], bins}\OperatorTok{=}\DecValTok{50}\NormalTok{, edgecolor}\OperatorTok{=}\StringTok{\textquotesingle{}black\textquotesingle{}}\NormalTok{, alpha}\OperatorTok{=}\FloatTok{0.7}\NormalTok{)}
+\NormalTok{axes[}\DecValTok{1}\NormalTok{].axvline(train\_df[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{].mean(), color}\OperatorTok{=}\StringTok{\textquotesingle{}red\textquotesingle{}}\NormalTok{, linestyle}\OperatorTok{=}\StringTok{\textquotesingle{}{-}{-}\textquotesingle{}}\NormalTok{,}
+\NormalTok{                   label}\OperatorTok{=}\SpecialStringTok{f\textquotesingle{}Mean: }\SpecialCharTok{\{}\NormalTok{train\_df[}\StringTok{"height"}\NormalTok{]}\SpecialCharTok{.}\NormalTok{mean()}\SpecialCharTok{:.0f\}}\SpecialStringTok{\textquotesingle{}}\NormalTok{)}
+\NormalTok{axes[}\DecValTok{1}\NormalTok{].set\_xlabel(}\StringTok{\textquotesingle{}Height (pixels)\textquotesingle{}}\NormalTok{)}
+\NormalTok{axes[}\DecValTok{1}\NormalTok{].set\_ylabel(}\StringTok{\textquotesingle{}Frequency\textquotesingle{}}\NormalTok{)}
+\NormalTok{axes[}\DecValTok{1}\NormalTok{].set\_title(}\StringTok{\textquotesingle{}Image Height Distribution\textquotesingle{}}\NormalTok{)}
+\NormalTok{axes[}\DecValTok{1}\NormalTok{].legend()}
+\NormalTok{axes[}\DecValTok{1}\NormalTok{].grid(alpha}\OperatorTok{=}\FloatTok{0.3}\NormalTok{)}
+
+\CommentTok{\# Aspect ratio}
+\NormalTok{train\_df[}\StringTok{\textquotesingle{}aspect\_ratio\textquotesingle{}}\NormalTok{] }\OperatorTok{=}\NormalTok{ train\_df[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{] }\OperatorTok{/}\NormalTok{ train\_df[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{]}
+\NormalTok{axes[}\DecValTok{2}\NormalTok{].hist(train\_df[}\StringTok{\textquotesingle{}aspect\_ratio\textquotesingle{}}\NormalTok{], bins}\OperatorTok{=}\DecValTok{50}\NormalTok{, edgecolor}\OperatorTok{=}\StringTok{\textquotesingle{}black\textquotesingle{}}\NormalTok{, alpha}\OperatorTok{=}\FloatTok{0.7}\NormalTok{)}
+\NormalTok{axes[}\DecValTok{2}\NormalTok{].axvline(}\FloatTok{1.0}\NormalTok{, color}\OperatorTok{=}\StringTok{\textquotesingle{}green\textquotesingle{}}\NormalTok{, linestyle}\OperatorTok{=}\StringTok{\textquotesingle{}{-}{-}\textquotesingle{}}\NormalTok{, label}\OperatorTok{=}\StringTok{\textquotesingle{}Square (1:1)\textquotesingle{}}\NormalTok{)}
+\NormalTok{axes[}\DecValTok{2}\NormalTok{].set\_xlabel(}\StringTok{\textquotesingle{}Aspect Ratio (width/height)\textquotesingle{}}\NormalTok{)}
+\NormalTok{axes[}\DecValTok{2}\NormalTok{].set\_ylabel(}\StringTok{\textquotesingle{}Frequency\textquotesingle{}}\NormalTok{)}
+\NormalTok{axes[}\DecValTok{2}\NormalTok{].set\_title(}\StringTok{\textquotesingle{}Aspect Ratio Distribution\textquotesingle{}}\NormalTok{)}
+\NormalTok{axes[}\DecValTok{2}\NormalTok{].legend()}
+\NormalTok{axes[}\DecValTok{2}\NormalTok{].grid(alpha}\OperatorTok{=}\FloatTok{0.3}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{main_files/figure-pdf/cell-7-output-1.png}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Scatter: width vs height}
+\NormalTok{fig, ax }\OperatorTok{=}\NormalTok{ plt.subplots(}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, figsize}\OperatorTok{=}\NormalTok{(}\DecValTok{8}\NormalTok{, }\DecValTok{6}\NormalTok{))}
+
+\NormalTok{ax.scatter(train\_df[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{], train\_df[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{], alpha}\OperatorTok{=}\FloatTok{0.3}\NormalTok{, s}\OperatorTok{=}\DecValTok{1}\NormalTok{)}
+\NormalTok{ax.plot([}\DecValTok{0}\NormalTok{, }\DecValTok{1000}\NormalTok{], [}\DecValTok{0}\NormalTok{, }\DecValTok{1000}\NormalTok{], }\StringTok{\textquotesingle{}r{-}{-}\textquotesingle{}}\NormalTok{, label}\OperatorTok{=}\StringTok{\textquotesingle{}Square\textquotesingle{}}\NormalTok{, linewidth}\OperatorTok{=}\DecValTok{1}\NormalTok{)}
+\NormalTok{ax.set\_xlabel(}\StringTok{\textquotesingle{}Width (pixels)\textquotesingle{}}\NormalTok{)}
+\NormalTok{ax.set\_ylabel(}\StringTok{\textquotesingle{}Height (pixels)\textquotesingle{}}\NormalTok{)}
+\NormalTok{ax.set\_title(}\StringTok{\textquotesingle{}Width vs Height Scatter\textquotesingle{}}\NormalTok{)}
+\NormalTok{ax.legend()}
+\NormalTok{ax.grid(alpha}\OperatorTok{=}\FloatTok{0.3}\NormalTok{)}
+\NormalTok{ax.set\_xlim(}\DecValTok{0}\NormalTok{, train\_df[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{].}\BuiltInTok{max}\NormalTok{() }\OperatorTok{+} \DecValTok{50}\NormalTok{)}
+\NormalTok{ax.set\_ylim(}\DecValTok{0}\NormalTok{, train\_df[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{].}\BuiltInTok{max}\NormalTok{() }\OperatorTok{+} \DecValTok{50}\NormalTok{)}
+
+\NormalTok{plt.tight\_layout()}
+\NormalTok{plt.savefig(}\StringTok{"../artifacts/figures/image\_dimensions\_scatter.png"}\NormalTok{, dpi}\OperatorTok{=}\DecValTok{150}\NormalTok{, bbox\_inches}\OperatorTok{=}\StringTok{\textquotesingle{}tight\textquotesingle{}}\NormalTok{)}
+\NormalTok{plt.show()}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{main_files/figure-pdf/cell-8-output-1.png}}
+
+\textbf{Key Findings:}
+
+\textbf{Highly Variable Dimensions}: Images range from 100×100 to
+3264×2562 pixels with mean 443×386
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Width}: Mean 443px (±145), Range {[}100, 3264{]}
+\item
+  \textbf{Height}: Mean 386px (±127), Range {[}100, 2562{]}\\
+\item
+  \textbf{Aspect Ratio}: Mean 1.19 (±0.30), mostly landscape orientation
+\end{itemize}
+
+\textbf{Low-Resolution Images}: Some images will require upscaling
+
+\begin{itemize}
+\tightlist
+\item
+  Resizing 100×100 → 224×224 requires 2.2× upscaling (will be blurry)
+\item
+  Most images (mean \textasciitilde440×390) will be downscaled,
+  preserving quality
+\item
+  Low-res images may be harder for the model to classify accurately
+\end{itemize}
+
+\textbf{Preprocessing Decision}: Resizing to 224×224 is appropriate
+since:
+
+\begin{itemize}
+\tightlist
+\item
+  Most images are already close to this size (reduces distortion)
+\item
+  Standard for ImageNet pre-trained models (ResNet, VGG, EfficientNet)
+\item
+  Square format normalizes the varying aspect ratios
+\item
+  Bilinear interpolation handles both upscaling and downscaling
+\end{itemize}
+
+Let us also take a look at the low-resolution images that need
+upscaling:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Analyze low{-}resolution images that will need upscaling}
+\BuiltInTok{print}\NormalTok{(}\StringTok{"Low{-}Resolution Image Analysis"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\StringTok{"="}\OperatorTok{*}\DecValTok{60}\NormalTok{)}
+
+\CommentTok{\# Images smaller than our target size (224x224)}
+\NormalTok{small\_images }\OperatorTok{=}\NormalTok{ train\_df[(train\_df[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{] }\OperatorTok{\textless{}} \DecValTok{224}\NormalTok{) }\OperatorTok{|}\NormalTok{ (train\_df[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{] }\OperatorTok{\textless{}} \DecValTok{224}\NormalTok{)]}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{Images requiring upscaling: }\SpecialCharTok{\{}\BuiltInTok{len}\NormalTok{(small\_images)}\SpecialCharTok{\}}\SpecialStringTok{ / }\SpecialCharTok{\{}\BuiltInTok{len}\NormalTok{(train\_df)}\SpecialCharTok{\}}\SpecialStringTok{ (}\SpecialCharTok{\{}\BuiltInTok{len}\NormalTok{(small\_images)}\OperatorTok{/}\BuiltInTok{len}\NormalTok{(train\_df)}\OperatorTok{*}\DecValTok{100}\SpecialCharTok{:.1f\}}\SpecialStringTok{\%)"}\NormalTok{)}
+
+\CommentTok{\# Break down by severity}
+\NormalTok{very\_small }\OperatorTok{=}\NormalTok{ train\_df[(train\_df[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{] }\OperatorTok{\textless{}} \DecValTok{150}\NormalTok{) }\OperatorTok{\&}\NormalTok{ (train\_df[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{] }\OperatorTok{\textless{}} \DecValTok{150}\NormalTok{)]}
+\NormalTok{small }\OperatorTok{=}\NormalTok{ train\_df[((train\_df[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{] }\OperatorTok{\textgreater{}=} \DecValTok{150}\NormalTok{) }\OperatorTok{\&}\NormalTok{ (train\_df[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{] }\OperatorTok{\textless{}} \DecValTok{224}\NormalTok{)) }\OperatorTok{|} 
+\NormalTok{                 ((train\_df[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{] }\OperatorTok{\textgreater{}=} \DecValTok{150}\NormalTok{) }\OperatorTok{\&}\NormalTok{ (train\_df[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{] }\OperatorTok{\textless{}} \DecValTok{224}\NormalTok{))]}
+
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  {-} Very small (\textless{}150×150): }\SpecialCharTok{\{}\BuiltInTok{len}\NormalTok{(very\_small)}\SpecialCharTok{\}}\SpecialStringTok{ images (}\SpecialCharTok{\{}\BuiltInTok{len}\NormalTok{(very\_small)}\OperatorTok{/}\BuiltInTok{len}\NormalTok{(train\_df)}\OperatorTok{*}\DecValTok{100}\SpecialCharTok{:.2f\}}\SpecialStringTok{\%)"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  {-} Small (150{-}224): }\SpecialCharTok{\{}\BuiltInTok{len}\NormalTok{(small)}\SpecialCharTok{\}}\SpecialStringTok{ images (}\SpecialCharTok{\{}\BuiltInTok{len}\NormalTok{(small)}\OperatorTok{/}\BuiltInTok{len}\NormalTok{(train\_df)}\OperatorTok{*}\DecValTok{100}\SpecialCharTok{:.2f\}}\SpecialStringTok{\%)"}\NormalTok{)}
+
+\CommentTok{\# Find the smallest images}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{Smallest images:"}\NormalTok{)}
+\NormalTok{smallest }\OperatorTok{=}\NormalTok{ train\_df.nsmallest(}\DecValTok{5}\NormalTok{, [}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{])}
+\ControlFlowTok{for}\NormalTok{ \_, row }\KeywordTok{in}\NormalTok{ smallest.iterrows():}
+    \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  }\SpecialCharTok{\{}\NormalTok{row[}\StringTok{\textquotesingle{}filename\textquotesingle{}}\NormalTok{]}\SpecialCharTok{\}}\SpecialStringTok{: }\SpecialCharTok{\{}\NormalTok{row[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{]}\SpecialCharTok{\}}\SpecialStringTok{×}\SpecialCharTok{\{}\NormalTok{row[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{]}\SpecialCharTok{\}}\SpecialStringTok{ {-} }\SpecialCharTok{\{}\NormalTok{row[}\StringTok{\textquotesingle{}breed\_name\textquotesingle{}}\NormalTok{]}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
+
+\CommentTok{\# Visualize upscaling effect on a few small images}
+\NormalTok{fig, axes }\OperatorTok{=}\NormalTok{ plt.subplots(}\DecValTok{2}\NormalTok{, }\DecValTok{3}\NormalTok{, figsize}\OperatorTok{=}\NormalTok{(}\DecValTok{15}\NormalTok{, }\DecValTok{10}\NormalTok{))}
+
+\CommentTok{\# Show 3 small images: original vs resized}
+\ControlFlowTok{for}\NormalTok{ i, (\_, row) }\KeywordTok{in} \BuiltInTok{enumerate}\NormalTok{(small\_images.sample(n}\OperatorTok{=}\BuiltInTok{min}\NormalTok{(}\DecValTok{3}\NormalTok{, }\BuiltInTok{len}\NormalTok{(small\_images)), random\_state}\OperatorTok{=}\DecValTok{42}\NormalTok{).iterrows()):}
+\NormalTok{    img\_path }\OperatorTok{=}\NormalTok{ Path(}\StringTok{".."}\NormalTok{) }\OperatorTok{/} \StringTok{"data"} \OperatorTok{/} \StringTok{"raw"} \OperatorTok{/}\NormalTok{ row[}\StringTok{\textquotesingle{}file\_path\textquotesingle{}}\NormalTok{]}
+\NormalTok{    img\_original }\OperatorTok{=}\NormalTok{ Image.}\BuiltInTok{open}\NormalTok{(img\_path).convert(}\StringTok{\textquotesingle{}RGB\textquotesingle{}}\NormalTok{)}
+\NormalTok{    img\_resized }\OperatorTok{=}\NormalTok{ img\_original.resize((}\DecValTok{224}\NormalTok{, }\DecValTok{224}\NormalTok{), Image.BILINEAR)}
+    
+    \CommentTok{\# Original}
+\NormalTok{    axes[}\DecValTok{0}\NormalTok{, i].imshow(img\_original)}
+\NormalTok{    axes[}\DecValTok{0}\NormalTok{, i].set\_title(}\SpecialStringTok{f"Original: }\SpecialCharTok{\{}\NormalTok{img\_original}\SpecialCharTok{.}\NormalTok{size[}\DecValTok{0}\NormalTok{]}\SpecialCharTok{\}}\SpecialStringTok{×}\SpecialCharTok{\{}\NormalTok{img\_original}\SpecialCharTok{.}\NormalTok{size[}\DecValTok{1}\NormalTok{]}\SpecialCharTok{\}}\CharTok{\textbackslash{}n}\SpecialCharTok{\{}\NormalTok{row[}\StringTok{\textquotesingle{}breed\_name\textquotesingle{}}\NormalTok{]}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{, fontsize}\OperatorTok{=}\DecValTok{9}\NormalTok{)}
+\NormalTok{    axes[}\DecValTok{0}\NormalTok{, i].axis(}\StringTok{\textquotesingle{}off\textquotesingle{}}\NormalTok{)}
+    
+    \CommentTok{\# Resized}
+\NormalTok{    axes[}\DecValTok{1}\NormalTok{, i].imshow(img\_resized)}
+\NormalTok{    axes[}\DecValTok{1}\NormalTok{, i].set\_title(}\SpecialStringTok{f"Resized: 224×224}\CharTok{\textbackslash{}n}\SpecialStringTok{(upscaled }\SpecialCharTok{\{}\DecValTok{224}\OperatorTok{/}\BuiltInTok{min}\NormalTok{(img\_original.size)}\SpecialCharTok{:.2f\}}\SpecialStringTok{×)"}\NormalTok{, fontsize}\OperatorTok{=}\DecValTok{9}\NormalTok{)}
+\NormalTok{    axes[}\DecValTok{1}\NormalTok{, i].axis(}\StringTok{\textquotesingle{}off\textquotesingle{}}\NormalTok{)}
+
+\NormalTok{plt.suptitle(}\StringTok{"Low{-}Resolution Images: Original vs Upscaled to 224×224"}\NormalTok{, fontsize}\OperatorTok{=}\DecValTok{14}\NormalTok{, fontweight}\OperatorTok{=}\StringTok{\textquotesingle{}bold\textquotesingle{}}\NormalTok{)}
+\NormalTok{plt.tight\_layout()}
+\NormalTok{plt.savefig(}\StringTok{"../artifacts/figures/upscaling\_comparison.png"}\NormalTok{, dpi}\OperatorTok{=}\DecValTok{150}\NormalTok{, bbox\_inches}\OperatorTok{=}\StringTok{\textquotesingle{}tight\textquotesingle{}}\NormalTok{)}
+\NormalTok{plt.show()}
+
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{✓ Conclusion: Despite }\SpecialCharTok{\{}\BuiltInTok{len}\NormalTok{(small\_images)}\OperatorTok{/}\BuiltInTok{len}\NormalTok{(train\_df)}\OperatorTok{*}\DecValTok{100}\SpecialCharTok{:.1f\}}\SpecialStringTok{\% of images requiring upscaling,"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  bilinear interpolation preserves the key visual features (breed characteristics, coat"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  patterns, facial structure) sufficiently well for classification. Upscaling quality is acceptable."}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+Low-Resolution Image Analysis
+============================================================
+
+Images requiring upscaling: 1261 / 16508 (7.6%)
+  - Very small (<150×150): 15 images (0.09%)
+  - Small (150-224): 1233 images (7.47%)
+
+Smallest images:
+  n02089078_4466.jpg: 100×115 - black-and-tan_coonhound
+  n02110627_13453.jpg: 103×120 - affenpinscher
+  n02089973_2943.jpg: 106×150 - English_foxhound
+  n02089973_243.jpg: 107×150 - English_foxhound
+  n02101388_4333.jpg: 108×120 - Brittany_spaniel
+\end{verbatim}
+
+\pandocbounded{\includegraphics[keepaspectratio]{main_files/figure-pdf/cell-9-output-2.png}}
+
+\begin{verbatim}
+
+✓ Conclusion: Despite 7.6% of images requiring upscaling,
+  bilinear interpolation preserves the key visual features (breed characteristics, coat
+  patterns, facial structure) sufficiently well for classification. Upscaling quality is acceptable.
+\end{verbatim}
+
+\subsection{Class Distribution
+Analysis}\label{class-distribution-analysis}
+
+Understanding how balanced our dataset is across the 120 dog breeds
+helps us anticipate potential model bias and decide if techniques like
+class weighting are needed.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Analyze class distribution}
+\NormalTok{breed\_counts }\OperatorTok{=}\NormalTok{ train\_df[}\StringTok{\textquotesingle{}breed\_name\textquotesingle{}}\NormalTok{].value\_counts().sort\_values(ascending}\OperatorTok{=}\VariableTok{False}\NormalTok{)}
+
+\NormalTok{fig, axes }\OperatorTok{=}\NormalTok{ plt.subplots(}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{, figsize}\OperatorTok{=}\NormalTok{(}\DecValTok{16}\NormalTok{, }\DecValTok{5}\NormalTok{))}
+
+\CommentTok{\# Plot 1: Top 20 breeds}
+\NormalTok{axes[}\DecValTok{0}\NormalTok{].barh(breed\_counts.head(}\DecValTok{20}\NormalTok{).index[::}\OperatorTok{{-}}\DecValTok{1}\NormalTok{], breed\_counts.head(}\DecValTok{20}\NormalTok{).values[::}\OperatorTok{{-}}\DecValTok{1}\NormalTok{])}
+\NormalTok{axes[}\DecValTok{0}\NormalTok{].set\_xlabel(}\StringTok{\textquotesingle{}Number of Images\textquotesingle{}}\NormalTok{)}
+\NormalTok{axes[}\DecValTok{0}\NormalTok{].set\_title(}\StringTok{\textquotesingle{}Top 20 Breeds by Image Count (Training Set)\textquotesingle{}}\NormalTok{)}
+\NormalTok{axes[}\DecValTok{0}\NormalTok{].grid(axis}\OperatorTok{=}\StringTok{\textquotesingle{}x\textquotesingle{}}\NormalTok{, alpha}\OperatorTok{=}\FloatTok{0.3}\NormalTok{)}
+
+\CommentTok{\# Plot 2: Distribution histogram}
+\NormalTok{axes[}\DecValTok{1}\NormalTok{].hist(breed\_counts.values, bins}\OperatorTok{=}\DecValTok{30}\NormalTok{, edgecolor}\OperatorTok{=}\StringTok{\textquotesingle{}black\textquotesingle{}}\NormalTok{, alpha}\OperatorTok{=}\FloatTok{0.7}\NormalTok{)}
+\NormalTok{axes[}\DecValTok{1}\NormalTok{].axvline(breed\_counts.mean(), color}\OperatorTok{=}\StringTok{\textquotesingle{}red\textquotesingle{}}\NormalTok{, linestyle}\OperatorTok{=}\StringTok{\textquotesingle{}{-}{-}\textquotesingle{}}\NormalTok{, label}\OperatorTok{=}\SpecialStringTok{f\textquotesingle{}Mean: }\SpecialCharTok{\{}\NormalTok{breed\_counts}\SpecialCharTok{.}\NormalTok{mean()}\SpecialCharTok{:.1f\}}\SpecialStringTok{\textquotesingle{}}\NormalTok{)}
+\NormalTok{axes[}\DecValTok{1}\NormalTok{].axvline(breed\_counts.median(), color}\OperatorTok{=}\StringTok{\textquotesingle{}green\textquotesingle{}}\NormalTok{, linestyle}\OperatorTok{=}\StringTok{\textquotesingle{}{-}{-}\textquotesingle{}}\NormalTok{, label}\OperatorTok{=}\SpecialStringTok{f\textquotesingle{}Median: }\SpecialCharTok{\{}\NormalTok{breed\_counts}\SpecialCharTok{.}\NormalTok{median()}\SpecialCharTok{:.1f\}}\SpecialStringTok{\textquotesingle{}}\NormalTok{)}
+\NormalTok{axes[}\DecValTok{1}\NormalTok{].set\_xlabel(}\StringTok{\textquotesingle{}Number of Images per Breed\textquotesingle{}}\NormalTok{)}
+\NormalTok{axes[}\DecValTok{1}\NormalTok{].set\_ylabel(}\StringTok{\textquotesingle{}Number of Breeds\textquotesingle{}}\NormalTok{)}
+\NormalTok{axes[}\DecValTok{1}\NormalTok{].set\_title(}\StringTok{\textquotesingle{}Distribution of Images Across Breeds\textquotesingle{}}\NormalTok{)}
+\NormalTok{axes[}\DecValTok{1}\NormalTok{].legend()}
+\NormalTok{axes[}\DecValTok{1}\NormalTok{].grid(alpha}\OperatorTok{=}\FloatTok{0.3}\NormalTok{)}
+
+\NormalTok{plt.tight\_layout()}
+\NormalTok{plt.savefig(}\StringTok{"../artifacts/figures/breed\_distribution.png"}\NormalTok{, dpi}\OperatorTok{=}\DecValTok{150}\NormalTok{, bbox\_inches}\OperatorTok{=}\StringTok{\textquotesingle{}tight\textquotesingle{}}\NormalTok{)}
+
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{Class Balance Analysis:"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Total breeds: }\SpecialCharTok{\{}\BuiltInTok{len}\NormalTok{(breed\_counts)}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Min images per breed: }\SpecialCharTok{\{}\NormalTok{breed\_counts}\SpecialCharTok{.}\BuiltInTok{min}\NormalTok{()}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Max images per breed: }\SpecialCharTok{\{}\NormalTok{breed\_counts}\SpecialCharTok{.}\BuiltInTok{max}\NormalTok{()}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Mean images per breed: }\SpecialCharTok{\{}\NormalTok{breed\_counts}\SpecialCharTok{.}\NormalTok{mean()}\SpecialCharTok{:.1f\}}\SpecialStringTok{"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Std images per breed: }\SpecialCharTok{\{}\NormalTok{breed\_counts}\SpecialCharTok{.}\NormalTok{std()}\SpecialCharTok{:.1f\}}\SpecialStringTok{"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Imbalance ratio (max/min): }\SpecialCharTok{\{}\NormalTok{breed\_counts}\SpecialCharTok{.}\BuiltInTok{max}\NormalTok{()}\OperatorTok{/}\NormalTok{breed\_counts}\SpecialCharTok{.}\BuiltInTok{min}\NormalTok{()}\SpecialCharTok{:.2f\}}\SpecialStringTok{x"}\NormalTok{)}
+
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{Most common breeds:"}\NormalTok{)}
+\ControlFlowTok{for}\NormalTok{ breed, count }\KeywordTok{in}\NormalTok{ breed\_counts.head(}\DecValTok{5}\NormalTok{).items():}
+    \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  }\SpecialCharTok{\{}\NormalTok{breed}\SpecialCharTok{\}}\SpecialStringTok{: }\SpecialCharTok{\{}\NormalTok{count}\SpecialCharTok{\}}\SpecialStringTok{ images"}\NormalTok{)}
+    
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{Least common breeds:"}\NormalTok{)}
+\ControlFlowTok{for}\NormalTok{ breed, count }\KeywordTok{in}\NormalTok{ breed\_counts.tail(}\DecValTok{5}\NormalTok{).items():}
+    \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  }\SpecialCharTok{\{}\NormalTok{breed}\SpecialCharTok{\}}\SpecialStringTok{: }\SpecialCharTok{\{}\NormalTok{count}\SpecialCharTok{\}}\SpecialStringTok{ images"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+
+Class Balance Analysis:
+  Total breeds: 120
+  Min images per breed: 119
+  Max images per breed: 202
+  Mean images per breed: 137.6
+  Std images per breed: 18.6
+  Imbalance ratio (max/min): 1.70x
+
+Most common breeds:
+  Maltese_dog: 202 images
+  Afghan_hound: 192 images
+  Scottish_deerhound: 186 images
+  Pomeranian: 176 images
+  Samoyed: 175 images
+
+Least common breeds:
+  clumber: 120 images
+  Border_collie: 120 images
+  Pekinese: 120 images
+  Bouvier_des_Flandres: 120 images
+  redbone: 119 images
+\end{verbatim}
+
+\pandocbounded{\includegraphics[keepaspectratio]{main_files/figure-pdf/cell-10-output-2.png}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{fig, ax }\OperatorTok{=}\NormalTok{ plt.subplots(}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, figsize}\OperatorTok{=}\NormalTok{(}\DecValTok{12}\NormalTok{, }\DecValTok{6}\NormalTok{))}
+
+\NormalTok{breed\_counts\_sorted }\OperatorTok{=}\NormalTok{ breed\_counts.sort\_values(ascending}\OperatorTok{=}\VariableTok{True}\NormalTok{)}
+\NormalTok{colors }\OperatorTok{=}\NormalTok{ [}\StringTok{\textquotesingle{}red\textquotesingle{}} \ControlFlowTok{if}\NormalTok{ x }\OperatorTok{\textless{}} \DecValTok{130} \ControlFlowTok{else} \StringTok{\textquotesingle{}orange\textquotesingle{}} \ControlFlowTok{if}\NormalTok{ x }\OperatorTok{\textless{}} \DecValTok{150} \ControlFlowTok{else} \StringTok{\textquotesingle{}green\textquotesingle{}} 
+          \ControlFlowTok{for}\NormalTok{ x }\KeywordTok{in}\NormalTok{ breed\_counts\_sorted.values]}
+
+\NormalTok{ax.barh(}\BuiltInTok{range}\NormalTok{(}\BuiltInTok{len}\NormalTok{(breed\_counts\_sorted)), breed\_counts\_sorted.values, color}\OperatorTok{=}\NormalTok{colors)}
+\NormalTok{ax.axvline(}\FloatTok{137.6}\NormalTok{, color}\OperatorTok{=}\StringTok{\textquotesingle{}blue\textquotesingle{}}\NormalTok{, linestyle}\OperatorTok{=}\StringTok{\textquotesingle{}{-}{-}\textquotesingle{}}\NormalTok{, linewidth}\OperatorTok{=}\DecValTok{2}\NormalTok{, label}\OperatorTok{=}\StringTok{\textquotesingle{}Mean (138)\textquotesingle{}}\NormalTok{)}
+\NormalTok{ax.axvline(}\DecValTok{150}\NormalTok{, color}\OperatorTok{=}\StringTok{\textquotesingle{}orange\textquotesingle{}}\NormalTok{, linestyle}\OperatorTok{=}\StringTok{\textquotesingle{}{-}{-}\textquotesingle{}}\NormalTok{, linewidth}\OperatorTok{=}\DecValTok{1}\NormalTok{, alpha}\OperatorTok{=}\FloatTok{0.7}\NormalTok{, label}\OperatorTok{=}\StringTok{\textquotesingle{}Adequate (150)\textquotesingle{}}\NormalTok{)}
+
+\NormalTok{ax.set\_xlabel(}\StringTok{\textquotesingle{}Number of Training Images\textquotesingle{}}\NormalTok{)}
+\NormalTok{ax.set\_ylabel(}\StringTok{\textquotesingle{}Breed Index\textquotesingle{}}\NormalTok{)}
+\NormalTok{ax.set\_title(}\StringTok{\textquotesingle{}Training Sample Size per Breed (Sorted)}\CharTok{\textbackslash{}n}\StringTok{Red: \textless{}130 samples, Orange: 130{-}150, Green: \textgreater{}150\textquotesingle{}}\NormalTok{)}
+\NormalTok{ax.legend()}
+\NormalTok{ax.grid(axis}\OperatorTok{=}\StringTok{\textquotesingle{}x\textquotesingle{}}\NormalTok{, alpha}\OperatorTok{=}\FloatTok{0.3}\NormalTok{)}
+
+\CommentTok{\# Add text annotation}
+\NormalTok{ax.text(}\FloatTok{0.02}\NormalTok{, }\FloatTok{0.98}\NormalTok{, }\SpecialStringTok{f\textquotesingle{}}\SpecialCharTok{\{}\NormalTok{(breed\_counts }\OperatorTok{\textless{}} \DecValTok{130}\NormalTok{)}\SpecialCharTok{.}\BuiltInTok{sum}\NormalTok{()}\SpecialCharTok{\}}\SpecialStringTok{ breeds with \textless{}130 samples\textquotesingle{}}\NormalTok{, }
+\NormalTok{        transform}\OperatorTok{=}\NormalTok{ax.transAxes, va}\OperatorTok{=}\StringTok{\textquotesingle{}top\textquotesingle{}}\NormalTok{, bbox}\OperatorTok{=}\BuiltInTok{dict}\NormalTok{(boxstyle}\OperatorTok{=}\StringTok{\textquotesingle{}round\textquotesingle{}}\NormalTok{, facecolor}\OperatorTok{=}\StringTok{\textquotesingle{}wheat\textquotesingle{}}\NormalTok{))}
+
+\NormalTok{plt.tight\_layout()}
+\NormalTok{plt.savefig(}\StringTok{"../artifacts/figures/sample\_adequacy.png"}\NormalTok{, dpi}\OperatorTok{=}\DecValTok{150}\NormalTok{, bbox\_inches}\OperatorTok{=}\StringTok{\textquotesingle{}tight\textquotesingle{}}\NormalTok{)}
+
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{Sample Adequacy Summary:"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Breeds with \textless{}130 samples (may underperform): }\SpecialCharTok{\{}\NormalTok{(breed\_counts }\OperatorTok{\textless{}} \DecValTok{130}\NormalTok{)}\SpecialCharTok{.}\BuiltInTok{sum}\NormalTok{()}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Breeds with 130{-}150 samples (adequate): }\SpecialCharTok{\{}\NormalTok{((breed\_counts }\OperatorTok{\textgreater{}=} \DecValTok{130}\NormalTok{) }\OperatorTok{\&}\NormalTok{ (breed\_counts }\OperatorTok{\textless{}} \DecValTok{150}\NormalTok{))}\SpecialCharTok{.}\BuiltInTok{sum}\NormalTok{()}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Breeds with \textgreater{}150 samples (good): }\SpecialCharTok{\{}\NormalTok{(breed\_counts }\OperatorTok{\textgreater{}=} \DecValTok{150}\NormalTok{)}\SpecialCharTok{.}\BuiltInTok{sum}\NormalTok{()}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{Conclusion: }\SpecialCharTok{\{}\NormalTok{(breed\_counts }\OperatorTok{\textless{}} \DecValTok{130}\NormalTok{)}\SpecialCharTok{.}\BuiltInTok{sum}\NormalTok{()}\SpecialCharTok{\}}\SpecialStringTok{ breeds may show lower accuracy due to limited training data."}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+
+Sample Adequacy Summary:
+  Breeds with <130 samples (may underperform): 62
+  Breeds with 130-150 samples (adequate): 28
+  Breeds with >150 samples (good): 30
+
+Conclusion: 62 breeds may show lower accuracy due to limited training data.
+\end{verbatim}
+
+\pandocbounded{\includegraphics[keepaspectratio]{main_files/figure-pdf/cell-11-output-2.png}}
+
+\textbf{Key Findings:}
+
+\textbf{Moderately Balanced Dataset}: 120 classes with 1.7× imbalance
+ratio (max/min)
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Range}: 118-202 images per breed\\
+\item
+  \textbf{Mean}: 138 images per breed
+\end{itemize}
+
+\textbf{Critical Challenge - Limited Training Data}:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{62 breeds (52\%) have \textless130 samples} - major risk for
+  poor per-class performance
+\item
+  Only 30 breeds (25\%) have adequate data (\textgreater150 images)
+\end{itemize}
+
+\textbf{How We Solved This}:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Aggressive data augmentation} implemented (rotation ±15°,
+  flip, zoom, brightness ±20\%, contrast ±20\%) - see Data Loading
+  section below
+\item
+  \textbf{Transfer learning strategy} - will use ImageNet pre-trained
+  models to leverage knowledge from millions of images
+\item
+  \textbf{Monitor per-class performance} during training to identify
+  problematic breeds
+\end{itemize}
+
+\subsection{EDA Summary}\label{eda-summary}
+
+Our exploratory analysis revealed key characteristics of the Stanford
+Dogs dataset that will inform our modeling approach:
+
+\textbf{Dataset Characteristics:}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{120 dog breeds}, 20,580 total images (16,508 train / 4,072
+  validation)
+\item
+  \textbf{Variable dimensions}: Mean 443×386px, ranging from 100×100 to
+  3264×2562
+\item
+  \textbf{Moderate class imbalance}: 1.7× ratio (118-202 images per
+  breed)
+\item
+  \textbf{Limited samples}: 62 breeds (52\%) have \textless130 training
+  images
+\end{itemize}
+
+\textbf{Key Insights:}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Image quality is sufficient}: Even low-resolution images
+  (100×100) upscale acceptably to 224×224 using bilinear interpolation
+\item
+  \textbf{Class imbalance is manageable}: Relatively mild compared to
+  real-world datasets
+\item
+  \textbf{Data scarcity is the main challenge}: Over half the breeds
+  have limited training data
+\end{enumerate}
+
+\textbf{Preprocessing Strategy (Implemented):}
+
+\begin{itemize}
+\tightlist
+\item
+  Resize all images to 224×224 (standard for ImageNet models)
+\item
+  Aggressive data augmentation (rotation, flip, zoom, brightness,
+  contrast)
+\item
+  Transfer learning with ImageNet pre-trained models
+\item
+  Monitor per-class performance during training
+\end{itemize}
+
+\textbf{Next Steps:} Implement the data loading pipeline and select
+appropriate model architectures.
+
+\section{Data Loading \& Augmentation
 Pipeline}\label{data-loading-augmentation-pipeline}
 
 Now we implement the critical preprocessing steps that transform raw
 images into model-ready batches. This is where we prepare the data for
 deep learning.
 
-\textbf{✅ Implemented Features:}
+\textbf{Implemented Features:}
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
-\tightlist
 \item
   \textbf{Image Resizing to 224×224} ✓
 
@@ -874,23 +1363,21 @@ deep learning.
     learning.
   \end{itemize}
 \item
-  \textbf{Data Augmentation (Training Only)} ✓
+  \textbf{Data Augmentation (Training Only)}
 
   \begin{itemize}
   \tightlist
   \item
-    ✅ \textbf{Random Rotation (±15°)}: Teaches model rotation
-    invariance
+    \textbf{Random Rotation (±15°)}: Teaches model rotation invariance
   \item
-    ✅ \textbf{Horizontal Flip (50\%)}: Dogs can face left or right
+    \textbf{Horizontal Flip (50\%)}: Dogs can face left or right
   \item
-    ✅ \textbf{Random Zoom (90-110\%)}: Handles different camera
-    distances
+    \textbf{Random Zoom (90-110\%)}: Handles different camera distances
   \item
-    ✅ \textbf{Brightness Adjustment (±20\%)}: Robust to lighting
+    \textbf{Brightness Adjustment (±20\%)}: Robust to lighting
     conditions
   \item
-    ✅ \textbf{Contrast Adjustment (±20\%)}: Handles different image
+    \textbf{Contrast Adjustment (±20\%)}: Handles different image
     qualities
   \end{itemize}
 
@@ -910,7 +1397,7 @@ deep learning.
     data
   \end{itemize}
 \item
-  \textbf{Batch Generation} ✓
+  \textbf{Batch Generation}
 
   \begin{itemize}
   \tightlist
@@ -952,9 +1439,6 @@ Without augmentation, our 16,508 training images would lead to
 overfitting. With augmentation, the model sees virtually infinite
 variations, enabling it to learn robust features that generalize to new
 dogs it has never seen before.
-
-\textbf{Status}: ✅ \textbf{COMPLETE} - All preprocessing implemented
-and tested! Data is ready for CNN training.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -1087,12 +1571,7 @@ training samples:
 \NormalTok{             fontsize}\OperatorTok{=}\DecValTok{14}\NormalTok{, fontweight}\OperatorTok{=}\StringTok{\textquotesingle{}bold\textquotesingle{}}\NormalTok{)}
 \NormalTok{plt.tight\_layout()}
 \NormalTok{plt.savefig(}\StringTok{"../artifacts/figures/augmentation\_examples.png"}\NormalTok{, dpi}\OperatorTok{=}\DecValTok{150}\NormalTok{, bbox\_inches}\OperatorTok{=}\StringTok{\textquotesingle{}tight\textquotesingle{}}\NormalTok{)}
-
-\CommentTok{\# Display the saved image}
-\NormalTok{display(IPImage(filename}\OperatorTok{=}\StringTok{\textquotesingle{}../artifacts/figures/augmentation\_examples.png\textquotesingle{}}\NormalTok{))}
-
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{✓ Augmentation visualization saved and displayed!"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"Augmentations: rotation (±15°), flip (50\%), zoom (90{-}110\%), brightness/contrast (±20\%)"}\NormalTok{)}
+\NormalTok{plt.show()}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1111,355 +1590,1164 @@ Dataset initialized:
   Augmentation: True
 \end{verbatim}
 
-\pandocbounded{\includegraphics[keepaspectratio]{main_files/figure-pdf/cell-6-output-2.png}}
+\pandocbounded{\includegraphics[keepaspectratio]{main_files/figure-pdf/cell-13-output-2.png}}
 
-\begin{verbatim}
+\subsection{High-Performance Image
+Preprocessing}\label{high-performance-image-preprocessing}
 
-✓ Augmentation visualization saved and displayed!
-Augmentations: rotation (±15°), flip (50%), zoom (90-110%), brightness/contrast (±20%)
-\end{verbatim}
+\textbf{Problem}: Training deep learning models with on-the-fly image
+loading creates an I/O bottleneck that severely limits training speed.
 
-\section{Exploratory Data Analysis}\label{exploratory-data-analysis}
+\textbf{Solution}: Preprocess all images once and save as memory-mapped
+numpy arrays for instant loading during training.
 
-In this section, we explore the dataset characteristics to understand:
+\subsubsection{Why Preprocessing
+Matters}\label{why-preprocessing-matters}
+
+\textbf{Without Preprocessing} (loading images on-the-fly):
+
+\begin{itemize}
+\tightlist
+\item
+  Each epoch loads 16,508 images from disk
+\item
+  JPEG decoding happens every time
+\item
+  Resizing/normalization computed repeatedly
+\item
+  \textbf{Result}: 60+ seconds per epoch overhead, training is I/O-bound
+\end{itemize}
+
+\textbf{With Preprocessing} (memory-mapped arrays):
+
+\begin{itemize}
+\tightlist
+\item
+  Images loaded and processed once upfront
+\item
+  Saved as \texttt{.npy} files that can be memory-mapped
+\item
+  Training loads data instantly from RAM
+\item
+  \textbf{Result}: 0.0006 seconds loading time, training is
+  compute-bound
+\end{itemize}
+
+\subsubsection{Implementation}\label{implementation}
+
+\textbf{Script}:
+\href{../src/dbc/preprocess_images.py}{\texttt{src/dbc/preprocess\_images.py}}
+
+\textbf{What it does}:
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
 \tightlist
 \item
-  \textbf{Sample images}: Visual inspection of different breeds
+  Loads all images (train + validation)
 \item
-  \textbf{Class distribution}: How balanced are the 120 breed classes?
+  Resizes to 224×224
 \item
-  \textbf{Image dimensions}: Variation in image sizes and aspect ratios
+  Converts to RGB if needed
 \item
-  \textbf{Data quality}: Any patterns or issues to address before
-  training
+  Normalizes to {[}0, 255{]} range
+\item
+  Saves as uncompressed \texttt{.npy} files
 \end{enumerate}
 
+\textbf{Key Technical Detail}: Uses \textbf{memory mapping}
+(\texttt{mmap\_mode=\textquotesingle{}r\textquotesingle{}}) - Operating
+system maps file directly into virtual memory - No actual loading
+required - data accessed on-demand - Multiple processes can share the
+same memory-mapped file - Perfect for training with multiple workers
+
+\subsubsection{Running Preprocessing}\label{running-preprocessing}
+
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Visualize sample images from different breeds}
-\KeywordTok{def}\NormalTok{ show\_sample\_images(train\_df, n\_breeds}\OperatorTok{=}\DecValTok{4}\NormalTok{, images\_per\_breed}\OperatorTok{=}\DecValTok{3}\NormalTok{):}
-    \CommentTok{"""Display sample images from random breeds"""}
-    
-    \CommentTok{\# Sample random breeds}
-\NormalTok{    breeds }\OperatorTok{=}\NormalTok{ train\_df[}\StringTok{\textquotesingle{}breed\_name\textquotesingle{}}\NormalTok{].unique()}
-\NormalTok{    sample\_breeds }\OperatorTok{=}\NormalTok{ np.random.choice(breeds, size}\OperatorTok{=}\BuiltInTok{min}\NormalTok{(n\_breeds, }\BuiltInTok{len}\NormalTok{(breeds)), replace}\OperatorTok{=}\VariableTok{False}\NormalTok{)}
-    
-\NormalTok{    fig, axes }\OperatorTok{=}\NormalTok{ plt.subplots(n\_breeds, images\_per\_breed, figsize}\OperatorTok{=}\NormalTok{(}\DecValTok{12}\NormalTok{, n\_breeds}\OperatorTok{*}\DecValTok{3}\NormalTok{))}
-    
-    \ControlFlowTok{for}\NormalTok{ i, breed }\KeywordTok{in} \BuiltInTok{enumerate}\NormalTok{(sample\_breeds):}
-\NormalTok{        breed\_images }\OperatorTok{=}\NormalTok{ train\_df[train\_df[}\StringTok{\textquotesingle{}breed\_name\textquotesingle{}}\NormalTok{] }\OperatorTok{==}\NormalTok{ breed].sample(n}\OperatorTok{=}\NormalTok{images\_per\_breed)}
+\CommentTok{\# Preprocess all images (run once before training)}
+\VariableTok{PYTHONPATH}\OperatorTok{=}\NormalTok{src }\ExtensionTok{python3} \AttributeTok{{-}m}\NormalTok{ dbc.preprocess\_images}
+
+\CommentTok{\# Output files:}
+\CommentTok{\# {-} artifacts/preprocessed/train\_images.npy (9.26 GB)}
+\CommentTok{\# {-} artifacts/preprocessed/train\_labels.npy (129 KB)}
+\CommentTok{\# {-} artifacts/preprocessed/val\_images.npy (2.28 GB)}
+\CommentTok{\# {-} artifacts/preprocessed/val\_labels.npy (32 KB)}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Performance Impact}\label{performance-impact}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.1270}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2063}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Metric
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Before Preprocessing
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+After Preprocessing
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Improvement
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{Data Loading Time} & 60+ seconds/epoch & 0.0006 seconds &
+\textbf{100,000×} \\
+\textbf{Epoch Time (VGG16)} & \textasciitilde200 seconds &
+\textasciitilde80 seconds & \textbf{2.5×} \\
+\textbf{Training Bottleneck} & I/O bound & Compute bound & ✅ Optimal \\
+\textbf{GPU Utilization} & 30-40\% & 50-55\% & \textbf{+40\%} \\
+\end{longtable}
+
+\subsubsection{Memory-Mapped Loading in Data
+Loader}\label{memory-mapped-loading-in-data-loader}
+
+\textbf{Implementation}:
+\href{../src/dbc/data_loader.py}{\texttt{src/dbc/data\_loader.py}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{class}\NormalTok{ PreprocessedDataGenerator:}
+    \KeywordTok{def} \FunctionTok{\_\_init\_\_}\NormalTok{(}\VariableTok{self}\NormalTok{, data\_path):}
+        \CommentTok{\# Load with memory mapping {-} instant!}
+\NormalTok{        images\_path }\OperatorTok{=}\NormalTok{ data\_path.parent }\OperatorTok{/} \SpecialStringTok{f"}\SpecialCharTok{\{}\NormalTok{data\_path}\SpecialCharTok{.}\NormalTok{stem}\SpecialCharTok{\}}\SpecialStringTok{\_images.npy"}
+\NormalTok{        labels\_path }\OperatorTok{=}\NormalTok{ data\_path.parent }\OperatorTok{/} \SpecialStringTok{f"}\SpecialCharTok{\{}\NormalTok{data\_path}\SpecialCharTok{.}\NormalTok{stem}\SpecialCharTok{\}}\SpecialStringTok{\_labels.npy"}
         
-        \ControlFlowTok{for}\NormalTok{ j, (\_, row) }\KeywordTok{in} \BuiltInTok{enumerate}\NormalTok{(breed\_images.iterrows()):}
-            \CommentTok{\# Use absolute\_path which has full path from project root}
-\NormalTok{            img\_path }\OperatorTok{=}\NormalTok{ Path(}\StringTok{".."}\NormalTok{) }\OperatorTok{/} \StringTok{"data"} \OperatorTok{/} \StringTok{"raw"} \OperatorTok{/}\NormalTok{ row[}\StringTok{\textquotesingle{}file\_path\textquotesingle{}}\NormalTok{]}
-\NormalTok{            img }\OperatorTok{=}\NormalTok{ Image.}\BuiltInTok{open}\NormalTok{(img\_path)}
-            
-\NormalTok{            ax }\OperatorTok{=}\NormalTok{ axes[i, j] }\ControlFlowTok{if}\NormalTok{ n\_breeds }\OperatorTok{\textgreater{}} \DecValTok{1} \ControlFlowTok{else}\NormalTok{ axes[j]}
-\NormalTok{            ax.imshow(img)}
-\NormalTok{            ax.axis(}\StringTok{\textquotesingle{}off\textquotesingle{}}\NormalTok{)}
-            
-            \ControlFlowTok{if}\NormalTok{ j }\OperatorTok{==} \DecValTok{0}\NormalTok{:}
-\NormalTok{                ax.set\_title(}\SpecialStringTok{f"}\SpecialCharTok{\{}\NormalTok{breed}\SpecialCharTok{\}}\CharTok{\textbackslash{}n}\SpecialCharTok{\{}\NormalTok{img}\SpecialCharTok{.}\NormalTok{size[}\DecValTok{0}\NormalTok{]}\SpecialCharTok{\}}\SpecialStringTok{×}\SpecialCharTok{\{}\NormalTok{img}\SpecialCharTok{.}\NormalTok{size[}\DecValTok{1}\NormalTok{]}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{, fontsize}\OperatorTok{=}\DecValTok{10}\NormalTok{)}
-            \ControlFlowTok{else}\NormalTok{:}
-\NormalTok{                ax.set\_title(}\SpecialStringTok{f"}\SpecialCharTok{\{}\NormalTok{img}\SpecialCharTok{.}\NormalTok{size[}\DecValTok{0}\NormalTok{]}\SpecialCharTok{\}}\SpecialStringTok{×}\SpecialCharTok{\{}\NormalTok{img}\SpecialCharTok{.}\NormalTok{size[}\DecValTok{1}\NormalTok{]}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{, fontsize}\OperatorTok{=}\DecValTok{9}\NormalTok{)}
-    
-\NormalTok{    plt.tight\_layout()}
-\NormalTok{    plt.savefig(}\StringTok{"../artifacts/figures/sample\_images.png"}\NormalTok{, dpi}\OperatorTok{=}\DecValTok{150}\NormalTok{, bbox\_inches}\OperatorTok{=}\StringTok{\textquotesingle{}tight\textquotesingle{}}\NormalTok{)}
-
-\CommentTok{\# Create figures directory}
-\NormalTok{Path(}\StringTok{"../artifacts/figures"}\NormalTok{).mkdir(parents}\OperatorTok{=}\VariableTok{True}\NormalTok{, exist\_ok}\OperatorTok{=}\VariableTok{True}\NormalTok{)}
-
-\CommentTok{\# Show samples}
-\NormalTok{np.random.seed(}\DecValTok{42}\NormalTok{)}
-\NormalTok{show\_sample\_images(train\_df, n\_breeds}\OperatorTok{=}\DecValTok{4}\NormalTok{, images\_per\_breed}\OperatorTok{=}\DecValTok{3}\NormalTok{)}
-
-\BuiltInTok{print}\NormalTok{(}\StringTok{"}\CharTok{\textbackslash{}n}\StringTok{Sample images showing variety in:"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\StringTok{"  {-} Breed appearance (different sizes, coat colors, facial features)"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\StringTok{"  {-} Image dimensions (various aspect ratios and resolutions)"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\StringTok{"  {-} Photography conditions (backgrounds, lighting, angles)"}\NormalTok{)}
+        \VariableTok{self}\NormalTok{.images }\OperatorTok{=}\NormalTok{ np.load(images\_path, mmap\_mode}\OperatorTok{=}\StringTok{\textquotesingle{}r\textquotesingle{}}\NormalTok{)  }\CommentTok{\# No actual loading}
+        \VariableTok{self}\NormalTok{.labels }\OperatorTok{=}\NormalTok{ np.load(labels\_path)}
+        
+    \KeywordTok{def} \FunctionTok{\_\_getitem\_\_}\NormalTok{(}\VariableTok{self}\NormalTok{, idx):}
+        \CommentTok{\# Data accessed on{-}demand from memory{-}mapped file}
+        \ControlFlowTok{return} \VariableTok{self}\NormalTok{.images[idx], }\VariableTok{self}\NormalTok{.labels[idx]}
 \end{Highlighting}
 \end{Shaded}
 
-\begin{verbatim}
+\subsubsection{Critical Insight}\label{critical-insight}
 
-Sample images showing variety in:
-  - Breed appearance (different sizes, coat colors, facial features)
-  - Image dimensions (various aspect ratios and resolutions)
-  - Photography conditions (backgrounds, lighting, angles)
-\end{verbatim}
+\begin{quote}
+\textbf{Preprocessing is not optional} - It's the difference between a
+model that takes 3 hours to train and one that takes 30 minutes. The
+100,000× speedup in data loading transforms training from I/O-bound to
+compute-bound, maximizing GPU utilization.
+\end{quote}
 
-\subsection{Image Dimension Analysis}\label{image-dimension-analysis}
-
-Understanding image sizes helps us choose appropriate preprocessing
-strategies
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{\# Analyze image dimensions}
-\NormalTok{fig, axes }\OperatorTok{=}\NormalTok{ plt.subplots(}\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{, figsize}\OperatorTok{=}\NormalTok{(}\DecValTok{14}\NormalTok{, }\DecValTok{10}\NormalTok{))}
-
-\CommentTok{\# Width distribution}
-\NormalTok{axes[}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{].hist(train\_df[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{], bins}\OperatorTok{=}\DecValTok{50}\NormalTok{, edgecolor}\OperatorTok{=}\StringTok{\textquotesingle{}black\textquotesingle{}}\NormalTok{, alpha}\OperatorTok{=}\FloatTok{0.7}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{].axvline(train\_df[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{].mean(), color}\OperatorTok{=}\StringTok{\textquotesingle{}red\textquotesingle{}}\NormalTok{, linestyle}\OperatorTok{=}\StringTok{\textquotesingle{}{-}{-}\textquotesingle{}}\NormalTok{, }
-\NormalTok{                   label}\OperatorTok{=}\SpecialStringTok{f\textquotesingle{}Mean: }\SpecialCharTok{\{}\NormalTok{train\_df[}\StringTok{"width"}\NormalTok{]}\SpecialCharTok{.}\NormalTok{mean()}\SpecialCharTok{:.0f\}}\SpecialStringTok{\textquotesingle{}}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{].set\_xlabel(}\StringTok{\textquotesingle{}Width (pixels)\textquotesingle{}}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{].set\_ylabel(}\StringTok{\textquotesingle{}Frequency\textquotesingle{}}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{].set\_title(}\StringTok{\textquotesingle{}Image Width Distribution\textquotesingle{}}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{].legend()}
-\NormalTok{axes[}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{].grid(alpha}\OperatorTok{=}\FloatTok{0.3}\NormalTok{)}
-
-\CommentTok{\# Height distribution}
-\NormalTok{axes[}\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{].hist(train\_df[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{], bins}\OperatorTok{=}\DecValTok{50}\NormalTok{, edgecolor}\OperatorTok{=}\StringTok{\textquotesingle{}black\textquotesingle{}}\NormalTok{, alpha}\OperatorTok{=}\FloatTok{0.7}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{].axvline(train\_df[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{].mean(), color}\OperatorTok{=}\StringTok{\textquotesingle{}red\textquotesingle{}}\NormalTok{, linestyle}\OperatorTok{=}\StringTok{\textquotesingle{}{-}{-}\textquotesingle{}}\NormalTok{,}
-\NormalTok{                   label}\OperatorTok{=}\SpecialStringTok{f\textquotesingle{}Mean: }\SpecialCharTok{\{}\NormalTok{train\_df[}\StringTok{"height"}\NormalTok{]}\SpecialCharTok{.}\NormalTok{mean()}\SpecialCharTok{:.0f\}}\SpecialStringTok{\textquotesingle{}}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{].set\_xlabel(}\StringTok{\textquotesingle{}Height (pixels)\textquotesingle{}}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{].set\_ylabel(}\StringTok{\textquotesingle{}Frequency\textquotesingle{}}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{].set\_title(}\StringTok{\textquotesingle{}Image Height Distribution\textquotesingle{}}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{].legend()}
-\NormalTok{axes[}\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{].grid(alpha}\OperatorTok{=}\FloatTok{0.3}\NormalTok{)}
-
-\CommentTok{\# Aspect ratio}
-\NormalTok{train\_df[}\StringTok{\textquotesingle{}aspect\_ratio\textquotesingle{}}\NormalTok{] }\OperatorTok{=}\NormalTok{ train\_df[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{] }\OperatorTok{/}\NormalTok{ train\_df[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{]}
-\NormalTok{axes[}\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{].hist(train\_df[}\StringTok{\textquotesingle{}aspect\_ratio\textquotesingle{}}\NormalTok{], bins}\OperatorTok{=}\DecValTok{50}\NormalTok{, edgecolor}\OperatorTok{=}\StringTok{\textquotesingle{}black\textquotesingle{}}\NormalTok{, alpha}\OperatorTok{=}\FloatTok{0.7}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{].axvline(}\FloatTok{1.0}\NormalTok{, color}\OperatorTok{=}\StringTok{\textquotesingle{}green\textquotesingle{}}\NormalTok{, linestyle}\OperatorTok{=}\StringTok{\textquotesingle{}{-}{-}\textquotesingle{}}\NormalTok{, label}\OperatorTok{=}\StringTok{\textquotesingle{}Square (1:1)\textquotesingle{}}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{].set\_xlabel(}\StringTok{\textquotesingle{}Aspect Ratio (width/height)\textquotesingle{}}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{].set\_ylabel(}\StringTok{\textquotesingle{}Frequency\textquotesingle{}}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{].set\_title(}\StringTok{\textquotesingle{}Aspect Ratio Distribution\textquotesingle{}}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{].legend()}
-\NormalTok{axes[}\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{].grid(alpha}\OperatorTok{=}\FloatTok{0.3}\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{\# Scatter: width vs height}
-\NormalTok{axes[}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{].scatter(train\_df[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{], train\_df[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{], alpha}\OperatorTok{=}\FloatTok{0.3}\NormalTok{, s}\OperatorTok{=}\DecValTok{1}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{].plot([}\DecValTok{0}\NormalTok{, }\DecValTok{1000}\NormalTok{], [}\DecValTok{0}\NormalTok{, }\DecValTok{1000}\NormalTok{], }\StringTok{\textquotesingle{}r{-}{-}\textquotesingle{}}\NormalTok{, label}\OperatorTok{=}\StringTok{\textquotesingle{}Square\textquotesingle{}}\NormalTok{, linewidth}\OperatorTok{=}\DecValTok{1}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{].set\_xlabel(}\StringTok{\textquotesingle{}Width (pixels)\textquotesingle{}}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{].set\_ylabel(}\StringTok{\textquotesingle{}Height (pixels)\textquotesingle{}}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{].set\_title(}\StringTok{\textquotesingle{}Width vs Height Scatter\textquotesingle{}}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{].legend()}
-\NormalTok{axes[}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{].grid(alpha}\OperatorTok{=}\FloatTok{0.3}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{].set\_xlim(}\DecValTok{0}\NormalTok{, train\_df[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{].}\BuiltInTok{max}\NormalTok{() }\OperatorTok{+} \DecValTok{50}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{].set\_ylim(}\DecValTok{0}\NormalTok{, train\_df[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{].}\BuiltInTok{max}\NormalTok{() }\OperatorTok{+} \DecValTok{50}\NormalTok{)}
-
-\NormalTok{plt.tight\_layout()}
-\NormalTok{plt.savefig(}\StringTok{"../artifacts/figures/image\_dimensions.png"}\NormalTok{, dpi}\OperatorTok{=}\DecValTok{150}\NormalTok{, bbox\_inches}\OperatorTok{=}\StringTok{\textquotesingle{}tight\textquotesingle{}}\NormalTok{)}
-
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{Image Dimension Statistics:"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Width  {-} Mean: }\SpecialCharTok{\{}\NormalTok{train\_df[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{]}\SpecialCharTok{.}\NormalTok{mean()}\SpecialCharTok{:.0f\}}\SpecialStringTok{, Std: }\SpecialCharTok{\{}\NormalTok{train\_df[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{]}\SpecialCharTok{.}\NormalTok{std()}\SpecialCharTok{:.0f\}}\SpecialStringTok{, Range: [}\SpecialCharTok{\{}\NormalTok{train\_df[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{]}\SpecialCharTok{.}\BuiltInTok{min}\NormalTok{()}\SpecialCharTok{\}}\SpecialStringTok{, }\SpecialCharTok{\{}\NormalTok{train\_df[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{]}\SpecialCharTok{.}\BuiltInTok{max}\NormalTok{()}\SpecialCharTok{\}}\SpecialStringTok{]"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Height {-} Mean: }\SpecialCharTok{\{}\NormalTok{train\_df[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{]}\SpecialCharTok{.}\NormalTok{mean()}\SpecialCharTok{:.0f\}}\SpecialStringTok{, Std: }\SpecialCharTok{\{}\NormalTok{train\_df[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{]}\SpecialCharTok{.}\NormalTok{std()}\SpecialCharTok{:.0f\}}\SpecialStringTok{, Range: [}\SpecialCharTok{\{}\NormalTok{train\_df[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{]}\SpecialCharTok{.}\BuiltInTok{min}\NormalTok{()}\SpecialCharTok{\}}\SpecialStringTok{, }\SpecialCharTok{\{}\NormalTok{train\_df[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{]}\SpecialCharTok{.}\BuiltInTok{max}\NormalTok{()}\SpecialCharTok{\}}\SpecialStringTok{]"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Aspect Ratio {-} Mean: }\SpecialCharTok{\{}\NormalTok{train\_df[}\StringTok{\textquotesingle{}aspect\_ratio\textquotesingle{}}\NormalTok{]}\SpecialCharTok{.}\NormalTok{mean()}\SpecialCharTok{:.2f\}}\SpecialStringTok{, Std: }\SpecialCharTok{\{}\NormalTok{train\_df[}\StringTok{\textquotesingle{}aspect\_ratio\textquotesingle{}}\NormalTok{]}\SpecialCharTok{.}\NormalTok{std()}\SpecialCharTok{:.2f\}}\SpecialStringTok{"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{Resizing strategy: All images will be resized to 224×224 for CNN input (standard for ImageNet pre{-}trained models)"}\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-
-Image Dimension Statistics:
-  Width  - Mean: 443, Std: 145, Range: [100, 3264]
-  Height - Mean: 386, Std: 127, Range: [100, 2562]
-  Aspect Ratio - Mean: 1.19, Std: 0.30
-
-Resizing strategy: All images will be resized to 224×224 for CNN input (standard for ImageNet pre-trained models)
-\end{verbatim}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{\# Analyze class distribution}
-\NormalTok{breed\_counts }\OperatorTok{=}\NormalTok{ train\_df[}\StringTok{\textquotesingle{}breed\_name\textquotesingle{}}\NormalTok{].value\_counts().sort\_values(ascending}\OperatorTok{=}\VariableTok{False}\NormalTok{)}
-
-\NormalTok{fig, axes }\OperatorTok{=}\NormalTok{ plt.subplots(}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{, figsize}\OperatorTok{=}\NormalTok{(}\DecValTok{16}\NormalTok{, }\DecValTok{5}\NormalTok{))}
-
-\CommentTok{\# Plot 1: Top 20 breeds}
-\NormalTok{axes[}\DecValTok{0}\NormalTok{].barh(breed\_counts.head(}\DecValTok{20}\NormalTok{).index[::}\OperatorTok{{-}}\DecValTok{1}\NormalTok{], breed\_counts.head(}\DecValTok{20}\NormalTok{).values[::}\OperatorTok{{-}}\DecValTok{1}\NormalTok{])}
-\NormalTok{axes[}\DecValTok{0}\NormalTok{].set\_xlabel(}\StringTok{\textquotesingle{}Number of Images\textquotesingle{}}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{0}\NormalTok{].set\_title(}\StringTok{\textquotesingle{}Top 20 Breeds by Image Count (Training Set)\textquotesingle{}}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{0}\NormalTok{].grid(axis}\OperatorTok{=}\StringTok{\textquotesingle{}x\textquotesingle{}}\NormalTok{, alpha}\OperatorTok{=}\FloatTok{0.3}\NormalTok{)}
-
-\CommentTok{\# Plot 2: Distribution histogram}
-\NormalTok{axes[}\DecValTok{1}\NormalTok{].hist(breed\_counts.values, bins}\OperatorTok{=}\DecValTok{30}\NormalTok{, edgecolor}\OperatorTok{=}\StringTok{\textquotesingle{}black\textquotesingle{}}\NormalTok{, alpha}\OperatorTok{=}\FloatTok{0.7}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{1}\NormalTok{].axvline(breed\_counts.mean(), color}\OperatorTok{=}\StringTok{\textquotesingle{}red\textquotesingle{}}\NormalTok{, linestyle}\OperatorTok{=}\StringTok{\textquotesingle{}{-}{-}\textquotesingle{}}\NormalTok{, label}\OperatorTok{=}\SpecialStringTok{f\textquotesingle{}Mean: }\SpecialCharTok{\{}\NormalTok{breed\_counts}\SpecialCharTok{.}\NormalTok{mean()}\SpecialCharTok{:.1f\}}\SpecialStringTok{\textquotesingle{}}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{1}\NormalTok{].axvline(breed\_counts.median(), color}\OperatorTok{=}\StringTok{\textquotesingle{}green\textquotesingle{}}\NormalTok{, linestyle}\OperatorTok{=}\StringTok{\textquotesingle{}{-}{-}\textquotesingle{}}\NormalTok{, label}\OperatorTok{=}\SpecialStringTok{f\textquotesingle{}Median: }\SpecialCharTok{\{}\NormalTok{breed\_counts}\SpecialCharTok{.}\NormalTok{median()}\SpecialCharTok{:.1f\}}\SpecialStringTok{\textquotesingle{}}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{1}\NormalTok{].set\_xlabel(}\StringTok{\textquotesingle{}Number of Images per Breed\textquotesingle{}}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{1}\NormalTok{].set\_ylabel(}\StringTok{\textquotesingle{}Number of Breeds\textquotesingle{}}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{1}\NormalTok{].set\_title(}\StringTok{\textquotesingle{}Distribution of Images Across Breeds\textquotesingle{}}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{1}\NormalTok{].legend()}
-\NormalTok{axes[}\DecValTok{1}\NormalTok{].grid(alpha}\OperatorTok{=}\FloatTok{0.3}\NormalTok{)}
-
-\NormalTok{plt.tight\_layout()}
-\NormalTok{plt.savefig(}\StringTok{"../artifacts/figures/breed\_distribution.png"}\NormalTok{, dpi}\OperatorTok{=}\DecValTok{150}\NormalTok{, bbox\_inches}\OperatorTok{=}\StringTok{\textquotesingle{}tight\textquotesingle{}}\NormalTok{)}
-
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{Class Balance Analysis:"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Total breeds: }\SpecialCharTok{\{}\BuiltInTok{len}\NormalTok{(breed\_counts)}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Min images per breed: }\SpecialCharTok{\{}\NormalTok{breed\_counts}\SpecialCharTok{.}\BuiltInTok{min}\NormalTok{()}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Max images per breed: }\SpecialCharTok{\{}\NormalTok{breed\_counts}\SpecialCharTok{.}\BuiltInTok{max}\NormalTok{()}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Mean images per breed: }\SpecialCharTok{\{}\NormalTok{breed\_counts}\SpecialCharTok{.}\NormalTok{mean()}\SpecialCharTok{:.1f\}}\SpecialStringTok{"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Std images per breed: }\SpecialCharTok{\{}\NormalTok{breed\_counts}\SpecialCharTok{.}\NormalTok{std()}\SpecialCharTok{:.1f\}}\SpecialStringTok{"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Imbalance ratio (max/min): }\SpecialCharTok{\{}\NormalTok{breed\_counts}\SpecialCharTok{.}\BuiltInTok{max}\NormalTok{()}\OperatorTok{/}\NormalTok{breed\_counts}\SpecialCharTok{.}\BuiltInTok{min}\NormalTok{()}\SpecialCharTok{:.2f\}}\SpecialStringTok{x"}\NormalTok{)}
-
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{Most common breeds:"}\NormalTok{)}
-\ControlFlowTok{for}\NormalTok{ breed, count }\KeywordTok{in}\NormalTok{ breed\_counts.head(}\DecValTok{5}\NormalTok{).items():}
-    \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  }\SpecialCharTok{\{}\NormalTok{breed}\SpecialCharTok{\}}\SpecialStringTok{: }\SpecialCharTok{\{}\NormalTok{count}\SpecialCharTok{\}}\SpecialStringTok{ images"}\NormalTok{)}
-    
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{Least common breeds:"}\NormalTok{)}
-\ControlFlowTok{for}\NormalTok{ breed, count }\KeywordTok{in}\NormalTok{ breed\_counts.tail(}\DecValTok{5}\NormalTok{).items():}
-    \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  }\SpecialCharTok{\{}\NormalTok{breed}\SpecialCharTok{\}}\SpecialStringTok{: }\SpecialCharTok{\{}\NormalTok{count}\SpecialCharTok{\}}\SpecialStringTok{ images"}\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-
-Class Balance Analysis:
-  Total breeds: 120
-  Min images per breed: 119
-  Max images per breed: 202
-  Mean images per breed: 137.6
-  Std images per breed: 18.6
-  Imbalance ratio (max/min): 1.70x
-
-Most common breeds:
-  Maltese_dog: 202 images
-  Afghan_hound: 192 images
-  Scottish_deerhound: 186 images
-  Pomeranian: 176 images
-  Samoyed: 175 images
-
-Least common breeds:
-  clumber: 120 images
-  Border_collie: 120 images
-  Pekinese: 120 images
-  Bouvier_des_Flandres: 120 images
-  redbone: 119 images
-\end{verbatim}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{fig, ax }\OperatorTok{=}\NormalTok{ plt.subplots(}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, figsize}\OperatorTok{=}\NormalTok{(}\DecValTok{12}\NormalTok{, }\DecValTok{6}\NormalTok{))}
-
-\NormalTok{breed\_counts\_sorted }\OperatorTok{=}\NormalTok{ breed\_counts.sort\_values(ascending}\OperatorTok{=}\VariableTok{True}\NormalTok{)}
-\NormalTok{colors }\OperatorTok{=}\NormalTok{ [}\StringTok{\textquotesingle{}red\textquotesingle{}} \ControlFlowTok{if}\NormalTok{ x }\OperatorTok{\textless{}} \DecValTok{130} \ControlFlowTok{else} \StringTok{\textquotesingle{}orange\textquotesingle{}} \ControlFlowTok{if}\NormalTok{ x }\OperatorTok{\textless{}} \DecValTok{150} \ControlFlowTok{else} \StringTok{\textquotesingle{}green\textquotesingle{}} 
-          \ControlFlowTok{for}\NormalTok{ x }\KeywordTok{in}\NormalTok{ breed\_counts\_sorted.values]}
-
-\NormalTok{ax.barh(}\BuiltInTok{range}\NormalTok{(}\BuiltInTok{len}\NormalTok{(breed\_counts\_sorted)), breed\_counts\_sorted.values, color}\OperatorTok{=}\NormalTok{colors)}
-\NormalTok{ax.axvline(}\FloatTok{137.6}\NormalTok{, color}\OperatorTok{=}\StringTok{\textquotesingle{}blue\textquotesingle{}}\NormalTok{, linestyle}\OperatorTok{=}\StringTok{\textquotesingle{}{-}{-}\textquotesingle{}}\NormalTok{, linewidth}\OperatorTok{=}\DecValTok{2}\NormalTok{, label}\OperatorTok{=}\StringTok{\textquotesingle{}Mean (138)\textquotesingle{}}\NormalTok{)}
-\NormalTok{ax.axvline(}\DecValTok{150}\NormalTok{, color}\OperatorTok{=}\StringTok{\textquotesingle{}orange\textquotesingle{}}\NormalTok{, linestyle}\OperatorTok{=}\StringTok{\textquotesingle{}{-}{-}\textquotesingle{}}\NormalTok{, linewidth}\OperatorTok{=}\DecValTok{1}\NormalTok{, alpha}\OperatorTok{=}\FloatTok{0.7}\NormalTok{, label}\OperatorTok{=}\StringTok{\textquotesingle{}Adequate (150)\textquotesingle{}}\NormalTok{)}
-
-\NormalTok{ax.set\_xlabel(}\StringTok{\textquotesingle{}Number of Training Images\textquotesingle{}}\NormalTok{)}
-\NormalTok{ax.set\_ylabel(}\StringTok{\textquotesingle{}Breed Index\textquotesingle{}}\NormalTok{)}
-\NormalTok{ax.set\_title(}\StringTok{\textquotesingle{}Training Sample Size per Breed (Sorted)}\CharTok{\textbackslash{}n}\StringTok{Red: \textless{}130 samples, Orange: 130{-}150, Green: \textgreater{}150\textquotesingle{}}\NormalTok{)}
-\NormalTok{ax.legend()}
-\NormalTok{ax.grid(axis}\OperatorTok{=}\StringTok{\textquotesingle{}x\textquotesingle{}}\NormalTok{, alpha}\OperatorTok{=}\FloatTok{0.3}\NormalTok{)}
-
-\CommentTok{\# Add text annotation}
-\NormalTok{ax.text(}\FloatTok{0.02}\NormalTok{, }\FloatTok{0.98}\NormalTok{, }\SpecialStringTok{f\textquotesingle{}}\SpecialCharTok{\{}\NormalTok{(breed\_counts }\OperatorTok{\textless{}} \DecValTok{130}\NormalTok{)}\SpecialCharTok{.}\BuiltInTok{sum}\NormalTok{()}\SpecialCharTok{\}}\SpecialStringTok{ breeds with \textless{}130 samples\textquotesingle{}}\NormalTok{, }
-\NormalTok{        transform}\OperatorTok{=}\NormalTok{ax.transAxes, va}\OperatorTok{=}\StringTok{\textquotesingle{}top\textquotesingle{}}\NormalTok{, bbox}\OperatorTok{=}\BuiltInTok{dict}\NormalTok{(boxstyle}\OperatorTok{=}\StringTok{\textquotesingle{}round\textquotesingle{}}\NormalTok{, facecolor}\OperatorTok{=}\StringTok{\textquotesingle{}wheat\textquotesingle{}}\NormalTok{))}
-
-\NormalTok{plt.tight\_layout()}
-\NormalTok{plt.savefig(}\StringTok{"../artifacts/figures/sample\_adequacy.png"}\NormalTok{, dpi}\OperatorTok{=}\DecValTok{150}\NormalTok{, bbox\_inches}\OperatorTok{=}\StringTok{\textquotesingle{}tight\textquotesingle{}}\NormalTok{)}
-
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{Sample Adequacy Summary:"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Breeds with \textless{}130 samples (may underperform): }\SpecialCharTok{\{}\NormalTok{(breed\_counts }\OperatorTok{\textless{}} \DecValTok{130}\NormalTok{)}\SpecialCharTok{.}\BuiltInTok{sum}\NormalTok{()}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Breeds with 130{-}150 samples (adequate): }\SpecialCharTok{\{}\NormalTok{((breed\_counts }\OperatorTok{\textgreater{}=} \DecValTok{130}\NormalTok{) }\OperatorTok{\&}\NormalTok{ (breed\_counts }\OperatorTok{\textless{}} \DecValTok{150}\NormalTok{))}\SpecialCharTok{.}\BuiltInTok{sum}\NormalTok{()}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Breeds with \textgreater{}150 samples (good): }\SpecialCharTok{\{}\NormalTok{(breed\_counts }\OperatorTok{\textgreater{}=} \DecValTok{150}\NormalTok{)}\SpecialCharTok{.}\BuiltInTok{sum}\NormalTok{()}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{Conclusion: }\SpecialCharTok{\{}\NormalTok{(breed\_counts }\OperatorTok{\textless{}} \DecValTok{130}\NormalTok{)}\SpecialCharTok{.}\BuiltInTok{sum}\NormalTok{()}\SpecialCharTok{\}}\SpecialStringTok{ breeds may show lower accuracy due to limited training data."}\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-
-Sample Adequacy Summary:
-  Breeds with <130 samples (may underperform): 62
-  Breeds with 130-150 samples (adequate): 28
-  Breeds with >150 samples (good): 30
-
-Conclusion: 62 breeds may show lower accuracy due to limited training data.
-\end{verbatim}
+\textbf{Trade-off}: 11.5 GB disk space for preprocessed files vs hours
+of saved training time → \textbf{Worth it!}
 
 \section{Models}\label{models}
 
-\begin{itemize}
-\tightlist
-\item
-  Baselines: Start with simple baselines (mean/last value,
-  logistic/linear).
-\item
-  Candidates: Consider tree-based (RF/XGBoost), linear, neural, or
-  specialized models.
-\item
-  Hyperparameters: Document search space and defaults.
-\end{itemize}
+\subsection{Model Selection \& Experimental
+Plan}\label{model-selection-experimental-plan}
 
-\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+\textbf{No Traditional Baselines} - This is a computer vision task with
+120 classes, making simple baselines (logistic regression, decision
+trees) impractical for image data.
+
+\textbf{Transfer Learning Approach}:
 
 \begin{itemize}
 \tightlist
 \item
-  Experiment Plan: A compact matrix listing planned model families, key
-  features, and parameters to try.
+  \textbf{Pre-trained Models}: ResNet50, VGG16, EfficientNetB0 (trained
+  on ImageNet with 1.4M images)
+\item
+  \textbf{Rationale}: Leverage features learned from millions of images,
+  adapt to dog breeds
+\item
+  \textbf{Advantage}: Achieves strong performance without training CNNs
+  from scratch
 \end{itemize}
+
+\subsection{Candidate Models}\label{candidate-models}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.0933}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1467}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2400}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2800}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2400}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Model
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Parameters
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Frozen Trainable
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Fine-tuned Trainable
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Expected Accuracy
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{VGG16} & 15.1M & 424K (2.8\%) & 15.1M (100\%) & 75-82\% \\
+\textbf{ResNet50} & 25M & \textasciitilde500K (2\%) & 25M (100\%) &
+78-85\% \\
+\textbf{EfficientNetB0} & 4.87M & 818K (16.8\%) & 4.87M (100\%) &
+80-87\% \\
+\end{longtable}
+
+\textbf{Why These Models?} - \textbf{VGG16}: Simple architecture with 16
+layers, proven for transfer learning, easy to understand and debug -
+\textbf{ResNet50}: Skip connections enable 50-layer depth without
+vanishing gradients, better feature extraction for complex patterns -
+\textbf{EfficientNetB0}: Modern compound-scaled architecture, best
+accuracy-to-parameters ratio, most efficient
+
+\subsection{Experimental Strategy}\label{experimental-strategy}
+
+\textbf{Phase 1: Frozen Baseline Training}
+
+Train all three models with frozen base layers first:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Purpose}: Validate data pipeline, establish baseline
+  performance, fast iteration (\textasciitilde1-2 hours total)
+\item
+  \textbf{Configuration}: \texttt{trainable\_base:\ false}, LR=0.001,
+  batch=256
+\item
+  \textbf{Expected outcome}: 30-40\% accuracy (limited by frozen
+  features)
+\item
+  \textbf{Decision point}: Select best-performing architecture for
+  fine-tuning
+\end{itemize}
+
+\textbf{Phase 2: Fine-Tuning Best Model}
+
+Unfreeze and fine-tune the top performer from Phase 1:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Purpose}: Adapt pre-trained features to dog breeds, achieve
+  production-ready accuracy
+\item
+  \textbf{Configuration}: \texttt{trainable\_base:\ true}, LR=0.00001
+  (100x lower), batch=64
+\item
+  \textbf{Strategy}: Load frozen checkpoint → unfreeze → retrain with
+  tiny learning rate
+\item
+  \textbf{Expected outcome}: 70-85\% accuracy (full model adaptation)
+\item
+  \textbf{Timeline}: 3-5 hours per model
+\end{itemize}
+
+\textbf{Phase 3: Hyperparameter Tuning (If Needed)}
+
+If Phase 2 results are below 75\% accuracy:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Learning rate search}: Try {[}0.00001, 0.00005, 0.0001{]}
+\item
+  \textbf{Batch size tuning}: Try {[}32, 64, 128{]} for stability vs
+  speed
+\item
+  \textbf{Regularization}: Adjust dropout {[}0.3, 0.5, 0.7{]}
+\item
+  \textbf{Unfreezing strategy}: Try partial unfreezing (last N layers
+  only)
+\end{itemize}
+
+\textbf{Phase 4: Ensemble (Stretch Goal)}
+
+If time and budget allow:
+
+\begin{itemize}
+\tightlist
+\item
+  Train all three architectures (VGG16, ResNet50, EfficientNetB0)
+\item
+  Create ensemble by averaging predictions
+\item
+  Expected boost: +2-5\% accuracy over single best model
+\end{itemize}
+
+\subsection{Success Criteria}\label{success-criteria}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Minimum viable}: 70\% validation accuracy (acceptable for
+  deployment)
+\item
+  \textbf{Target}: 75-80\% validation accuracy (good performance)
+\item
+  \textbf{Stretch}: 85\%+ validation accuracy (state-of-the-art for this
+  dataset)
+\end{itemize}
+
+\subsection{Resource Planning}\label{resource-planning}
+
+\begin{longtable}[]{@{}lllll@{}}
+\toprule\noalign{}
+Phase & Models & Time & Cost & Priority \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Phase 1: Frozen & 3 models & 1-2 hours & \$0.50-1.00 &
+\textbf{Required} \\
+Phase 2: Fine-tune & 1 model & 3-5 hours & \$1.50-2.50 &
+\textbf{Required} \\
+Phase 3: Hyperparameter & 3-5 runs & 10-15 hours & \$5-8 & If needed \\
+Phase 4: Ensemble & 2 more models & 6-10 hours & \$3-5 & Optional \\
+\end{longtable}
+
+\textbf{Total Budget}: \$2-4 (baseline), \$7-13 (full exploration)
 
 \section{Training}\label{training}
 
+\subsection{Training Strategy \& Setup}\label{training-strategy-setup}
+
+\textbf{Two-Phase Training Strategy}:
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1273}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2182}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2727}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2182}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1636}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Phase
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Base Layers
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Learning Rate
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Batch Size
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Purpose
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{Phase 1: Frozen} & Trainable: False & 0.001 & 256 & Fast feature
+extraction, learn task-specific classification head \\
+\textbf{Phase 2: Fine-tuned} & Trainable: True & 0.00001 & 64 & Adapt
+all layers to dog breeds, prevent catastrophic forgetting \\
+\end{longtable}
+
+\textbf{Hyperparameters}:
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2037}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2407}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3519}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2037}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Parameter
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Frozen Phase
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Fine-tuning Phase
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Rationale
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{Learning Rate} & 0.001 & 0.00001 & 100x lower for fine-tuning
+preserves pre-trained features \\
+\textbf{Batch Size} & 256 & 64 & Larger for GPU efficiency; smaller for
+stable gradients \\
+\textbf{Optimizer} & Adam & Adam & Adaptive learning rates work well for
+both \\
+\textbf{Dropout} & 0.5 & 0.5 & Prevent overfitting in classification
+head \\
+\textbf{Early Stopping} & Patience=5 & Patience=5 & Stop if no
+improvement for 5 epochs \\
+\end{longtable}
+
+\subsection{Critical Lessons Learned}\label{critical-lessons-learned}
+
+\textbf{1. Preprocessing Speedup is Essential}
+
+Implemented memory-mapped \texttt{.npy} preprocessing for 100x speedup:
+
 \begin{itemize}
 \tightlist
 \item
-  Strategy: Train/validation/test split strategy, cross-validation, and
-  seeds.
+  \textbf{Before}: Loading images on-the-fly from disk (60+ seconds per
+  epoch overhead)
 \item
-  Reproducibility: Deterministic seeds, config files, and artifact
-  logging.
+  \textbf{After}: Memory-mapped numpy arrays load instantly (0.0006
+  seconds)
 \item
-  Compute: Hardware, runtime, and cost notes.
+  \textbf{Implementation}:
+  \href{../src/dbc/preprocess_images.py}{\texttt{src/dbc/preprocess\_images.py}}
+  - preprocesses once, saves as \texttt{.npy}
+\item
+  \textbf{Impact}: Training speed went from I/O-bound to compute-bound
+  (\textasciitilde40-80 sec/epoch)
+\item
+  \textbf{Why it works}: Operating system maps file directly to memory,
+  no loading overhead
 \end{itemize}
 
-\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+\textbf{2. Fine-Tuning Requires Careful Strategy}
 
-\begin{itemize}
-\tightlist
-\item
-  Split Strategy \& Leakage: Explicitly state split logic (time-aware vs
-  random), test size, and leakage mitigations.
-\item
-  Reproducibility Checklist: Config use, seeds, artifact locations,
-  environment capture (Python + key pkg versions).
-\end{itemize}
+❌ \textbf{Wrong Approach} (causes catastrophic forgetting):
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Evaluate model and save simple plots}
-\ImportTok{import}\NormalTok{ sys}
-\ImportTok{from}\NormalTok{ pathlib }\ImportTok{import}\NormalTok{ Path}
-\NormalTok{sys.path.append(}\BuiltInTok{str}\NormalTok{(Path.cwd() }\OperatorTok{/} \StringTok{\textquotesingle{}src\textquotesingle{}}\NormalTok{))}
-\ImportTok{from}\NormalTok{ dbc.}\BuiltInTok{eval} \ImportTok{import}\NormalTok{ main }\ImportTok{as}\NormalTok{ eval\_main}
-\NormalTok{CONFIG }\OperatorTok{=} \StringTok{\textquotesingle{}configs/exp\_baseline.yaml\textquotesingle{}}
-\NormalTok{eval\_main(CONFIG)}
+\CommentTok{\# Train unfrozen model from scratch}
+\NormalTok{model }\OperatorTok{=}\NormalTok{ build\_transfer\_model(trainable\_base}\OperatorTok{=}\VariableTok{True}\NormalTok{)}
+\NormalTok{model.fit(...)  }\CommentTok{\# Result: 1.23\% accuracy {-} destroyed pre{-}trained features}
 \end{Highlighting}
 \end{Shaded}
 
-\begin{Highlighting}
-\textcolor{black}{FileNotFoundError: [Errno 2] No such file or directory: 'configs/exp\_baseline.yaml'}
-\textcolor{black}{}\textcolor{QuartoInternalColor1}{---------------------------------------------------------------------------}\textcolor{QuartoInternalColor2}{}
-\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor1}{FileNotFoundError}\textcolor{QuartoInternalColor2}{                         Traceback (most recent call last)}
-\textcolor{QuartoInternalColor2}{Cell }\textcolor{QuartoInternalColor3}{In[134], line 7}\textcolor{QuartoInternalColor2}{}
-\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor4}{      5}\textcolor{QuartoInternalColor2}{ }\textcolor{QuartoInternalColor5}{from}\textcolor{QuartoInternalColor2}{ }\textcolor{QuartoInternalColor6}{dbc}\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor6}{.}\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor6}{eval}\textcolor{QuartoInternalColor2}{ }\textcolor{QuartoInternalColor5}{import}\textcolor{QuartoInternalColor2}{ main }\textcolor{QuartoInternalColor5}{as}\textcolor{QuartoInternalColor2}{ eval\_main}
-\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor4}{      6}\textcolor{QuartoInternalColor2}{ CONFIG }\textcolor{QuartoInternalColor7}{=}\textcolor{QuartoInternalColor2}{ }\textcolor{QuartoInternalColor8}{'}\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor8}{configs/exp\_baseline.yaml}\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor8}{'}\textcolor{QuartoInternalColor2}{}
-\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor3}{----> 7}\textcolor{QuartoInternalColor2}{ }\textcolor{QuartoInternalColor2}{eval\_main}\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor2}{(}\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor2}{CONFIG}\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor2}{)}\textcolor{QuartoInternalColor2}{}
-\textcolor{QuartoInternalColor2}{File }\textcolor{QuartoInternalColor3}{\textasciitilde{}/Documents/Artificial Intelligence - Studying/dog\_breed\_classification/src/dbc/eval.py:12}\textcolor{QuartoInternalColor2}{, in }\textcolor{QuartoInternalColor9}{main}\textcolor{QuartoInternalColor10}{(config\_path)}\textcolor{QuartoInternalColor2}{}
-\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor4}{     11}\textcolor{QuartoInternalColor2}{ }\textcolor{QuartoInternalColor5}{def}\textcolor{QuartoInternalColor2}{ }\textcolor{QuartoInternalColor6}{main}\textcolor{QuartoInternalColor2}{(config\_path: }\textcolor{QuartoInternalColor5}{str}\textcolor{QuartoInternalColor2}{ }\textcolor{QuartoInternalColor7}{=}\textcolor{QuartoInternalColor2}{ }\textcolor{QuartoInternalColor8}{"}\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor8}{configs/exp\_baseline.yaml}\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor8}{"}\textcolor{QuartoInternalColor2}{):}
-\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor3}{---> 12}\textcolor{QuartoInternalColor2}{     cfg }\textcolor{QuartoInternalColor7}{=}\textcolor{QuartoInternalColor2}{ }\textcolor{QuartoInternalColor2}{load\_config}\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor2}{(}\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor2}{config\_path}\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor2}{)}\textcolor{QuartoInternalColor2}{}
-\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor4}{     13}\textcolor{QuartoInternalColor2}{     metrics\_path }\textcolor{QuartoInternalColor7}{=}\textcolor{QuartoInternalColor2}{ Path(cfg}\textcolor{QuartoInternalColor7}{.}\textcolor{QuartoInternalColor2}{paths[}\textcolor{QuartoInternalColor8}{'}\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor8}{artifacts}\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor8}{'}\textcolor{QuartoInternalColor2}{]) }\textcolor{QuartoInternalColor7}{/}\textcolor{QuartoInternalColor2}{ }\textcolor{QuartoInternalColor8}{"}\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor8}{metrics.json}\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor8}{"}\textcolor{QuartoInternalColor2}{}
-\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor4}{     14}\textcolor{QuartoInternalColor2}{     }\textcolor{QuartoInternalColor5}{with}\textcolor{QuartoInternalColor2}{ }\textcolor{QuartoInternalColor5}{open}\textcolor{QuartoInternalColor2}{(metrics\_path) }\textcolor{QuartoInternalColor5}{as}\textcolor{QuartoInternalColor2}{ f:}
-\textcolor{QuartoInternalColor2}{File }\textcolor{QuartoInternalColor3}{\textasciitilde{}/Documents/Artificial Intelligence - Studying/dog\_breed\_classification/src/dbc/config.py:9}\textcolor{QuartoInternalColor2}{, in }\textcolor{QuartoInternalColor9}{load\_config}\textcolor{QuartoInternalColor10}{(path)}\textcolor{QuartoInternalColor2}{}
-\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor4}{      7}\textcolor{QuartoInternalColor2}{ }\textcolor{QuartoInternalColor5}{def}\textcolor{QuartoInternalColor2}{ }\textcolor{QuartoInternalColor6}{load\_config}\textcolor{QuartoInternalColor2}{(path: }\textcolor{QuartoInternalColor5}{str}\textcolor{QuartoInternalColor2}{) }\textcolor{QuartoInternalColor7}{-}\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor7}{>}\textcolor{QuartoInternalColor2}{ Dict[}\textcolor{QuartoInternalColor5}{str}\textcolor{QuartoInternalColor2}{, Any]:}
-\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor4}{      8}\textcolor{QuartoInternalColor2}{ }\textcolor{QuartoInternalColor11}{    }\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor8}{"""Load YAML config file and return as dict."""}\textcolor{QuartoInternalColor2}{}
-\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor3}{----> 9}\textcolor{QuartoInternalColor2}{     }\textcolor{QuartoInternalColor5}{with}\textcolor{QuartoInternalColor2}{ }\textcolor{QuartoInternalColor5}{open}\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor2}{(}\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor2}{path}\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor2}{,}\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor2}{ }\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor8}{"}\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor8}{r}\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor8}{"}\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor2}{)}\textcolor{QuartoInternalColor2}{ }\textcolor{QuartoInternalColor5}{as}\textcolor{QuartoInternalColor2}{ f:}
-\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor4}{     10}\textcolor{QuartoInternalColor2}{         }\textcolor{QuartoInternalColor5}{return}\textcolor{QuartoInternalColor2}{ yaml}\textcolor{QuartoInternalColor7}{.}\textcolor{QuartoInternalColor2}{safe\_load(f)}
-\textcolor{QuartoInternalColor2}{}\textcolor{QuartoInternalColor1}{FileNotFoundError}\textcolor{QuartoInternalColor2}{: [Errno 2] No such file or directory: 'configs/exp\_baseline.yaml'}
+✅ \textbf{Correct Approach} (preserves learned features):
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# 1. Load frozen checkpoint FIRST}
+\NormalTok{model }\OperatorTok{=}\NormalTok{ keras.models.load\_model(}\StringTok{\textquotesingle{}frozen\_checkpoint.h5\textquotesingle{}}\NormalTok{)}
+\CommentTok{\# 2. Unfreeze base layers}
+\NormalTok{base\_model.trainable }\OperatorTok{=} \VariableTok{True}
+\CommentTok{\# 3. Recompile with VERY low learning rate (100x lower)}
+\NormalTok{model.}\BuiltInTok{compile}\NormalTok{(optimizer}\OperatorTok{=}\NormalTok{Adam(lr}\OperatorTok{=}\FloatTok{0.00001}\NormalTok{), ...)}
+\CommentTok{\# 4. Fine{-}tune}
+\NormalTok{model.fit(...)  }\CommentTok{\# Result: Steady improvement from frozen baseline}
 \end{Highlighting}
+\end{Shaded}
+
+\textbf{Key Insight}: Must start from frozen weights, then gradually
+adapt with tiny learning rate
+
+\textbf{Implementation}: See
+\href{../src/dbc/finetune_from_checkpoint.py}{\texttt{src/dbc/finetune\_from\_checkpoint.py}}
+
+\subsection{Experiment 1: VGG16 Frozen
+Baseline}\label{experiment-1-vgg16-frozen-baseline}
+
+\textbf{Objective}: Establish baseline performance with frozen VGG16
+base layers
+
+\textbf{Configuration}:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Model}: VGG16 (15.1M parameters, only 424K trainable)
+\item
+  \textbf{Base layers}: Frozen (trainable=False)
+\item
+  \textbf{Learning rate}: 0.001
+\item
+  \textbf{Batch size}: 256
+\item
+  \textbf{Epochs}: 20
+\item
+  \textbf{Experiment ID}: \texttt{exp\_20251007\_100239}
+\end{itemize}
+
+\textbf{Results}:
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Metric & Value \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{Validation Accuracy} & \textbf{31.85\%} \\
+\textbf{Top-5 Accuracy} & \textbf{70.48\%} \\
+\textbf{Training Time} & 24 minutes (80 sec/epoch) \\
+\textbf{Epochs Trained} & 20 (no early stopping) \\
+\textbf{GPU Utilization} & \textasciitilde51\% \\
+\end{longtable}
+
+\textbf{Analysis}:
+
+\textbf{What Worked}:
+
+\begin{itemize}
+\tightlist
+\item
+  Data pipeline validated successfully (preprocessing, augmentation,
+  batching)
+\item
+  Model learning steadily without overfitting
+\item
+  Preprocessing speedup enabled fast training (80 sec/epoch vs 200+ sec
+  without)
+\item
+  Top-5 accuracy of 70\% shows model capturing meaningful features
+\end{itemize}
+
+\textbf{Limitations}:
+
+\begin{itemize}
+\tightlist
+\item
+  31.85\% accuracy insufficient for deployment (target: 75\%+)
+\item
+  Frozen ImageNet features not optimized for fine-grained dog breed
+  distinctions
+\item
+  Generic features miss subtle breed-specific patterns (ear shape, fur
+  texture, snout proportions)
+\end{itemize}
+
+\textbf{Key Insight}: Frozen baseline validates our pipeline but
+confirms we must unfreeze layers to achieve production-ready
+performance.
+
+\textbf{Artifacts}:
+
+\begin{itemize}
+\tightlist
+\item
+  Checkpoint:
+  \href{../experiments/exp_20251007_100239/checkpoints/best_model.h5}{\texttt{experiments/exp\_20251007\_100239/checkpoints/best\_model.h5}}
+\item
+  Config:
+  \href{../configs/exp_vgg16.yaml}{\texttt{configs/exp\_vgg16.yaml}}
+\item
+  Metrics:
+  \href{../experiments/exp_20251007_100239/final_results.json}{\texttt{experiments/exp\_20251007\_100239/final\_results.json}}
+\end{itemize}
+
+\subsection{Experiment 2: EfficientNetB0 Frozen
+Baseline}\label{experiment-2-efficientnetb0-frozen-baseline}
+
+\textbf{Objective}: Compare EfficientNetB0 frozen baseline against VGG16
+
+\textbf{Configuration}:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Model}: EfficientNetB0 (4.87M parameters, 818K trainable)
+\item
+  \textbf{Base layers}: Frozen (trainable=False)
+\item
+  \textbf{Learning rate}: 0.001
+\item
+  \textbf{Batch size}: 256
+\item
+  \textbf{Epochs}: 20 (early stopped at 11)
+\item
+  \textbf{Experiment ID}: \texttt{exp\_20251007\_094305}
+\end{itemize}
+
+\textbf{Results}:
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Metric & Value \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{Validation Accuracy} & \textbf{1.23\%} \\
+\textbf{Top-5 Accuracy} & \textbf{5.62\%} \\
+\textbf{Training Time} & 18 minutes (early stopped) \\
+\textbf{Epochs Trained} & 11 (early stopped) \\
+\end{longtable}
+
+\textbf{Analysis}:
+
+\textbf{Poor Performance}:
+
+\begin{itemize}
+\tightlist
+\item
+  Only 1.23\% accuracy (barely better than random: 0.83\%)
+\item
+  EfficientNetB0 frozen features failed to transfer to dog breeds
+\item
+  Early stopped after 11 epochs due to no improvement
+\item
+  Model not learning effectively
+\end{itemize}
+
+\textbf{Why EfficientNetB0 Failed}:
+
+\begin{itemize}
+\tightlist
+\item
+  EfficientNet architecture uses compound scaling (depth, width,
+  resolution) optimized for efficiency
+\item
+  Frozen features may be too compressed/abstract for our 120-class
+  fine-grained task
+\item
+  VGG16's simpler, wider features transfer better when frozen
+\item
+  EfficientNet likely requires unfreezing to adapt properly
+\end{itemize}
+
+\textbf{Decision}:
+
+\begin{itemize}
+\tightlist
+\item
+  VGG16 is the clear winner for frozen baseline (31.85\% vs 1.23\%)
+\item
+  VGG16 will be used for fine-tuning experiments
+\item
+  EfficientNetB0 may be revisited later if fine-tuned from scratch
+\end{itemize}
+
+\textbf{Artifacts}:
+
+\begin{itemize}
+\tightlist
+\item
+  Checkpoint:
+  \href{../experiments/exp_20251007_094305/checkpoints/best_model.h5}{\texttt{experiments/exp\_20251007\_094305/checkpoints/best\_model.h5}}
+\item
+  Config:
+  \href{../configs/exp_efficientnet.yaml}{\texttt{configs/exp\_efficientnet.yaml}}
+\item
+  Metrics:
+  \href{../experiments/exp_20251007_094305/final_results.json}{\texttt{experiments/exp\_20251007\_094305/final\_results.json}}
+\end{itemize}
+
+\subsection{Experiment 5: ResNet50 Frozen
+Baseline}\label{experiment-5-resnet50-frozen-baseline}
+
+\textbf{Objective}: Compare ResNet50 frozen baseline against VGG16 and
+EfficientNetB0
+
+\textbf{Configuration}:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Model}: ResNet50 (25M parameters, 1.2M trainable)
+\item
+  \textbf{Base layers}: Frozen (trainable=False)
+\item
+  \textbf{Learning rate}: 0.001
+\item
+  \textbf{Batch size}: 256
+\item
+  \textbf{Epochs}: 20
+\item
+  \textbf{Experiment ID}: \texttt{exp\_20251007\_110024}
+\end{itemize}
+
+\textbf{Results}:
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Metric & Value \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{Validation Accuracy} & \textbf{5.45\%} \\
+\textbf{Top-5 Accuracy} & \textbf{18.03\%} \\
+\textbf{Training Time} & \textasciitilde30 minutes \\
+\textbf{Epochs Trained} & 20 (no early stopping) \\
+\end{longtable}
+
+\textbf{Analysis}:
+
+\textbf{Poor Performance}:
+
+\begin{itemize}
+\tightlist
+\item
+  Only 5.45\% accuracy (6.5× better than random but still very poor)
+\item
+  Worse than VGG16 frozen (31.85\%) but better than EfficientNetB0
+  (1.23\%)
+\item
+  Top-5 accuracy shows some learning but not enough
+\end{itemize}
+
+\textbf{Why ResNet50 Underperformed}:
+
+\begin{itemize}
+\tightlist
+\item
+  ResNet's deeper architecture (50 layers with skip connections)
+  requires more training data
+\item
+  Frozen deep features may not transfer well to fine-grained dog breed
+  task
+\item
+  Skip connections optimized for ImageNet classes, not dog breeds
+\item
+  More complex architecture needs unfreezing to adapt properly
+\end{itemize}
+
+\textbf{Comparison}:
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Model & Frozen Accuracy & Ranking \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+VGG16 & 31.85\% & Best \\
+ResNet50 & 5.45\% & Medium \\
+EfficientNetB0 & 1.23\% & Worst \\
+\end{longtable}
+
+\textbf{Decision}:
+
+\begin{itemize}
+\tightlist
+\item
+  VGG16's simpler architecture transfers best when frozen
+\item
+  ResNet50 will be fine-tuned to see if deeper architecture helps when
+  unfrozen
+\item
+  Still worth testing fine-tuning to leverage ResNet's depth
+\end{itemize}
+
+\textbf{Artifacts}:
+
+\begin{itemize}
+\tightlist
+\item
+  Checkpoint:
+  \href{../experiments/exp_20251007_110024/checkpoints/best_model.h5}{\texttt{experiments/exp\_20251007\_110024/checkpoints/best\_model.h5}}
+\item
+  Config:
+  \href{../configs/exp_resnet50.yaml}{\texttt{configs/exp\_resnet50.yaml}}
+\item
+  Metrics:
+  \href{../experiments/exp_20251007_110024/final_results.json}{\texttt{experiments/exp\_20251007\_110024/final\_results.json}}
+\end{itemize}
+
+\subsection{Experiment 3: VGG16 Fine-Tuning (Failed - Catastrophic
+Forgetting)}\label{experiment-3-vgg16-fine-tuning-failed---catastrophic-forgetting}
+
+\textbf{Objective}: Fine-tune VGG16 by unfreezing all layers
+
+\textbf{Configuration}:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Model}: VGG16 (15.1M parameters, all trainable)
+\item
+  \textbf{Base layers}: Unfrozen (trainable=True)
+\item
+  \textbf{Learning rate}: 0.0001
+\item
+  \textbf{Batch size}: 128
+\item
+  \textbf{Training approach}: ❌ \textbf{Trained from scratch with
+  random initialization}
+\item
+  \textbf{Experiment ID}: \texttt{exp\_20251007\_101930}
+\end{itemize}
+
+\textbf{Results}:
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Metric & Value \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{Validation Accuracy} & \textbf{1.23\%} (catastrophic failure) \\
+\textbf{Expected} & 40-50\% (improvement over frozen 31.85\%) \\
+\textbf{Actual} & Worse than random guessing \\
+\end{longtable}
+
+\textbf{Analysis}:
+
+❌ \textbf{Catastrophic Forgetting}:
+
+\begin{itemize}
+\tightlist
+\item
+  Training unfrozen model from scratch \textbf{destroyed pre-trained
+  ImageNet features}
+\item
+  Model started with random weights instead of loading frozen checkpoint
+\item
+  15.1M parameters being optimized from scratch is too many for our 16K
+  training images
+\item
+  Result: Complete failure to learn, worse than the frozen baseline
+\end{itemize}
+
+\textbf{What Went Wrong}:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# WRONG: Creates new model with random weights}
+\NormalTok{model }\OperatorTok{=}\NormalTok{ build\_transfer\_model(trainable\_base}\OperatorTok{=}\VariableTok{True}\NormalTok{)}
+\NormalTok{model.fit(...)  }\CommentTok{\# Destroys pre{-}trained features}
+\end{Highlighting}
+\end{Shaded}
+
+\textbf{Root Cause}:
+
+\begin{itemize}
+\tightlist
+\item
+  Did not load the frozen checkpoint before unfreezing
+\item
+  Started training with random initialization instead of pre-trained
+  weights
+\item
+  High learning rate (0.0001) too aggressive for preserving learned
+  features
+\end{itemize}
+
+\textbf{Key Lesson}:
+
+\begin{quote}
+\textbf{Must load frozen checkpoint FIRST, then unfreeze and retrain
+with very low learning rate}
+\end{quote}
+
+This experiment demonstrated the importance of proper fine-tuning
+strategy and led to creating \texttt{finetune\_from\_checkpoint.py}.
+
+\textbf{Artifacts}: - Config:
+\href{../configs/exp_vgg16_finetune.yaml}{\texttt{configs/exp\_vgg16\_finetune.yaml}}
+- Experiment: \texttt{exp\_20251007\_101930}
+
+\subsection{Experiment 4: VGG16 Fine-Tuning (Correct
+Approach)}\label{experiment-4-vgg16-fine-tuning-correct-approach}
+
+\textbf{Objective}: Properly fine-tune VGG16 by loading frozen
+checkpoint first
+
+\textbf{Configuration}:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Model}: VGG16 (15.1M parameters, all trainable)
+\item
+  \textbf{Base layers}: Unfrozen (trainable=True)
+\item
+  \textbf{Starting point}: \textbf{Loaded frozen checkpoint}
+  (exp\_20251007\_100239)
+\item
+  \textbf{Learning rate}: 0.00001 (100x lower than frozen)
+\item
+  \textbf{Batch size}: 64
+\item
+  \textbf{Epochs}: 20
+\item
+  \textbf{Experiment ID}: \texttt{exp\_20251007\_103850}
+\end{itemize}
+
+\textbf{Results}:
+
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+Metric & Frozen Baseline & Fine-Tuned & Improvement \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{Validation Accuracy} & 31.85\% & \textbf{44.87\%} &
+\textbf{+40.9\%} \\
+\textbf{Training Time} & 24 min & \textasciitilde30 min & - \\
+\textbf{Best Epoch} & 20 & 15 & Early stopped \\
+\end{longtable}
+
+\textbf{Training Progress}:
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Epoch & Val Accuracy & Status \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+1 & 34.80\% & Already beating frozen! \\
+7 & 41.63\% & Steady improvement \\
+11 & 43.27\% & Approaching target \\
+15 & \textbf{44.87\%} & \textbf{Best model} \\
+16-20 & No improvement & Approaching convergence \\
+\end{longtable}
+
+\textbf{Analysis}:
+
+\textbf{Success Factors}:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Loaded frozen checkpoint} before unfreezing - preserved
+  pre-trained features
+\item
+  \textbf{Very low learning rate} (0.00001) allowed gradual adaptation
+  without destroying weights
+\item
+  \textbf{Smaller batch size} (64) provided more stable gradients for
+  fine-tuning
+\item
+  \textbf{Immediate improvement} in Epoch 1 (34.80\% \textgreater{}
+  31.85\%) validated the approach
+\end{itemize}
+
+\textbf{Performance}:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{44.87\% validation accuracy} - significant improvement over
+  frozen baseline
+\item
+  \textbf{40.9\% relative improvement} (31.85\% → 44.87\%)
+\item
+  Model learning steadily without overfitting
+\item
+  Training stable and reproducible
+\end{itemize}
+
+\textbf{Still Below Target}:
+
+\begin{itemize}
+\tightlist
+\item
+  Target was 75\%+ accuracy for deployment
+\item
+  44.87\% is good progress but insufficient for production
+\item
+  May need:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Longer training (more epochs)
+  \item
+    Different architecture (ResNet50, EfficientNet)
+  \item
+    Hyperparameter tuning (learning rate, regularization)
+  \item
+    More sophisticated augmentation
+  \end{itemize}
+\end{itemize}
+
+\textbf{Key Insight}:
+
+The correct fine-tuning approach (load checkpoint → unfreeze → low LR)
+works as expected and delivers measurable improvement. However,
+\textbf{44.87\% accuracy suggests VGG16 may not be the optimal
+architecture} for this fine-grained 120-class dog breed task.
+
+\textbf{Next Steps}:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Try ResNet50 or EfficientNetB0 fine-tuning (deeper/modern
+  architectures)
+\item
+  Experiment with learning rates {[}0.00001, 0.00005, 0.0001{]}
+\item
+  Consider partial unfreezing (only last N layers)
+\item
+  Add more aggressive data augmentation
+\end{enumerate}
+
+\textbf{Artifacts}:
+
+\begin{itemize}
+\tightlist
+\item
+  Checkpoint:
+  \href{../experiments/exp_20251007_103850/checkpoints/best_model.h5}{\texttt{experiments/exp\_20251007\_103850/checkpoints/best\_model.h5}}
+\item
+  Training script:
+  \href{../src/dbc/finetune_from_checkpoint.py}{\texttt{src/dbc/finetune\_from\_checkpoint.py}}
+\end{itemize}
+
+\subsection{Experiment 6: ResNet50
+Fine-Tuning}\label{experiment-6-resnet50-fine-tuning}
+
+\textbf{Objective}: Fine-tune ResNet50 by loading frozen checkpoint and
+unfreezing all layers
+
+\textbf{Configuration}:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Model}: ResNet50 (25M parameters, all trainable)
+\item
+  \textbf{Base layers}: Unfrozen (trainable=True)
+\item
+  \textbf{Starting point}: \textbf{Loaded frozen checkpoint}
+  (exp\_20251007\_110024)
+\item
+  \textbf{Learning rate}: 0.00001 (100x lower than frozen)
+\item
+  \textbf{Batch size}: 32 (reduced from 64 due to memory constraints)
+\item
+  \textbf{Epochs}: 20
+\item
+  \textbf{Experiment ID}: \texttt{exp\_20251007\_120454}
+\end{itemize}
+
+\textbf{Results}:
+
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+Metric & Frozen Baseline & Fine-Tuned & Improvement \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{Validation Accuracy} & 5.45\% & \textbf{24.29\%} &
+\textbf{+346\%} \\
+\textbf{Top-5 Accuracy} & 18.03\% & \textbf{54.42\%} &
+\textbf{+202\%} \\
+\textbf{Training Time} & 30 min & \textasciitilde35 min & - \\
+\textbf{Best Epoch} & 20 & 20 & No early stopping \\
+\end{longtable}
+
+\textbf{Analysis}:
+
+\textbf{Significant Improvement from Frozen}:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{24.29\% validation accuracy} - massive 346\% relative
+  improvement over frozen (5.45\%)
+\item
+  Top-5 accuracy of 54.42\% shows model learning meaningful breed
+  distinctions
+\item
+  Correct fine-tuning approach (load checkpoint → unfreeze → low LR)
+  worked as expected
+\item
+  Training remained stable throughout all 20 epochs
+\end{itemize}
+
+\textbf{Still Poor Overall Performance}:
+
+\begin{itemize}
+\tightlist
+\item
+  24.29\% is far below VGG16 fine-tuned (44.87\%)
+\item
+  Well below target of 75\%+ for production deployment
+\item
+  ResNet50's deeper architecture (50 layers) didn't provide expected
+  advantage
+\item
+  Despite proper fine-tuning strategy, performance remained weak
+\end{itemize}
+
+\textbf{Why ResNet50 Underperformed}:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Architecture mismatch}: ResNet's skip connections and deeper
+  structure may be over-parameterized for our 16K training images
+\item
+  \textbf{Fine-grained task challenge}: 120 visually similar dog breeds
+  require different feature extraction than ImageNet's diverse 1000
+  classes
+\item
+  \textbf{Limited data per class}: \textasciitilde138 images/breed
+  insufficient to properly adapt 25M parameters
+\item
+  \textbf{Batch size impact}: Had to reduce batch size to 32 (vs VGG16's
+  64) which may have affected gradient quality
+\end{itemize}
+
+\textbf{Model Comparison}:
+
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+Model & Frozen & Fine-Tuned & Total Improvement \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{VGG16} & 31.85\% & \textbf{44.87\%} & \textbf{+40.9\%} 🥇 \\
+\textbf{ResNet50} & 5.45\% & \textbf{24.29\%} & \textbf{+346\%} 🥈 \\
+\textbf{EfficientNetB0} & 1.23\% & ❌ OOM & - \\
+\end{longtable}
+
+\textbf{Key Insights}:
+
+\begin{itemize}
+\tightlist
+\item
+  VGG16 remains the best performer (44.87\% vs 24.29\%)
+\item
+  Simpler VGG16 architecture (16 layers) transfers better than complex
+  ResNet50 (50 layers)
+\item
+  More parameters doesn't guarantee better performance with limited
+  fine-grained data
+\item
+  \textbf{Fundamental issue}: Even best model (VGG16 44.87\%) is nowhere
+  near 70-80\% target
+\end{itemize}
+
+\textbf{Critical Problem Identified}:
+
+\begin{quote}
+\textbf{All models severely underperforming} - Even VGG16 at 44.87\% is
+far from expected 70-80\% accuracy for transfer learning on dog breeds.
+This suggests a fundamental issue with our setup:
+\end{quote}
+
+\begin{quote}
+\begin{itemize}
+\tightlist
+\item
+  Data augmentation insufficient?
+\item
+  Learning rate too conservative?
+\item
+  Need longer training (\textgreater20 epochs)?
+\item
+  Classification head architecture too simple?
+\item
+  ImageNet pre-training not suitable for fine-grained tasks?
+\end{itemize}
+\end{quote}
+
+\textbf{Artifacts}:
+
+\begin{itemize}
+\tightlist
+\item
+  Checkpoint:
+  \href{../experiments/exp_20251007_120454/checkpoints/best_model.h5}{\texttt{experiments/exp\_20251007\_120454/checkpoints/best\_model.h5}}
+\item
+  Config:
+  \href{../configs/exp_resnet50.yaml}{\texttt{configs/exp\_resnet50.yaml}}
+\item
+  Metrics:
+  \href{../experiments/exp_20251007_120454/final_results.json}{\texttt{experiments/exp\_20251007\_120454/final\_results.json}}
+\end{itemize}
 
 \section{Evaluation}\label{evaluation}
 
