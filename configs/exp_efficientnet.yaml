@@ -18,7 +18,7 @@ train:
   trainable_base: false   # Freeze base for initial training
 
   # Training parameters
-  batch_size: 32
+  batch_size: 256  # Increased for better GPU utilization
   epochs: 20
   learning_rate: 0.001
   optimizer: "adam"

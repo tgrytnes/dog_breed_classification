@@ -86,16 +86,33 @@ def train_model(config_path: str = "configs/cnn_baseline.yaml"):
 
     # Create data loaders
     print("\nCreating data loaders...")
-    train_gen, val_gen = create_data_loaders(
-        train_metadata_path=train_metadata,
-        val_metadata_path=val_metadata,
-        data_root=data_root,
-        batch_size=batch_size,
-        image_size=image_size,
-        normalize='imagenet',
-        augment_train=True,
-        seed=42
-    )
+
+    # Check if preprocessed data exists (.npy format for memory mapping)
+    preprocessed_dir = Path("artifacts/preprocessed")
+    use_preprocessed = ((preprocessed_dir / "train_data_images.npy").exists() and
+                        (preprocessed_dir / "val_data_images.npy").exists())
+
+    if use_preprocessed:
+        from .data_loader import create_preprocessed_loaders
+        train_gen, val_gen = create_preprocessed_loaders(
+            preprocessed_dir=preprocessed_dir,
+            batch_size=batch_size,
+            augment_train=True,
+            seed=42
+        )
+    else:
+        print("Warning: Preprocessed data not found. Using on-the-fly loading (slower).")
+        print("Run 'PYTHONPATH=src python3 -m dbc.preprocess_images' to preprocess images for faster training.")
+        train_gen, val_gen = create_data_loaders(
+            train_metadata_path=train_metadata,
+            val_metadata_path=val_metadata,
+            data_root=data_root,
+            batch_size=batch_size,
+            image_size=image_size,
+            normalize='imagenet',
+            augment_train=True,
+            seed=42
+        )
 
     # Build model
     print(f"\nBuilding {model_type} model...")
@@ -191,15 +208,32 @@ def train_model(config_path: str = "configs/cnn_baseline.yaml"):
     print(f"\nStarting training for {epochs} epochs...")
     print("="*60)
 
-    history = model.fit(
-        train_gen,
-        validation_data=val_gen,
-        epochs=epochs,
-        steps_per_epoch=steps_per_epoch,
-        validation_steps=validation_steps,
-        callbacks=callbacks,
-        verbose=1
-    )
+    # Adjust workers based on data source
+    if use_preprocessed:
+        # Preprocessed data is already in memory, no need for workers
+        history = model.fit(
+            train_gen,
+            validation_data=val_gen,
+            epochs=epochs,
+            steps_per_epoch=steps_per_epoch,
+            validation_steps=validation_steps,
+            callbacks=callbacks,
+            verbose=1
+        )
+    else:
+        # On-the-fly loading benefits from multiprocessing
+        history = model.fit(
+            train_gen,
+            validation_data=val_gen,
+            epochs=epochs,
+            steps_per_epoch=steps_per_epoch,
+            validation_steps=validation_steps,
+            callbacks=callbacks,
+            verbose=1,
+            workers=8,
+            use_multiprocessing=True,
+            max_queue_size=32
+        )
 
     print("\n" + "="*60)
     print("Training complete!")

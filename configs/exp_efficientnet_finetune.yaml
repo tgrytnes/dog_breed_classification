@@ -1,0 +1,35 @@
+# EfficientNetB0 Fine-Tuning - Unfrozen Training
+# Expected performance: 80-87% validation accuracy (best expected with fine-tuning)
+
+# Experiment metadata
+experiment_name: "EfficientNetB0 Fine-Tuning"
+experiment_description: "Fine-tuning with unfrozen EfficientNetB0 base, 20 epochs, lower learning rate"
+experiment_tags: ["finetune", "efficientnet", "efficientnetb0", "transfer", "unfrozen"]
+
+paths:
+  data: "data/raw"
+  artifacts: "artifacts"
+  experiments: "experiments"
+
+train:
+  # Model architecture
+  model_type: "transfer"
+  base_model: "efficientnetb0"
+  trainable_base: true   # Unfreeze base for fine-tuning
+
+  # Training parameters
+  batch_size: 128  # Reduced batch size for fine-tuning stability
+  epochs: 20
+  learning_rate: 0.0001  # Lower LR for fine-tuning (10x lower than frozen)
+  optimizer: "adam"
+
+  # Regularization
+  dropout: 0.5
+
+  # Early stopping
+  early_stopping: true
+  patience: 5
+
+  # Data
+  image_size: [224, 224]
+  num_classes: 120

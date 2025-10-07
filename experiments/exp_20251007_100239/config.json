@@ -1,0 +1,34 @@
+{
+  "experiment_name": "VGG16 Transfer Learning",
+  "experiment_description": "Transfer learning with frozen VGG16 base, 20 epochs, comparison to ResNet50",
+  "experiment_tags": [
+    "baseline",
+    "vgg16",
+    "transfer",
+    "frozen",
+    "vgg16",
+    "transfer"
+  ],
+  "paths": {
+    "data": "data/raw",
+    "artifacts": "artifacts",
+    "experiments": "experiments"
+  },
+  "train": {
+    "model_type": "transfer",
+    "base_model": "vgg16",
+    "trainable_base": false,
+    "batch_size": 256,
+    "epochs": 20,
+    "learning_rate": 0.001,
+    "optimizer": "adam",
+    "dropout": 0.5,
+    "early_stopping": true,
+    "patience": 5,
+    "image_size": [
+      224,
+      224
+    ],
+    "num_classes": 120
+  }
+}

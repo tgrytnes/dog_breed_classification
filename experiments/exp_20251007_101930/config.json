@@ -1,0 +1,34 @@
+{
+  "experiment_name": "VGG16 Fine-Tuning",
+  "experiment_description": "Fine-tuning with unfrozen VGG16 base, 20 epochs, lower learning rate",
+  "experiment_tags": [
+    "finetune",
+    "vgg16",
+    "transfer",
+    "unfrozen",
+    "vgg16",
+    "transfer"
+  ],
+  "paths": {
+    "data": "data/raw",
+    "artifacts": "artifacts",
+    "experiments": "experiments"
+  },
+  "train": {
+    "model_type": "transfer",
+    "base_model": "vgg16",
+    "trainable_base": true,
+    "batch_size": 128,
+    "epochs": 20,
+    "learning_rate": 0.0001,
+    "optimizer": "adam",
+    "dropout": 0.5,
+    "early_stopping": true,
+    "patience": 5,
+    "image_size": [
+      224,
+      224
+    ],
+    "num_classes": 120
+  }
+}

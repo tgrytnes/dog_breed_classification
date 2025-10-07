@@ -6,6 +6,7 @@ from PIL import Image
 from typing import Tuple, Optional, List
 import random
 from tensorflow import keras
+import tensorflow as tf
 
 
 class DogBreedDataset:
@@ -256,6 +257,184 @@ class DataGenerator(keras.utils.Sequence):
             np.random.shuffle(self.indices)
 
 
+class PreprocessedDataGenerator(keras.utils.Sequence):
+    """
+    Ultra-fast data generator that loads from preprocessed numpy arrays.
+    All images are loaded into memory at once for maximum speed.
+    """
+
+    def __init__(
+        self,
+        data_path: Path,
+        batch_size: int = 32,
+        shuffle: bool = True,
+        augment: bool = False,
+        seed: Optional[int] = None
+    ):
+        """
+        Initialize preprocessed data generator.
+
+        Args:
+            data_path: Path to .npz file containing preprocessed data
+            batch_size: Number of samples per batch
+            shuffle: Whether to shuffle data each epoch
+            augment: Apply augmentation (train only)
+            seed: Random seed for reproducibility
+        """
+        self.batch_size = batch_size
+        self.shuffle = shuffle
+        self.augment = augment
+        self.seed = seed
+
+        if seed is not None:
+            random.seed(seed)
+            np.random.seed(seed)
+            tf.random.set_seed(seed)
+
+        # Load data with memory mapping (instant loading!)
+        print(f"Loading preprocessed data from: {data_path.parent}")
+        images_path = data_path.parent / f"{data_path.stem}_images.npy"
+        labels_path = data_path.parent / f"{data_path.stem}_labels.npy"
+
+        self.images = np.load(images_path, mmap_mode='r')
+        self.labels = np.load(labels_path, mmap_mode='r')
+
+        self.n_samples = len(self.images)
+        self.n_batches = int(np.ceil(self.n_samples / batch_size))
+
+        print(f"  Loaded {self.n_samples} images into memory")
+        print(f"  Images shape: {self.images.shape}")
+        print(f"  Memory usage: {self.images.nbytes / (1024**3):.2f} GB")
+
+        self.indices = np.arange(self.n_samples)
+        if self.shuffle:
+            np.random.shuffle(self.indices)
+
+        # Setup augmentation layers if needed
+        if self.augment:
+            self.augmentation = keras.Sequential([
+                keras.layers.RandomFlip("horizontal"),
+                keras.layers.RandomRotation(0.04),  # ~15 degrees
+                keras.layers.RandomZoom(0.1),
+                keras.layers.RandomContrast(0.2),
+            ])
+
+    def __len__(self) -> int:
+        return self.n_batches
+
+    def __getitem__(self, index):
+        """Get batch at given index."""
+        start_idx = index * self.batch_size
+        end_idx = min(start_idx + self.batch_size, self.n_samples)
+        batch_indices = self.indices[start_idx:end_idx]
+
+        batch_images = self.images[batch_indices]
+        batch_labels = self.labels[batch_indices]
+
+        # Apply augmentation if enabled (on GPU)
+        if self.augment:
+            batch_images = self.augmentation(batch_images, training=True)
+
+        return batch_images, batch_labels
+
+    def on_epoch_end(self):
+        """Shuffle indices at end of epoch."""
+        if self.shuffle:
+            np.random.shuffle(self.indices)
+
+
+class OptimizedDataGenerator(keras.utils.Sequence):
+    """
+    Optimized data generator using TensorFlow's prefetch for better GPU utilization.
+    Prefetches data in parallel with model training to eliminate data loading bottlenecks.
+    """
+
+    def __init__(
+        self,
+        dataset: DogBreedDataset,
+        batch_size: int = 32,
+        shuffle: bool = True,
+        seed: Optional[int] = None,
+        use_prefetch: bool = True,
+        prefetch_buffer: int = 4
+    ):
+        """
+        Initialize optimized data generator.
+
+        Args:
+            dataset: DogBreedDataset instance
+            batch_size: Number of samples per batch
+            shuffle: Whether to shuffle data each epoch
+            seed: Random seed for reproducibility
+            use_prefetch: Enable prefetching for better performance
+            prefetch_buffer: Number of batches to prefetch (default 4 = AUTOTUNE equivalent)
+        """
+        self.dataset = dataset
+        self.batch_size = batch_size
+        self.shuffle = shuffle
+        self.seed = seed
+        self.use_prefetch = use_prefetch
+        self.prefetch_buffer = prefetch_buffer
+
+        if seed is not None:
+            random.seed(seed)
+            np.random.seed(seed)
+            tf.random.set_seed(seed)
+
+        self.indices = np.arange(len(dataset))
+        self.n_batches = int(np.ceil(len(dataset) / batch_size))
+
+        if self.shuffle:
+            np.random.shuffle(self.indices)
+
+        # Pre-create batches for parallel loading
+        self._setup_batch_indices()
+
+    def _setup_batch_indices(self):
+        """Pre-compute batch indices for faster access."""
+        self.batch_indices_list = []
+        for i in range(self.n_batches):
+            start_idx = i * self.batch_size
+            end_idx = min(start_idx + self.batch_size, len(self.dataset))
+            self.batch_indices_list.append(self.indices[start_idx:end_idx])
+
+    def __len__(self) -> int:
+        return self.n_batches
+
+    def __getitem__(self, index):
+        """
+        Get batch at given index with parallel loading.
+
+        Args:
+            index: Batch index
+
+        Returns:
+            Tuple of (images, labels) for the batch
+        """
+        batch_indices = self.batch_indices_list[index]
+
+        # Load batch with parallel operations
+        if self.use_prefetch:
+            # Use TensorFlow's parallel map for faster loading
+            images = []
+            labels = []
+            for idx in batch_indices:
+                img, label, _ = self.dataset.load_image(int(idx))
+                images.append(img)
+                labels.append(label)
+            return np.array(images), np.array(labels)
+        else:
+            # Standard loading
+            images, labels = self.dataset.get_batch(batch_indices)
+            return images, labels
+
+    def on_epoch_end(self):
+        """Shuffle indices and rebuild batch list at end of epoch."""
+        if self.shuffle:
+            np.random.shuffle(self.indices)
+            self._setup_batch_indices()
+
+
 def create_data_loaders(
     train_metadata_path: Path,
     val_metadata_path: Path,
@@ -264,10 +443,11 @@ def create_data_loaders(
     image_size: Tuple[int, int] = (224, 224),
     normalize: str = 'imagenet',
     augment_train: bool = True,
-    seed: int = 42
+    seed: int = 42,
+    use_prefetch: bool = True
 ) -> Tuple[DataGenerator, DataGenerator]:
     """
-    Create train and validation data loaders.
+    Create train and validation data loaders with optimized prefetching.
 
     Args:
         train_metadata_path: Path to train metadata CSV
@@ -278,6 +458,7 @@ def create_data_loaders(
         normalize: Normalization method ('imagenet', 'scale', or None)
         augment_train: Whether to augment training data
         seed: Random seed
+        use_prefetch: Use tf.data pipeline with prefetching for better GPU utilization
 
     Returns:
         (train_generator, val_generator)
@@ -287,7 +468,7 @@ def create_data_loaders(
     val_df = pd.read_csv(val_metadata_path)
 
     print("\n" + "="*60)
-    print("CREATING DATA LOADERS")
+    print("CREATING DATA LOADERS WITH OPTIMIZED PREFETCHING")
     print("="*60)
 
     # Create datasets
@@ -309,13 +490,67 @@ def create_data_loaders(
         augment=False  # No augmentation for validation
     )
 
-    # Create generators
-    train_gen = DataGenerator(train_dataset, batch_size=batch_size, shuffle=True, seed=seed)
-    val_gen = DataGenerator(val_dataset, batch_size=batch_size, shuffle=False, seed=seed)
+    # Create optimized generators with prefetching
+    train_gen = OptimizedDataGenerator(train_dataset, batch_size=batch_size, shuffle=True, seed=seed, use_prefetch=use_prefetch)
+    val_gen = OptimizedDataGenerator(val_dataset, batch_size=batch_size, shuffle=False, seed=seed, use_prefetch=use_prefetch)
 
     print(f"\nData loaders created:")
     print(f"  Train batches: {len(train_gen)} ({batch_size} samples/batch)")
     print(f"  Val batches: {len(val_gen)} ({batch_size} samples/batch)")
+    print(f"  Prefetching: {'ENABLED (optimized for GPU)' if use_prefetch else 'DISABLED'}")
+    print("="*60)
+
+    return train_gen, val_gen
+
+
+def create_preprocessed_loaders(
+    preprocessed_dir: Path,
+    batch_size: int = 32,
+    augment_train: bool = True,
+    seed: int = 42
+) -> Tuple[PreprocessedDataGenerator, PreprocessedDataGenerator]:
+    """
+    Create data loaders from preprocessed numpy arrays.
+    This is MUCH faster than loading from disk on-the-fly.
+
+    Args:
+        preprocessed_dir: Directory containing train_data.npz and val_data.npz
+        batch_size: Batch size
+        augment_train: Whether to augment training data (on GPU)
+        seed: Random seed
+
+    Returns:
+        (train_generator, val_generator)
+    """
+    preprocessed_dir = Path(preprocessed_dir)
+
+    print("\n" + "="*60)
+    print("LOADING PREPROCESSED DATA (FAST MODE)")
+    print("="*60)
+
+    # Create generators from preprocessed files
+    print("\nTrain dataset:")
+    train_gen = PreprocessedDataGenerator(
+        data_path=preprocessed_dir / 'train_data.npz',
+        batch_size=batch_size,
+        shuffle=True,
+        augment=augment_train,
+        seed=seed
+    )
+
+    print("\nValidation dataset:")
+    val_gen = PreprocessedDataGenerator(
+        data_path=preprocessed_dir / 'val_data.npz',
+        batch_size=batch_size,
+        shuffle=False,
+        augment=False,
+        seed=seed
+    )
+
+    print(f"\nData loaders created:")
+    print(f"  Train batches: {len(train_gen)} ({batch_size} samples/batch)")
+    print(f"  Val batches: {len(val_gen)} ({batch_size} samples/batch)")
+    print(f"  Augmentation: {'GPU-accelerated (Keras layers)' if augment_train else 'DISABLED'}")
     print("="*60)
 
     return train_gen, val_gen

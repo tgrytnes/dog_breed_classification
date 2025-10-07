@@ -429,6 +429,1032 @@
         "checkpoint_path": "experiments/exp_20251007_063425/checkpoints/best_model.h5",
         "completed_at": "2025-10-07T07:22:24"
       }
+    },
+    {
+      "experiment_id": "exp_20251007_080143",
+      "name": "EfficientNetB0 Transfer Learning",
+      "description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+      "tags": [
+        "baseline",
+        "efficientnet",
+        "efficientnetb0",
+        "transfer",
+        "frozen",
+        "efficientnetb0",
+        "transfer"
+      ],
+      "created_at": "2025-10-07T08:01:43",
+      "status": "configured",
+      "config": {
+        "experiment_name": "EfficientNetB0 Transfer Learning",
+        "experiment_description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+        "experiment_tags": [
+          "baseline",
+          "efficientnet",
+          "efficientnetb0",
+          "transfer",
+          "frozen",
+          "efficientnetb0",
+          "transfer"
+        ],
+        "paths": {
+          "data": "data/raw",
+          "artifacts": "artifacts",
+          "experiments": "experiments"
+        },
+        "train": {
+          "model_type": "transfer",
+          "base_model": "efficientnetb0",
+          "trainable_base": false,
+          "batch_size": 32,
+          "epochs": 20,
+          "learning_rate": 0.001,
+          "optimizer": "adam",
+          "dropout": 0.5,
+          "early_stopping": true,
+          "patience": 5,
+          "image_size": [
+            224,
+            224
+          ],
+          "num_classes": 120
+        }
+      }
+    },
+    {
+      "experiment_id": "exp_20251007_080414",
+      "name": "EfficientNetB0 Transfer Learning",
+      "description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+      "tags": [
+        "baseline",
+        "efficientnet",
+        "efficientnetb0",
+        "transfer",
+        "frozen",
+        "efficientnetb0",
+        "transfer"
+      ],
+      "created_at": "2025-10-07T08:04:14",
+      "status": "configured",
+      "config": {
+        "experiment_name": "EfficientNetB0 Transfer Learning",
+        "experiment_description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+        "experiment_tags": [
+          "baseline",
+          "efficientnet",
+          "efficientnetb0",
+          "transfer",
+          "frozen",
+          "efficientnetb0",
+          "transfer"
+        ],
+        "paths": {
+          "data": "data/raw",
+          "artifacts": "artifacts",
+          "experiments": "experiments"
+        },
+        "train": {
+          "model_type": "transfer",
+          "base_model": "efficientnetb0",
+          "trainable_base": false,
+          "batch_size": 32,
+          "epochs": 20,
+          "learning_rate": 0.001,
+          "optimizer": "adam",
+          "dropout": 0.5,
+          "early_stopping": true,
+          "patience": 5,
+          "image_size": [
+            224,
+            224
+          ],
+          "num_classes": 120
+        }
+      }
+    },
+    {
+      "experiment_id": "exp_20251007_081420",
+      "name": "EfficientNetB0 Transfer Learning",
+      "description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+      "tags": [
+        "baseline",
+        "efficientnet",
+        "efficientnetb0",
+        "transfer",
+        "frozen",
+        "efficientnetb0",
+        "transfer"
+      ],
+      "created_at": "2025-10-07T08:14:20",
+      "status": "configured",
+      "config": {
+        "experiment_name": "EfficientNetB0 Transfer Learning",
+        "experiment_description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+        "experiment_tags": [
+          "baseline",
+          "efficientnet",
+          "efficientnetb0",
+          "transfer",
+          "frozen",
+          "efficientnetb0",
+          "transfer"
+        ],
+        "paths": {
+          "data": "data/raw",
+          "artifacts": "artifacts",
+          "experiments": "experiments"
+        },
+        "train": {
+          "model_type": "transfer",
+          "base_model": "efficientnetb0",
+          "trainable_base": false,
+          "batch_size": 32,
+          "epochs": 20,
+          "learning_rate": 0.001,
+          "optimizer": "adam",
+          "dropout": 0.5,
+          "early_stopping": true,
+          "patience": 5,
+          "image_size": [
+            224,
+            224
+          ],
+          "num_classes": 120
+        }
+      }
+    },
+    {
+      "experiment_id": "exp_20251007_082013",
+      "name": "EfficientNetB0 Transfer Learning",
+      "description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+      "tags": [
+        "baseline",
+        "efficientnet",
+        "efficientnetb0",
+        "transfer",
+        "frozen",
+        "efficientnetb0",
+        "transfer"
+      ],
+      "created_at": "2025-10-07T08:20:13",
+      "status": "configured",
+      "config": {
+        "experiment_name": "EfficientNetB0 Transfer Learning",
+        "experiment_description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+        "experiment_tags": [
+          "baseline",
+          "efficientnet",
+          "efficientnetb0",
+          "transfer",
+          "frozen",
+          "efficientnetb0",
+          "transfer"
+        ],
+        "paths": {
+          "data": "data/raw",
+          "artifacts": "artifacts",
+          "experiments": "experiments"
+        },
+        "train": {
+          "model_type": "transfer",
+          "base_model": "efficientnetb0",
+          "trainable_base": false,
+          "batch_size": 128,
+          "epochs": 20,
+          "learning_rate": 0.001,
+          "optimizer": "adam",
+          "dropout": 0.5,
+          "early_stopping": true,
+          "patience": 5,
+          "image_size": [
+            224,
+            224
+          ],
+          "num_classes": 120
+        }
+      }
+    },
+    {
+      "experiment_id": "exp_20251007_082303",
+      "name": "EfficientNetB0 Transfer Learning",
+      "description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+      "tags": [
+        "baseline",
+        "efficientnet",
+        "efficientnetb0",
+        "transfer",
+        "frozen",
+        "efficientnetb0",
+        "transfer"
+      ],
+      "created_at": "2025-10-07T08:23:03",
+      "status": "configured",
+      "config": {
+        "experiment_name": "EfficientNetB0 Transfer Learning",
+        "experiment_description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+        "experiment_tags": [
+          "baseline",
+          "efficientnet",
+          "efficientnetb0",
+          "transfer",
+          "frozen",
+          "efficientnetb0",
+          "transfer"
+        ],
+        "paths": {
+          "data": "data/raw",
+          "artifacts": "artifacts",
+          "experiments": "experiments"
+        },
+        "train": {
+          "model_type": "transfer",
+          "base_model": "efficientnetb0",
+          "trainable_base": false,
+          "batch_size": 256,
+          "epochs": 20,
+          "learning_rate": 0.001,
+          "optimizer": "adam",
+          "dropout": 0.5,
+          "early_stopping": true,
+          "patience": 5,
+          "image_size": [
+            224,
+            224
+          ],
+          "num_classes": 120
+        }
+      }
+    },
+    {
+      "experiment_id": "exp_20251007_082428",
+      "name": "EfficientNetB0 Transfer Learning",
+      "description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+      "tags": [
+        "baseline",
+        "efficientnet",
+        "efficientnetb0",
+        "transfer",
+        "frozen",
+        "efficientnetb0",
+        "transfer"
+      ],
+      "created_at": "2025-10-07T08:24:28",
+      "status": "configured",
+      "config": {
+        "experiment_name": "EfficientNetB0 Transfer Learning",
+        "experiment_description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+        "experiment_tags": [
+          "baseline",
+          "efficientnet",
+          "efficientnetb0",
+          "transfer",
+          "frozen",
+          "efficientnetb0",
+          "transfer"
+        ],
+        "paths": {
+          "data": "data/raw",
+          "artifacts": "artifacts",
+          "experiments": "experiments"
+        },
+        "train": {
+          "model_type": "transfer",
+          "base_model": "efficientnetb0",
+          "trainable_base": false,
+          "batch_size": 128,
+          "epochs": 20,
+          "learning_rate": 0.001,
+          "optimizer": "adam",
+          "dropout": 0.5,
+          "early_stopping": true,
+          "patience": 5,
+          "image_size": [
+            224,
+            224
+          ],
+          "num_classes": 120
+        }
+      }
+    },
+    {
+      "experiment_id": "exp_20251007_082630",
+      "name": "EfficientNetB0 Transfer Learning",
+      "description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+      "tags": [
+        "baseline",
+        "efficientnet",
+        "efficientnetb0",
+        "transfer",
+        "frozen",
+        "efficientnetb0",
+        "transfer"
+      ],
+      "created_at": "2025-10-07T08:26:30",
+      "status": "configured",
+      "config": {
+        "experiment_name": "EfficientNetB0 Transfer Learning",
+        "experiment_description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+        "experiment_tags": [
+          "baseline",
+          "efficientnet",
+          "efficientnetb0",
+          "transfer",
+          "frozen",
+          "efficientnetb0",
+          "transfer"
+        ],
+        "paths": {
+          "data": "data/raw",
+          "artifacts": "artifacts",
+          "experiments": "experiments"
+        },
+        "train": {
+          "model_type": "transfer",
+          "base_model": "efficientnetb0",
+          "trainable_base": false,
+          "batch_size": 128,
+          "epochs": 20,
+          "learning_rate": 0.001,
+          "optimizer": "adam",
+          "dropout": 0.5,
+          "early_stopping": true,
+          "patience": 5,
+          "image_size": [
+            224,
+            224
+          ],
+          "num_classes": 120
+        }
+      }
+    },
+    {
+      "experiment_id": "exp_20251007_083848",
+      "name": "EfficientNetB0 Transfer Learning",
+      "description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+      "tags": [
+        "baseline",
+        "efficientnet",
+        "efficientnetb0",
+        "transfer",
+        "frozen",
+        "efficientnetb0",
+        "transfer"
+      ],
+      "created_at": "2025-10-07T08:38:48",
+      "status": "configured",
+      "config": {
+        "experiment_name": "EfficientNetB0 Transfer Learning",
+        "experiment_description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+        "experiment_tags": [
+          "baseline",
+          "efficientnet",
+          "efficientnetb0",
+          "transfer",
+          "frozen",
+          "efficientnetb0",
+          "transfer"
+        ],
+        "paths": {
+          "data": "data/raw",
+          "artifacts": "artifacts",
+          "experiments": "experiments"
+        },
+        "train": {
+          "model_type": "transfer",
+          "base_model": "efficientnetb0",
+          "trainable_base": false,
+          "batch_size": 256,
+          "epochs": 20,
+          "learning_rate": 0.001,
+          "optimizer": "adam",
+          "dropout": 0.5,
+          "early_stopping": true,
+          "patience": 5,
+          "image_size": [
+            224,
+            224
+          ],
+          "num_classes": 120
+        }
+      }
+    },
+    {
+      "experiment_id": "exp_20251007_085130",
+      "name": "EfficientNetB0 Transfer Learning",
+      "description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+      "tags": [
+        "baseline",
+        "efficientnet",
+        "efficientnetb0",
+        "transfer",
+        "frozen",
+        "efficientnetb0",
+        "transfer"
+      ],
+      "created_at": "2025-10-07T08:51:30",
+      "status": "configured",
+      "config": {
+        "experiment_name": "EfficientNetB0 Transfer Learning",
+        "experiment_description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+        "experiment_tags": [
+          "baseline",
+          "efficientnet",
+          "efficientnetb0",
+          "transfer",
+          "frozen",
+          "efficientnetb0",
+          "transfer"
+        ],
+        "paths": {
+          "data": "data/raw",
+          "artifacts": "artifacts",
+          "experiments": "experiments"
+        },
+        "train": {
+          "model_type": "transfer",
+          "base_model": "efficientnetb0",
+          "trainable_base": false,
+          "batch_size": 256,
+          "epochs": 20,
+          "learning_rate": 0.001,
+          "optimizer": "adam",
+          "dropout": 0.5,
+          "early_stopping": true,
+          "patience": 5,
+          "image_size": [
+            224,
+            224
+          ],
+          "num_classes": 120
+        }
+      }
+    },
+    {
+      "experiment_id": "exp_20251007_085349",
+      "name": "EfficientNetB0 Transfer Learning",
+      "description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+      "tags": [
+        "baseline",
+        "efficientnet",
+        "efficientnetb0",
+        "transfer",
+        "frozen",
+        "efficientnetb0",
+        "transfer"
+      ],
+      "created_at": "2025-10-07T08:53:49",
+      "status": "configured",
+      "config": {
+        "experiment_name": "EfficientNetB0 Transfer Learning",
+        "experiment_description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+        "experiment_tags": [
+          "baseline",
+          "efficientnet",
+          "efficientnetb0",
+          "transfer",
+          "frozen",
+          "efficientnetb0",
+          "transfer"
+        ],
+        "paths": {
+          "data": "data/raw",
+          "artifacts": "artifacts",
+          "experiments": "experiments"
+        },
+        "train": {
+          "model_type": "transfer",
+          "base_model": "efficientnetb0",
+          "trainable_base": false,
+          "batch_size": 128,
+          "epochs": 20,
+          "learning_rate": 0.001,
+          "optimizer": "adam",
+          "dropout": 0.5,
+          "early_stopping": true,
+          "patience": 5,
+          "image_size": [
+            224,
+            224
+          ],
+          "num_classes": 120
+        }
+      }
+    },
+    {
+      "experiment_id": "exp_20251007_090657",
+      "name": "EfficientNetB0 Transfer Learning",
+      "description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+      "tags": [
+        "baseline",
+        "efficientnet",
+        "efficientnetb0",
+        "transfer",
+        "frozen",
+        "efficientnetb0",
+        "transfer"
+      ],
+      "created_at": "2025-10-07T09:06:57",
+      "status": "configured",
+      "config": {
+        "experiment_name": "EfficientNetB0 Transfer Learning",
+        "experiment_description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+        "experiment_tags": [
+          "baseline",
+          "efficientnet",
+          "efficientnetb0",
+          "transfer",
+          "frozen",
+          "efficientnetb0",
+          "transfer"
+        ],
+        "paths": {
+          "data": "data/raw",
+          "artifacts": "artifacts",
+          "experiments": "experiments"
+        },
+        "train": {
+          "model_type": "transfer",
+          "base_model": "efficientnetb0",
+          "trainable_base": false,
+          "batch_size": 128,
+          "epochs": 1,
+          "learning_rate": 0.001,
+          "optimizer": "adam",
+          "dropout": 0.5,
+          "early_stopping": true,
+          "patience": 5,
+          "image_size": [
+            224,
+            224
+          ],
+          "num_classes": 120
+        }
+      }
+    },
+    {
+      "experiment_id": "exp_20251007_093139",
+      "name": "EfficientNetB0 Transfer Learning",
+      "description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+      "tags": [
+        "baseline",
+        "efficientnet",
+        "efficientnetb0",
+        "transfer",
+        "frozen",
+        "efficientnetb0",
+        "transfer"
+      ],
+      "created_at": "2025-10-07T09:31:39",
+      "status": "completed",
+      "config": {
+        "experiment_name": "EfficientNetB0 Transfer Learning",
+        "experiment_description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+        "experiment_tags": [
+          "baseline",
+          "efficientnet",
+          "efficientnetb0",
+          "transfer",
+          "frozen",
+          "efficientnetb0",
+          "transfer"
+        ],
+        "paths": {
+          "data": "data/raw",
+          "artifacts": "artifacts",
+          "experiments": "experiments"
+        },
+        "train": {
+          "model_type": "transfer",
+          "base_model": "efficientnetb0",
+          "trainable_base": false,
+          "batch_size": 128,
+          "epochs": 1,
+          "learning_rate": 0.001,
+          "optimizer": "adam",
+          "dropout": 0.5,
+          "early_stopping": true,
+          "patience": 5,
+          "image_size": [
+            224,
+            224
+          ],
+          "num_classes": 120
+        }
+      },
+      "final_results": {
+        "experiment_id": "exp_20251007_093139",
+        "model_type": "transfer",
+        "base_model": "efficientnetb0",
+        "val_loss": 4.783865451812744,
+        "val_accuracy": 0.007367386948317289,
+        "val_top5_accuracy": 0.05623771995306015,
+        "epochs_trained": 1,
+        "batch_size": 128,
+        "learning_rate": 0.001,
+        "image_size": [
+          224,
+          224
+        ],
+        "timestamp": "2025-10-07T09:33:52",
+        "config_path": "configs/exp_efficientnet.yaml",
+        "checkpoint_path": "experiments/exp_20251007_093139/checkpoints/best_model.h5",
+        "completed_at": "2025-10-07T09:33:52"
+      }
+    },
+    {
+      "experiment_id": "exp_20251007_093432",
+      "name": "EfficientNetB0 Transfer Learning",
+      "description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+      "tags": [
+        "baseline",
+        "efficientnet",
+        "efficientnetb0",
+        "transfer",
+        "frozen",
+        "efficientnetb0",
+        "transfer"
+      ],
+      "created_at": "2025-10-07T09:34:32",
+      "status": "completed",
+      "config": {
+        "experiment_name": "EfficientNetB0 Transfer Learning",
+        "experiment_description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+        "experiment_tags": [
+          "baseline",
+          "efficientnet",
+          "efficientnetb0",
+          "transfer",
+          "frozen",
+          "efficientnetb0",
+          "transfer"
+        ],
+        "paths": {
+          "data": "data/raw",
+          "artifacts": "artifacts",
+          "experiments": "experiments"
+        },
+        "train": {
+          "model_type": "transfer",
+          "base_model": "efficientnetb0",
+          "trainable_base": false,
+          "batch_size": 128,
+          "epochs": 1,
+          "learning_rate": 0.001,
+          "optimizer": "adam",
+          "dropout": 0.5,
+          "early_stopping": true,
+          "patience": 5,
+          "image_size": [
+            224,
+            224
+          ],
+          "num_classes": 120
+        }
+      },
+      "final_results": {
+        "experiment_id": "exp_20251007_093432",
+        "model_type": "transfer",
+        "base_model": "efficientnetb0",
+        "val_loss": 4.785332202911377,
+        "val_accuracy": 0.011542239226400852,
+        "val_top5_accuracy": 0.055255401879549026,
+        "epochs_trained": 1,
+        "batch_size": 128,
+        "learning_rate": 0.001,
+        "image_size": [
+          224,
+          224
+        ],
+        "timestamp": "2025-10-07T09:35:15",
+        "config_path": "configs/exp_efficientnet.yaml",
+        "checkpoint_path": "experiments/exp_20251007_093432/checkpoints/best_model.h5",
+        "completed_at": "2025-10-07T09:35:15"
+      }
+    },
+    {
+      "experiment_id": "exp_20251007_094041",
+      "name": "EfficientNetB0 Transfer Learning",
+      "description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+      "tags": [
+        "baseline",
+        "efficientnet",
+        "efficientnetb0",
+        "transfer",
+        "frozen",
+        "efficientnetb0",
+        "transfer"
+      ],
+      "created_at": "2025-10-07T09:40:41",
+      "status": "configured",
+      "config": {
+        "experiment_name": "EfficientNetB0 Transfer Learning",
+        "experiment_description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+        "experiment_tags": [
+          "baseline",
+          "efficientnet",
+          "efficientnetb0",
+          "transfer",
+          "frozen",
+          "efficientnetb0",
+          "transfer"
+        ],
+        "paths": {
+          "data": "data/raw",
+          "artifacts": "artifacts",
+          "experiments": "experiments"
+        },
+        "train": {
+          "model_type": "transfer",
+          "base_model": "efficientnetb0",
+          "trainable_base": false,
+          "batch_size": 128,
+          "epochs": 20,
+          "learning_rate": 0.001,
+          "optimizer": "adam",
+          "dropout": 0.5,
+          "early_stopping": true,
+          "patience": 5,
+          "image_size": [
+            224,
+            224
+          ],
+          "num_classes": 120
+        }
+      }
+    },
+    {
+      "experiment_id": "exp_20251007_094305",
+      "name": "EfficientNetB0 Transfer Learning",
+      "description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+      "tags": [
+        "baseline",
+        "efficientnet",
+        "efficientnetb0",
+        "transfer",
+        "frozen",
+        "efficientnetb0",
+        "transfer"
+      ],
+      "created_at": "2025-10-07T09:43:05",
+      "status": "completed",
+      "config": {
+        "experiment_name": "EfficientNetB0 Transfer Learning",
+        "experiment_description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs, modern efficient architecture",
+        "experiment_tags": [
+          "baseline",
+          "efficientnet",
+          "efficientnetb0",
+          "transfer",
+          "frozen",
+          "efficientnetb0",
+          "transfer"
+        ],
+        "paths": {
+          "data": "data/raw",
+          "artifacts": "artifacts",
+          "experiments": "experiments"
+        },
+        "train": {
+          "model_type": "transfer",
+          "base_model": "efficientnetb0",
+          "trainable_base": false,
+          "batch_size": 256,
+          "epochs": 20,
+          "learning_rate": 0.001,
+          "optimizer": "adam",
+          "dropout": 0.5,
+          "early_stopping": true,
+          "patience": 5,
+          "image_size": [
+            224,
+            224
+          ],
+          "num_classes": 120
+        }
+      },
+      "final_results": {
+        "experiment_id": "exp_20251007_094305",
+        "model_type": "transfer",
+        "base_model": "efficientnetb0",
+        "val_loss": 4.779781818389893,
+        "val_accuracy": 0.01227897871285677,
+        "val_top5_accuracy": 0.05623771995306015,
+        "epochs_trained": 11,
+        "batch_size": 256,
+        "learning_rate": 0.001,
+        "image_size": [
+          224,
+          224
+        ],
+        "timestamp": "2025-10-07T09:47:36",
+        "config_path": "configs/exp_efficientnet.yaml",
+        "checkpoint_path": "experiments/exp_20251007_094305/checkpoints/best_model.h5",
+        "completed_at": "2025-10-07T09:47:36"
+      }
+    },
+    {
+      "experiment_id": "exp_20251007_100239",
+      "name": "VGG16 Transfer Learning",
+      "description": "Transfer learning with frozen VGG16 base, 20 epochs, comparison to ResNet50",
+      "tags": [
+        "baseline",
+        "vgg16",
+        "transfer",
+        "frozen",
+        "vgg16",
+        "transfer"
+      ],
+      "created_at": "2025-10-07T10:02:39",
+      "status": "completed",
+      "config": {
+        "experiment_name": "VGG16 Transfer Learning",
+        "experiment_description": "Transfer learning with frozen VGG16 base, 20 epochs, comparison to ResNet50",
+        "experiment_tags": [
+          "baseline",
+          "vgg16",
+          "transfer",
+          "frozen",
+          "vgg16",
+          "transfer"
+        ],
+        "paths": {
+          "data": "data/raw",
+          "artifacts": "artifacts",
+          "experiments": "experiments"
+        },
+        "train": {
+          "model_type": "transfer",
+          "base_model": "vgg16",
+          "trainable_base": false,
+          "batch_size": 256,
+          "epochs": 20,
+          "learning_rate": 0.001,
+          "optimizer": "adam",
+          "dropout": 0.5,
+          "early_stopping": true,
+          "patience": 5,
+          "image_size": [
+            224,
+            224
+          ],
+          "num_classes": 120
+        }
+      },
+      "final_results": {
+        "experiment_id": "exp_20251007_100239",
+        "model_type": "transfer",
+        "base_model": "vgg16",
+        "val_loss": 2.440540313720703,
+        "val_accuracy": 0.31851670145988464,
+        "val_top5_accuracy": 0.7048133611679077,
+        "epochs_trained": 20,
+        "batch_size": 256,
+        "learning_rate": 0.001,
+        "image_size": [
+          224,
+          224
+        ],
+        "timestamp": "2025-10-07T10:16:10",
+        "config_path": "configs/exp_vgg16.yaml",
+        "checkpoint_path": "experiments/exp_20251007_100239/checkpoints/best_model.h5",
+        "completed_at": "2025-10-07T10:16:10"
+      }
+    },
+    {
+      "experiment_id": "exp_20251007_101930",
+      "name": "VGG16 Fine-Tuning",
+      "description": "Fine-tuning with unfrozen VGG16 base, 20 epochs, lower learning rate",
+      "tags": [
+        "finetune",
+        "vgg16",
+        "transfer",
+        "unfrozen",
+        "vgg16",
+        "transfer"
+      ],
+      "created_at": "2025-10-07T10:19:30",
+      "status": "completed",
+      "config": {
+        "experiment_name": "VGG16 Fine-Tuning",
+        "experiment_description": "Fine-tuning with unfrozen VGG16 base, 20 epochs, lower learning rate",
+        "experiment_tags": [
+          "finetune",
+          "vgg16",
+          "transfer",
+          "unfrozen",
+          "vgg16",
+          "transfer"
+        ],
+        "paths": {
+          "data": "data/raw",
+          "artifacts": "artifacts",
+          "experiments": "experiments"
+        },
+        "train": {
+          "model_type": "transfer",
+          "base_model": "vgg16",
+          "trainable_base": true,
+          "batch_size": 128,
+          "epochs": 20,
+          "learning_rate": 0.0001,
+          "optimizer": "adam",
+          "dropout": 0.5,
+          "early_stopping": true,
+          "patience": 5,
+          "image_size": [
+            224,
+            224
+          ],
+          "num_classes": 120
+        }
+      },
+      "final_results": {
+        "experiment_id": "exp_20251007_101930",
+        "model_type": "transfer",
+        "base_model": "vgg16",
+        "val_loss": 4.786749839782715,
+        "val_accuracy": 0.01227897871285677,
+        "val_top5_accuracy": 0.05623771995306015,
+        "epochs_trained": 7,
+        "batch_size": 128,
+        "learning_rate": 0.0001,
+        "image_size": [
+          224,
+          224
+        ],
+        "timestamp": "2025-10-07T10:25:47",
+        "config_path": "configs/exp_vgg16_finetune.yaml",
+        "checkpoint_path": "experiments/exp_20251007_101930/checkpoints/best_model.h5",
+        "completed_at": "2025-10-07T10:25:47"
+      }
+    },
+    {
+      "experiment_id": "exp_20251007_110024",
+      "name": "ResNet50 Transfer Learning - Frozen",
+      "description": "Transfer learning with frozen ResNet50 base, 20 epochs",
+      "tags": [
+        "baseline",
+        "resnet50",
+        "transfer",
+        "frozen",
+        "resnet50",
+        "transfer"
+      ],
+      "created_at": "2025-10-07T11:00:24",
+      "status": "completed",
+      "config": {
+        "experiment_name": "ResNet50 Transfer Learning - Frozen",
+        "experiment_description": "Transfer learning with frozen ResNet50 base, 20 epochs",
+        "experiment_tags": [
+          "baseline",
+          "resnet50",
+          "transfer",
+          "frozen",
+          "resnet50",
+          "transfer"
+        ],
+        "paths": {
+          "data": "data/raw",
+          "artifacts": "artifacts",
+          "experiments": "experiments"
+        },
+        "train": {
+          "model_type": "transfer",
+          "base_model": "resnet50",
+          "trainable_base": false,
+          "batch_size": 256,
+          "epochs": 20,
+          "learning_rate": 0.001,
+          "optimizer": "adam",
+          "dropout": 0.5,
+          "early_stopping": true,
+          "patience": 5,
+          "image_size": [
+            224,
+            224
+          ],
+          "num_classes": 120
+        }
+      },
+      "final_results": {
+        "experiment_id": "exp_20251007_110024",
+        "model_type": "transfer",
+        "base_model": "resnet50",
+        "val_loss": 4.419679641723633,
+        "val_accuracy": 0.05451866239309311,
+        "val_top5_accuracy": 0.18025539815425873,
+        "epochs_trained": 20,
+        "batch_size": 256,
+        "learning_rate": 0.001,
+        "image_size": [
+          224,
+          224
+        ],
+        "timestamp": "2025-10-07T11:09:21",
+        "config_path": "configs/exp_resnet50.yaml",
+        "checkpoint_path": "experiments/exp_20251007_110024/checkpoints/best_model.h5",
+        "completed_at": "2025-10-07T11:09:21"
+      }
     }
   ]
 }
