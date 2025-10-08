@@ -46,6 +46,11 @@ def get_model_preprocessing_config(model_name: str) -> dict:
             'preprocess_mode': None,  # EfficientNet has preprocessing built into model!
             'image_size': (456, 456),
             'description': 'EfficientNetB5: No preprocessing (built into model), 456x456 input'
+        },
+        'efficientnetv2s': {
+            'preprocess_mode': None,  # EfficientNetV2 has preprocessing built into model!
+            'image_size': (384, 384),
+            'description': 'EfficientNetV2-S: No preprocessing (built into model), 384x384 input'
         }
     }
 
@@ -685,6 +690,87 @@ def create_preprocessed_loaders(
     print("="*60)
 
     return train_gen, val_gen
+
+
+def create_tta_augmentations(image: np.ndarray, n_augmentations: int = 5) -> List[np.ndarray]:
+    """
+    Create multiple augmented versions of an image for Test-Time Augmentation (TTA).
+
+    Args:
+        image: Input image as numpy array (H, W, 3)
+        n_augmentations: Number of augmented versions to create (default 5)
+
+    Returns:
+        List of augmented images including the original
+    """
+    augmented_images = [image]  # Always include original
+
+    img_pil = Image.fromarray(image.astype(np.uint8))
+
+    # Common TTA augmentations for dog breeds:
+    # 1. Horizontal flip
+    if n_augmentations >= 2:
+        flipped = img_pil.transpose(Image.FLIP_LEFT_RIGHT)
+        augmented_images.append(np.array(flipped, dtype=np.float32))
+
+    # 2. Small rotation (+10 degrees)
+    if n_augmentations >= 3:
+        rotated = img_pil.rotate(10, resample=Image.BILINEAR, fillcolor=(128, 128, 128))
+        augmented_images.append(np.array(rotated, dtype=np.float32))
+
+    # 3. Small rotation (-10 degrees)
+    if n_augmentations >= 4:
+        rotated = img_pil.rotate(-10, resample=Image.BILINEAR, fillcolor=(128, 128, 128))
+        augmented_images.append(np.array(rotated, dtype=np.float32))
+
+    # 4. Brightness adjustment (slightly brighter)
+    if n_augmentations >= 5:
+        brightened = np.clip(np.array(img_pil, dtype=np.float32) * 1.1, 0, 255)
+        augmented_images.append(brightened)
+
+    # 5. Brightness adjustment (slightly darker)
+    if n_augmentations >= 6:
+        darkened = np.clip(np.array(img_pil, dtype=np.float32) * 0.9, 0, 255)
+        augmented_images.append(darkened)
+
+    return augmented_images[:n_augmentations]
+
+
+def predict_with_tta(
+    model,
+    image: np.ndarray,
+    n_augmentations: int = 5,
+    normalize_fn=None
+) -> np.ndarray:
+    """
+    Make prediction using Test-Time Augmentation (TTA).
+
+    Args:
+        model: Trained Keras model
+        image: Input image as numpy array (H, W, 3) in [0, 255] range
+        n_augmentations: Number of augmented versions to use
+        normalize_fn: Optional normalization function to apply before prediction
+
+    Returns:
+        Averaged prediction probabilities (num_classes,)
+    """
+    # Create augmented versions
+    augmented_images = create_tta_augmentations(image, n_augmentations)
+
+    # Apply normalization if provided
+    if normalize_fn is not None:
+        augmented_images = [normalize_fn(img) for img in augmented_images]
+
+    # Stack into batch
+    batch = np.array(augmented_images)
+
+    # Get predictions for all augmentations
+    predictions = model.predict(batch, verbose=0)
+
+    # Average predictions
+    avg_prediction = np.mean(predictions, axis=0)
+
+    return avg_prediction
 
 
 if __name__ == "__main__":

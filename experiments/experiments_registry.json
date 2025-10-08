@@ -2342,7 +2342,7 @@
         "transfer"
       ],
       "created_at": "2025-10-08T17:00:24",
-      "status": "configured",
+      "status": "completed",
       "config": {
         "experiment_name": "EfficientNetB5 Frozen Baseline",
         "experiment_description": "Transfer learning with frozen EfficientNetB5 base, 20 epochs",
@@ -2376,6 +2376,165 @@
           ],
           "num_classes": 120
         }
+      },
+      "final_results": {
+        "experiment_id": "exp_20251008_170024",
+        "model_type": "transfer",
+        "base_model": "efficientnetb5",
+        "val_loss": 0.20625907182693481,
+        "val_accuracy": 0.9454813599586487,
+        "val_top5_accuracy": 0.9970530271530151,
+        "epochs_trained": 10,
+        "batch_size": 16,
+        "learning_rate": 0.001,
+        "image_size": [
+          456,
+          456
+        ],
+        "timestamp": "2025-10-08T17:43:17",
+        "config_path": "configs/efficientnetb5_baseline.yaml",
+        "checkpoint_path": "experiments/exp_20251008_170024/checkpoints/best_model.h5",
+        "completed_at": "2025-10-08T17:43:17"
+      }
+    },
+    {
+      "experiment_id": "exp_20251008_174650",
+      "name": "EfficientNetV2-S Frozen Baseline",
+      "description": "Transfer learning with frozen EfficientNetV2-S base, 20 epochs",
+      "tags": [
+        "baseline",
+        "efficientnetv2s",
+        "transfer",
+        "frozen",
+        "efficientnetv2s",
+        "transfer"
+      ],
+      "created_at": "2025-10-08T17:46:50",
+      "status": "completed",
+      "config": {
+        "experiment_name": "EfficientNetV2-S Frozen Baseline",
+        "experiment_description": "Transfer learning with frozen EfficientNetV2-S base, 20 epochs",
+        "experiment_tags": [
+          "baseline",
+          "efficientnetv2s",
+          "transfer",
+          "frozen",
+          "efficientnetv2s",
+          "transfer"
+        ],
+        "paths": {
+          "data": "data/raw",
+          "artifacts": "artifacts",
+          "experiments": "experiments"
+        },
+        "train": {
+          "model_type": "transfer",
+          "base_model": "efficientnetv2s",
+          "trainable_base": false,
+          "batch_size": 16,
+          "epochs": 20,
+          "learning_rate": 0.001,
+          "optimizer": "adam",
+          "dropout": 0.5,
+          "early_stopping": true,
+          "patience": 5,
+          "image_size": [
+            384,
+            384
+          ],
+          "num_classes": 120
+        }
+      },
+      "final_results": {
+        "experiment_id": "exp_20251008_174650",
+        "model_type": "transfer",
+        "base_model": "efficientnetv2s",
+        "val_loss": 0.2348872572183609,
+        "val_accuracy": 0.9503929018974304,
+        "val_top5_accuracy": 0.9953339695930481,
+        "epochs_trained": 17,
+        "batch_size": 16,
+        "learning_rate": 0.001,
+        "image_size": [
+          384,
+          384
+        ],
+        "timestamp": "2025-10-08T18:25:23",
+        "config_path": "configs/efficientnetv2s_baseline.yaml",
+        "checkpoint_path": "experiments/exp_20251008_174650/checkpoints/best_model.h5",
+        "completed_at": "2025-10-08T18:25:24"
+      }
+    },
+    {
+      "experiment_id": "exp_20251008_182534",
+      "name": "EfficientNetV2-S Fine-Tuning - Selective (20 layers)",
+      "description": "Fine-tuning EfficientNetV2-S with last 20 layers unfrozen, lower learning rate",
+      "tags": [
+        "finetune",
+        "efficientnetv2s",
+        "transfer",
+        "selective",
+        "efficientnetv2s",
+        "transfer"
+      ],
+      "created_at": "2025-10-08T18:25:34",
+      "status": "completed",
+      "config": {
+        "experiment_name": "EfficientNetV2-S Fine-Tuning - Selective (20 layers)",
+        "experiment_description": "Fine-tuning EfficientNetV2-S with last 20 layers unfrozen, lower learning rate",
+        "experiment_tags": [
+          "finetune",
+          "efficientnetv2s",
+          "transfer",
+          "selective",
+          "efficientnetv2s",
+          "transfer"
+        ],
+        "paths": {
+          "data": "data/raw",
+          "artifacts": "artifacts",
+          "experiments": "experiments"
+        },
+        "train": {
+          "model_type": "transfer",
+          "base_model": "efficientnetv2s",
+          "load_checkpoint": "experiments/exp_20251008_174650/checkpoints/best_model.h5",
+          "unfreeze_last_n": 20,
+          "batch_size": 16,
+          "epochs": 10,
+          "learning_rate": 1e-05,
+          "optimizer": "adam",
+          "dropout": 0.5,
+          "lr_schedule": "cosine_warmup",
+          "warmup_epochs": 2,
+          "min_learning_rate": 1e-06,
+          "early_stopping": true,
+          "patience": 5,
+          "image_size": [
+            384,
+            384
+          ],
+          "num_classes": 120
+        }
+      },
+      "final_results": {
+        "experiment_id": "exp_20251008_182534",
+        "model_type": "transfer",
+        "base_model": "efficientnetv2s",
+        "val_loss": 0.23538412153720856,
+        "val_accuracy": 0.9513752460479736,
+        "val_top5_accuracy": 0.9950883984565735,
+        "epochs_trained": 8,
+        "batch_size": 16,
+        "learning_rate": 1e-05,
+        "image_size": [
+          384,
+          384
+        ],
+        "timestamp": "2025-10-08T18:45:14",
+        "config_path": "configs/efficientnetv2s_finetune.yaml",
+        "checkpoint_path": "experiments/exp_20251008_182534/checkpoints/best_model.h5",
+        "completed_at": "2025-10-08T18:45:14"
       }
     }
   ]

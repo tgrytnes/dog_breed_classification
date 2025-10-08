@@ -1,0 +1,38 @@
+{
+  "experiment_name": "EfficientNetV2-S Fine-Tuning - Selective (20 layers)",
+  "experiment_description": "Fine-tuning EfficientNetV2-S with last 20 layers unfrozen, lower learning rate",
+  "experiment_tags": [
+    "finetune",
+    "efficientnetv2s",
+    "transfer",
+    "selective",
+    "efficientnetv2s",
+    "transfer"
+  ],
+  "paths": {
+    "data": "data/raw",
+    "artifacts": "artifacts",
+    "experiments": "experiments"
+  },
+  "train": {
+    "model_type": "transfer",
+    "base_model": "efficientnetv2s",
+    "load_checkpoint": "experiments/exp_20251008_174650/checkpoints/best_model.h5",
+    "unfreeze_last_n": 20,
+    "batch_size": 16,
+    "epochs": 10,
+    "learning_rate": 1e-05,
+    "optimizer": "adam",
+    "dropout": 0.5,
+    "lr_schedule": "cosine_warmup",
+    "warmup_epochs": 2,
+    "min_learning_rate": 1e-06,
+    "early_stopping": true,
+    "patience": 5,
+    "image_size": [
+      384,
+      384
+    ],
+    "num_classes": 120
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "ensemble": {
+    "top1_accuracy": 0.9503929273084479,
+    "top5_accuracy": 0.9968074656188605
+  },
+  "individual_models": [
+    {
+      "model_name": "efficientnetv2s",
+      "weight": 0.3333333333333333,
+      "top1_accuracy": 0.9513752455795678,
+      "top5_accuracy": 0.9950884086444007
+    },
+    {
+      "model_name": "efficientnetb5",
+      "weight": 0.3333333333333333,
+      "top1_accuracy": 0.9454813359528488,
+      "top5_accuracy": 0.9970530451866405
+    },
+    {
+      "model_name": "efficientnetb4",
+      "weight": 0.3333333333333333,
+      "top1_accuracy": 0.9386051080550099,
+      "top5_accuracy": 0.9963163064833006
+    }
+  ],
+  "improvement_over_best": -0.0009823182711198308,
+  "n_samples": 4072
+}

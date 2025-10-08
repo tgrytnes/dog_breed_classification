@@ -1,0 +1,19 @@
+{
+  "experiment_id": "exp_20251008_182534",
+  "model_type": "transfer",
+  "base_model": "efficientnetv2s",
+  "val_loss": 0.23538412153720856,
+  "val_accuracy": 0.9513752460479736,
+  "val_top5_accuracy": 0.9950883984565735,
+  "epochs_trained": 8,
+  "batch_size": 16,
+  "learning_rate": 1e-05,
+  "image_size": [
+    384,
+    384
+  ],
+  "timestamp": "2025-10-08T18:45:14",
+  "config_path": "configs/efficientnetv2s_finetune.yaml",
+  "checkpoint_path": "experiments/exp_20251008_182534/checkpoints/best_model.h5",
+  "completed_at": "2025-10-08T18:45:14"
+}

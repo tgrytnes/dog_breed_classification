@@ -1,0 +1,7 @@
+{
+  "model_path": "experiments/exp_20251008_182534/checkpoints/best_model.h5",
+  "n_augmentations": 5,
+  "top1_accuracy": 0.9533398821218074,
+  "top5_accuracy": 0.9953339882121808,
+  "n_samples": 4072
+}

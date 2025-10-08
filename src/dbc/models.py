@@ -10,7 +10,8 @@ from tensorflow.keras.applications import (
     ResNet50,
     EfficientNetB0,
     EfficientNetB4,
-    EfficientNetB5
+    EfficientNetB5,
+    EfficientNetV2S
 )
 
 
@@ -42,7 +43,8 @@ def build_transfer_learning_model(
         'resnet50': ResNet50,
         'efficientnetb0': EfficientNetB0,
         'efficientnetb4': EfficientNetB4,
-        'efficientnetb5': EfficientNetB5
+        'efficientnetb5': EfficientNetB5,
+        'efficientnetv2s': EfficientNetV2S
     }
 
     if base_model_name.lower() not in base_models:

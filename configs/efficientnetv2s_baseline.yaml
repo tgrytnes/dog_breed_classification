@@ -1,0 +1,35 @@
+# EfficientNetV2-S Frozen Baseline
+# Phase 1: Train with frozen base to establish baseline
+# EfficientNetV2: Improved training speed and accuracy over V1
+
+experiment_name: "EfficientNetV2-S Frozen Baseline"
+experiment_description: "Transfer learning with frozen EfficientNetV2-S base, 20 epochs"
+experiment_tags: ["baseline", "efficientnetv2s", "transfer", "frozen"]
+
+paths:
+  data: "data/raw"
+  artifacts: "artifacts"
+  experiments: "experiments"
+
+train:
+  # Model architecture
+  model_type: "transfer"
+  base_model: "efficientnetv2s"
+  trainable_base: false  # Keep base frozen for baseline
+
+  # Training parameters
+  batch_size: 16  # Reduced due to larger 384x384 images
+  epochs: 20
+  learning_rate: 0.001
+  optimizer: "adam"
+
+  # Regularization
+  dropout: 0.5
+
+  # Early stopping
+  early_stopping: true
+  patience: 5
+
+  # Data
+  image_size: [384, 384]  # EfficientNetV2-S uses 384x384
+  num_classes: 120
