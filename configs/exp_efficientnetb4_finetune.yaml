@@ -1,0 +1,36 @@
+# EfficientNetB4 Fine-Tuning - Best Accuracy
+# Expected performance: 85-92% validation accuracy (highest expected)
+
+# Experiment metadata
+experiment_name: "EfficientNetB4 Fine-Tuning"
+experiment_description: "Fine-tuning with unfrozen EfficientNetB4 base, 40 epochs, very low learning rate"
+experiment_tags: ["finetune", "efficientnet", "efficientnetb4", "transfer", "unfrozen"]
+
+paths:
+  data: "data/raw"
+  artifacts: "artifacts"
+  experiments: "experiments"
+
+train:
+  # Model architecture
+  model_type: "transfer"
+  base_model: "efficientnetb4"
+  trainable_base: false   # Will use selective unfreezing via finetune_from_checkpoint.py
+  unfreeze_last_n_layers: 30  # Unfreeze last 30 layers (conservative)
+
+  # Training parameters
+  batch_size: 32  # Smaller batch for B4 (larger model + 380x380 images)
+  epochs: 50
+  learning_rate: 0.00001  # Very low LR for fine-tuning (100x lower than frozen)
+  optimizer: "adam"
+
+  # Regularization
+  dropout: 0.5
+
+  # Early stopping
+  early_stopping: true
+  patience: 7
+
+  # Data
+  image_size: [380, 380]  # EfficientNetB4 uses 380x380 input
+  num_classes: 120

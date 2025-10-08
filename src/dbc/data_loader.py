@@ -27,11 +27,6 @@ def get_model_preprocessing_config(model_name: str) -> dict:
     model_name = model_name.lower()
 
     configs = {
-        'vgg16': {
-            'preprocess_mode': 'caffe',
-            'image_size': (224, 224),
-            'description': 'VGG16: RGB->BGR, mean=[103.939, 116.779, 123.68] subtraction'
-        },
         'resnet50': {
             'preprocess_mode': 'caffe',
             'image_size': (224, 224),
@@ -40,7 +35,12 @@ def get_model_preprocessing_config(model_name: str) -> dict:
         'efficientnetb0': {
             'preprocess_mode': 'torch',
             'image_size': (224, 224),
-            'description': 'EfficientNet: RGB, normalize with ImageNet mean/std to ~[-2, +2]'
+            'description': 'EfficientNetB0: RGB, normalize with ImageNet mean/std to ~[-2, +2]'
+        },
+        'efficientnetb4': {
+            'preprocess_mode': 'torch',
+            'image_size': (380, 380),
+            'description': 'EfficientNetB4: RGB, normalize with ImageNet mean/std, 380x380 input'
         }
     }
 

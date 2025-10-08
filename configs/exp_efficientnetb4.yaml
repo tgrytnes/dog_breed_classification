@@ -1,0 +1,35 @@
+# EfficientNetB4 Transfer Learning - Best Accuracy
+# Expected performance: 85-90% validation accuracy (highest expected)
+
+# Experiment metadata
+experiment_name: "EfficientNetB4 Transfer Learning"
+experiment_description: "Transfer learning with frozen EfficientNetB4 base, 20 epochs, best accuracy for Stanford Dogs"
+experiment_tags: ["baseline", "efficientnet", "efficientnetb4", "transfer", "frozen"]
+
+paths:
+  data: "data/raw"
+  artifacts: "artifacts"
+  experiments: "experiments"
+
+train:
+  # Model architecture
+  model_type: "transfer"
+  base_model: "efficientnetb4"
+  trainable_base: false   # Freeze base for initial training
+
+  # Training parameters
+  batch_size: 256  # Increased for better GPU utilization
+  epochs: 20
+  learning_rate: 0.001
+  optimizer: "adam"
+
+  # Regularization
+  dropout: 0.5
+
+  # Early stopping
+  early_stopping: true
+  patience: 5
+
+  # Data
+  image_size: [380, 380]  # EfficientNetB4 uses 380x380 input
+  num_classes: 120

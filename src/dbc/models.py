@@ -8,8 +8,8 @@ from tensorflow import keras
 from tensorflow.keras import layers, Model
 from tensorflow.keras.applications import (
     ResNet50,
-    VGG16,
-    EfficientNetB0
+    EfficientNetB0,
+    EfficientNetB4
 )
 
 
@@ -39,8 +39,8 @@ def build_transfer_learning_model(
     # Load pre-trained base model
     base_models = {
         'resnet50': ResNet50,
-        'vgg16': VGG16,
-        'efficientnetb0': EfficientNetB0
+        'efficientnetb0': EfficientNetB0,
+        'efficientnetb4': EfficientNetB4
     }
 
     if base_model_name.lower() not in base_models:

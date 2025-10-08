@@ -48,6 +48,13 @@ def finetune_from_checkpoint(
     with open(config_path, 'r') as f:
         config = yaml.safe_load(f)
 
+    # Use unfreeze_last_n_layers from config if not specified in CLI
+    if unfreeze_last_n_layers is None:
+        unfreeze_last_n_layers = config.get('train', {}).get('unfreeze_last_n_layers', None)
+
+    if unfreeze_last_n_layers:
+        print(f"Selective unfreezing: last {unfreeze_last_n_layers} layers")
+
     # Load the frozen model
     print(f"\nLoading frozen model from: {checkpoint_path}")
     model = keras.models.load_model(checkpoint_path)

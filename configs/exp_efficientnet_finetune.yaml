@@ -15,12 +15,13 @@ train:
   # Model architecture
   model_type: "transfer"
   base_model: "efficientnetb0"
-  trainable_base: true   # Unfreeze base for fine-tuning
+  trainable_base: false   # Will use selective unfreezing via finetune_from_checkpoint.py
+  unfreeze_last_n_layers: 20  # Unfreeze last 20 layers (conservative)
 
   # Training parameters
-  batch_size: 128  # Reduced batch size for fine-tuning stability
-  epochs: 20
-  learning_rate: 0.0001  # Lower LR for fine-tuning (10x lower than frozen)
+  batch_size: 64  # Reduced batch size for fine-tuning stability
+  epochs: 40
+  learning_rate: 0.00001  # Very low LR for fine-tuning (100x lower than frozen)
   optimizer: "adam"
 
   # Regularization
@@ -28,7 +29,7 @@ train:
 
   # Early stopping
   early_stopping: true
-  patience: 5
+  patience: 7
 
   # Data
   image_size: [224, 224]

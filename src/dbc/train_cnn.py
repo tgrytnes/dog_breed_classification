@@ -89,30 +89,16 @@ def train_model(config_path: str = "configs/cnn_baseline.yaml"):
 
     # Check if preprocessed data exists (.npy format for memory mapping)
     preprocessed_dir = Path("artifacts/preprocessed")
-    use_preprocessed = ((preprocessed_dir / "train_data_images.npy").exists() and
-                        (preprocessed_dir / "val_data_images.npy").exists())
-
-    if use_preprocessed:
-        from .data_loader import create_preprocessed_loaders
-        train_gen, val_gen = create_preprocessed_loaders(
-            preprocessed_dir=preprocessed_dir,
-            batch_size=batch_size,
-            augment_train=True,
-            seed=42
-        )
-    else:
-        print("Warning: Preprocessed data not found. Using on-the-fly loading (slower).")
-        print("Run 'PYTHONPATH=src python3 -m dbc.preprocess_images' to preprocess images for faster training.")
-        train_gen, val_gen = create_data_loaders(
-            train_metadata_path=train_metadata,
-            val_metadata_path=val_metadata,
-            data_root=data_root,
-            batch_size=batch_size,
-            image_size=image_size,
-            normalize='imagenet',
-            augment_train=True,
-            seed=42
-        )
+    # Use on-the-fly loading with model-specific preprocessing
+    train_gen, val_gen = create_data_loaders(
+        train_metadata_path=train_metadata,
+        val_metadata_path=val_metadata,
+        data_root=data_root,
+        batch_size=batch_size,
+        model_name=base_model,  # Critical: model-specific preprocessing
+        augment_train=True,
+        seed=42
+    )
 
     # Build model
     print(f"\nBuilding {model_type} model...")
