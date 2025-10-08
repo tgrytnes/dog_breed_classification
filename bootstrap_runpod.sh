@@ -67,6 +67,15 @@ pip install scipy>=1.11         # For .mat file loading
 pip install ipython>=8.0
 
 echo ""
+echo "Installing Node.js (for Claude Code)..."
+echo "========================================"
+# Install Node.js via NodeSource repository
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt-get install -y nodejs
+echo "✓ Node.js installed: $(node --version)"
+echo "✓ npm installed: $(npm --version)"
+
+echo ""
 echo "Verifying TensorFlow GPU support..."
 echo "===================================="
 python3 << 'EOF'
