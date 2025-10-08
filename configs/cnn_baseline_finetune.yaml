@@ -1,0 +1,40 @@
+# ResNet50 Fine-Tuning Configuration
+# Phase 2: Unfreeze and fine-tune from frozen baseline
+# Starting from: exp_20251008_072125 (54.69% val_acc)
+# Expected: 75-85% validation accuracy
+
+# Experiment metadata
+experiment_name: "ResNet50 Fine-Tuning"
+experiment_description: "Fine-tuning unfrozen ResNet50 base from frozen checkpoint, 50 epochs"
+experiment_tags: ["finetune", "resnet50", "transfer", "unfrozen"]
+
+paths:
+  data: "data/raw"
+  artifacts: "artifacts"
+  experiments: "experiments"
+
+train:
+  # Model architecture
+  model_type: "transfer"
+  base_model: "resnet50"
+  trainable_base: true   # UNFREEZE the base layers for fine-tuning
+
+  # Load from checkpoint
+  load_checkpoint: "experiments/exp_20251008_072125/checkpoints/best_model.h5"
+
+  # Training parameters
+  batch_size: 32
+  epochs: 50
+  learning_rate: 0.00001  # 100x lower than frozen baseline (0.001 -> 0.00001)
+  optimizer: "adam"
+
+  # Regularization
+  dropout: 0.5
+
+  # Early stopping
+  early_stopping: true
+  patience: 10  # More patience for fine-tuning
+
+  # Data
+  image_size: [224, 224]
+  num_classes: 120

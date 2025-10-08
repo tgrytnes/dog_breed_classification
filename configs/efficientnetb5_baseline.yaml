@@ -1,0 +1,35 @@
+# EfficientNetB5 Frozen Baseline
+# Phase 1: Train with frozen base to establish baseline
+# Expected: Higher accuracy than B4 (93.71%), potentially 95%+
+
+experiment_name: "EfficientNetB5 Frozen Baseline"
+experiment_description: "Transfer learning with frozen EfficientNetB5 base, 20 epochs"
+experiment_tags: ["baseline", "efficientnetb5", "transfer", "frozen"]
+
+paths:
+  data: "data/raw"
+  artifacts: "artifacts"
+  experiments: "experiments"
+
+train:
+  # Model architecture
+  model_type: "transfer"
+  base_model: "efficientnetb5"
+  trainable_base: false  # Keep base frozen for baseline
+
+  # Training parameters
+  batch_size: 16  # Reduced due to larger 456x456 images
+  epochs: 20
+  learning_rate: 0.001
+  optimizer: "adam"
+
+  # Regularization
+  dropout: 0.5
+
+  # Early stopping
+  early_stopping: true
+  patience: 5
+
+  # Data
+  image_size: [456, 456]  # EfficientNetB5 uses 456x456
+  num_classes: 120

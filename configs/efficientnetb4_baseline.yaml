@@ -1,0 +1,35 @@
+# EfficientNetB4 Frozen Baseline
+# Phase 1: Train with frozen base to establish baseline
+# Expected: 60-65% validation accuracy (frozen)
+
+experiment_name: "EfficientNetB4 Frozen Baseline"
+experiment_description: "Transfer learning with frozen EfficientNetB4 base, 20 epochs"
+experiment_tags: ["baseline", "efficientnetb4", "transfer", "frozen"]
+
+paths:
+  data: "data/raw"
+  artifacts: "artifacts"
+  experiments: "experiments"
+
+train:
+  # Model architecture
+  model_type: "transfer"
+  base_model: "efficientnetb4"
+  trainable_base: false  # Keep base frozen for baseline
+
+  # Training parameters
+  batch_size: 32  # Keras recommends 64, using 32 for 380x380 images
+  epochs: 20
+  learning_rate: 0.001  # Reduced from 0.01 (caused collapse) - same as ResNet50
+  optimizer: "adam"
+
+  # Regularization
+  dropout: 0.5
+
+  # Early stopping
+  early_stopping: true
+  patience: 5
+
+  # Data
+  image_size: [380, 380]  # EfficientNetB4 uses 380x380 (NOT 224x224!)
+  num_classes: 120

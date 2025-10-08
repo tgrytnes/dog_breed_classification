@@ -1,0 +1,40 @@
+# ResNet50 Selective Fine-Tuning - Option 1
+# Unfreeze only last 30 layers (conservative, stable approach)
+# Expected: 75-85% validation accuracy
+
+experiment_name: "ResNet50 Selective Fine-Tuning"
+experiment_description: "Selective unfreezing: last 30 of 175 ResNet50 layers, LR=0.0001, batch=64"
+experiment_tags: ["finetune", "resnet50", "selective", "unfrozen"]
+
+paths:
+  data: "data/raw"
+  artifacts: "artifacts"
+  experiments: "experiments"
+
+train:
+  # Model architecture
+  model_type: "transfer"
+  base_model: "resnet50"
+
+  # Load from frozen baseline checkpoint
+  load_checkpoint: "experiments/exp_20251008_072125/checkpoints/best_model.h5"
+
+  # Selective unfreezing (NOT trainable_base!)
+  unfreeze_last_n: 30  # Unfreeze last 30 layers (out of 175)
+
+  # Training parameters
+  batch_size: 64  # Larger batch for stability
+  epochs: 50
+  learning_rate: 0.0001  # 10x higher than previous attempt (0.00001 -> 0.0001)
+  optimizer: "adam"
+
+  # Regularization
+  dropout: 0.5
+
+  # Early stopping
+  early_stopping: true
+  patience: 10
+
+  # Data
+  image_size: [224, 224]
+  num_classes: 120

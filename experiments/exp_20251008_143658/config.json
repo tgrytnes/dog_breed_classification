@@ -1,0 +1,42 @@
+{
+  "experiment_name": "EfficientNetB4 Fine-Tuning v3 - Advanced (Label Smoothing + Cosine)",
+  "experiment_description": "Advanced fine-tuning with label smoothing, cosine annealing with warmup, discriminative LR",
+  "experiment_tags": [
+    "finetune",
+    "efficientnetb4",
+    "transfer",
+    "advanced",
+    "v3",
+    "label_smoothing",
+    "cosine_annealing",
+    "efficientnetb4",
+    "transfer"
+  ],
+  "paths": {
+    "data": "data/raw",
+    "artifacts": "artifacts",
+    "experiments": "experiments"
+  },
+  "train": {
+    "model_type": "transfer",
+    "base_model": "efficientnetb4",
+    "load_checkpoint": "experiments/exp_20251008_115733/checkpoints/best_model.h5",
+    "unfreeze_last_n": 20,
+    "batch_size": 16,
+    "epochs": 40,
+    "learning_rate": 1e-05,
+    "optimizer": "adam",
+    "label_smoothing": 0.1,
+    "dropout": 0.5,
+    "lr_schedule": "cosine_warmup",
+    "warmup_epochs": 4,
+    "min_learning_rate": 1e-06,
+    "early_stopping": true,
+    "patience": 12,
+    "image_size": [
+      380,
+      380
+    ],
+    "num_classes": 120
+  }
+}

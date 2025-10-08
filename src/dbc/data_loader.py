@@ -33,14 +33,19 @@ def get_model_preprocessing_config(model_name: str) -> dict:
             'description': 'ResNet50: RGB->BGR, mean=[103.939, 116.779, 123.68] subtraction'
         },
         'efficientnetb0': {
-            'preprocess_mode': 'torch',
+            'preprocess_mode': None,  # EfficientNet has preprocessing built into model!
             'image_size': (224, 224),
-            'description': 'EfficientNetB0: RGB, normalize with ImageNet mean/std to ~[-2, +2]'
+            'description': 'EfficientNetB0: No preprocessing (built into model), 224x224 input'
         },
         'efficientnetb4': {
-            'preprocess_mode': 'torch',
+            'preprocess_mode': None,  # EfficientNet has preprocessing built into model!
             'image_size': (380, 380),
-            'description': 'EfficientNetB4: RGB, normalize with ImageNet mean/std, 380x380 input'
+            'description': 'EfficientNetB4: No preprocessing (built into model), 380x380 input'
+        },
+        'efficientnetb5': {
+            'preprocess_mode': None,  # EfficientNet has preprocessing built into model!
+            'image_size': (456, 456),
+            'description': 'EfficientNetB5: No preprocessing (built into model), 456x456 input'
         }
     }
 
@@ -156,6 +161,9 @@ class DogBreedDataset:
         if self.model_preprocess_mode is not None:
             # Use model-specific preprocessing (Keras preprocess_input with mode)
             img_array = keras_preprocess_input(img_array, mode=self.model_preprocess_mode)
+        elif self.model_name and 'efficientnet' in self.model_name.lower():
+            # EfficientNet models have preprocessing built-in, keep raw [0, 255] values
+            pass  # No preprocessing needed
         elif self.normalize == 'imagenet':
             img_array = img_array / 255.0  # Scale to [0,1]
             img_array = (img_array - self.imagenet_mean) / self.imagenet_std

@@ -1,0 +1,36 @@
+{
+  "experiment_name": "ResNet50 Selective Fine-Tuning v2",
+  "experiment_description": "On-the-fly loading, last 50 layers unfrozen, LR=0.0001",
+  "experiment_tags": [
+    "finetune",
+    "resnet50",
+    "selective",
+    "v2",
+    "resnet50",
+    "transfer"
+  ],
+  "paths": {
+    "data": "data/raw",
+    "artifacts": "artifacts",
+    "experiments": "experiments"
+  },
+  "train": {
+    "model_type": "transfer",
+    "base_model": "resnet50",
+    "load_checkpoint": "experiments/exp_20251008_072125/checkpoints/best_model.h5",
+    "unfreeze_last_n": 50,
+    "use_preprocessed": false,
+    "batch_size": 32,
+    "epochs": 50,
+    "learning_rate": 0.0001,
+    "optimizer": "adam",
+    "dropout": 0.5,
+    "early_stopping": true,
+    "patience": 10,
+    "image_size": [
+      224,
+      224
+    ],
+    "num_classes": 120
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "experiment_name": "EfficientNetB4 Fine-Tuning v2 - Research-Based",
+  "experiment_description": "Fine-tuning with Keras best practices: LR=1e-5, top 20 layers, BatchNorm frozen",
+  "experiment_tags": [
+    "finetune",
+    "efficientnetb4",
+    "transfer",
+    "research_based",
+    "v2",
+    "efficientnetb4",
+    "transfer"
+  ],
+  "paths": {
+    "data": "data/raw",
+    "artifacts": "artifacts",
+    "experiments": "experiments"
+  },
+  "train": {
+    "model_type": "transfer",
+    "base_model": "efficientnetb4",
+    "load_checkpoint": "experiments/exp_20251008_115733/checkpoints/best_model.h5",
+    "unfreeze_last_n": 20,
+    "batch_size": 16,
+    "epochs": 30,
+    "learning_rate": 1e-05,
+    "optimizer": "adam",
+    "dropout": 0.5,
+    "early_stopping": true,
+    "patience": 8,
+    "image_size": [
+      380,
+      380
+    ],
+    "num_classes": 120
+  }
+}

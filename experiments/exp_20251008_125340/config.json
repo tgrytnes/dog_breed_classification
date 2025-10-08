@@ -1,0 +1,35 @@
+{
+  "experiment_name": "EfficientNetB4 Fine-Tuning - Selective (50)",
+  "experiment_description": "Fine-tuning EfficientNetB4 with last 50 layers unfrozen",
+  "experiment_tags": [
+    "finetune",
+    "efficientnetb4",
+    "transfer",
+    "selective",
+    "efficientnetb4",
+    "transfer"
+  ],
+  "paths": {
+    "data": "data/raw",
+    "artifacts": "artifacts",
+    "experiments": "experiments"
+  },
+  "train": {
+    "model_type": "transfer",
+    "base_model": "efficientnetb4",
+    "load_checkpoint": "experiments/exp_20251008_115733/checkpoints/best_model.h5",
+    "unfreeze_last_n": 50,
+    "batch_size": 16,
+    "epochs": 50,
+    "learning_rate": 0.0001,
+    "optimizer": "adam",
+    "dropout": 0.5,
+    "early_stopping": true,
+    "patience": 10,
+    "image_size": [
+      380,
+      380
+    ],
+    "num_classes": 120
+  }
+}

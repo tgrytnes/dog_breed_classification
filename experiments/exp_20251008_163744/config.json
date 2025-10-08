@@ -1,0 +1,38 @@
+{
+  "experiment_name": "EfficientNetB0 Fine-Tuning - Selective (20 layers)",
+  "experiment_description": "Fine-tuning EfficientNetB0 with last 20 layers unfrozen, BatchNorm frozen",
+  "experiment_tags": [
+    "finetune",
+    "efficientnetb0",
+    "transfer",
+    "selective",
+    "efficientnetb0",
+    "transfer"
+  ],
+  "paths": {
+    "data": "data/raw",
+    "artifacts": "artifacts",
+    "experiments": "experiments"
+  },
+  "train": {
+    "model_type": "transfer",
+    "base_model": "efficientnetb0",
+    "load_checkpoint": "experiments/exp_20251008_160357/checkpoints/best_model.h5",
+    "unfreeze_last_n": 20,
+    "batch_size": 32,
+    "epochs": 40,
+    "learning_rate": 1e-05,
+    "optimizer": "adam",
+    "dropout": 0.5,
+    "lr_schedule": "cosine_warmup",
+    "warmup_epochs": 4,
+    "min_learning_rate": 1e-06,
+    "early_stopping": true,
+    "patience": 12,
+    "image_size": [
+      224,
+      224
+    ],
+    "num_classes": 120
+  }
+}

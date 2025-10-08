@@ -1,0 +1,34 @@
+{
+  "experiment_name": "EfficientNetB0 Frozen Baseline",
+  "experiment_description": "Transfer learning with frozen EfficientNetB0 base, 20 epochs",
+  "experiment_tags": [
+    "baseline",
+    "efficientnetb0",
+    "transfer",
+    "frozen",
+    "efficientnetb0",
+    "transfer"
+  ],
+  "paths": {
+    "data": "data/raw",
+    "artifacts": "artifacts",
+    "experiments": "experiments"
+  },
+  "train": {
+    "model_type": "transfer",
+    "base_model": "efficientnetb0",
+    "trainable_base": false,
+    "batch_size": 32,
+    "epochs": 20,
+    "learning_rate": 0.001,
+    "optimizer": "adam",
+    "dropout": 0.5,
+    "early_stopping": true,
+    "patience": 5,
+    "image_size": [
+      224,
+      224
+    ],
+    "num_classes": 120
+  }
+}

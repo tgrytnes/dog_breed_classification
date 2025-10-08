@@ -9,7 +9,8 @@ from tensorflow.keras import layers, Model
 from tensorflow.keras.applications import (
     ResNet50,
     EfficientNetB0,
-    EfficientNetB4
+    EfficientNetB4,
+    EfficientNetB5
 )
 
 
@@ -40,7 +41,8 @@ def build_transfer_learning_model(
     base_models = {
         'resnet50': ResNet50,
         'efficientnetb0': EfficientNetB0,
-        'efficientnetb4': EfficientNetB4
+        'efficientnetb4': EfficientNetB4,
+        'efficientnetb5': EfficientNetB5
     }
 
     if base_model_name.lower() not in base_models:
@@ -171,7 +173,8 @@ def build_custom_cnn(
 def compile_model(
     model: Model,
     learning_rate: float = 0.001,
-    optimizer: str = 'adam'
+    optimizer: str = 'adam',
+    label_smoothing: float = 0.0
 ) -> Model:
     """
     Compile a model with appropriate loss and metrics.
@@ -180,6 +183,7 @@ def compile_model(
         model: Keras model to compile
         learning_rate: Learning rate for optimizer
         optimizer: Optimizer name ('adam', 'sgd', 'rmsprop')
+        label_smoothing: Label smoothing factor (0.0 = no smoothing, 0.1 = 10% smoothing)
 
     Returns:
         Compiled model
@@ -198,6 +202,12 @@ def compile_model(
     opt = optimizers[optimizer.lower()]
 
     # Compile with categorical crossentropy for multi-class classification
+    # Note: Label smoothing requires one-hot encoded labels (not sparse)
+    # For now, using standard sparse categorical crossentropy
+    if label_smoothing > 0:
+        print(f"  ⚠️  Label smoothing ({label_smoothing}) not supported with sparse labels - skipping for now")
+        print(f"      (Future: implement one-hot encoding in data loader for label smoothing)")
+
     model.compile(
         optimizer=opt,
         loss='sparse_categorical_crossentropy',  # Use sparse for integer labels

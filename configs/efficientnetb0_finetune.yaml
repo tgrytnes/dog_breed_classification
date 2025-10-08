@@ -1,0 +1,40 @@
+# EfficientNetB0 Fine-Tuning
+# Phase 2: Fine-tune with selective layer unfreezing
+
+experiment_name: "EfficientNetB0 Fine-Tuning - Selective (20 layers)"
+experiment_description: "Fine-tuning EfficientNetB0 with last 20 layers unfrozen, BatchNorm frozen"
+experiment_tags: ["finetune", "efficientnetb0", "transfer", "selective"]
+
+paths:
+  data: "data/raw"
+  artifacts: "artifacts"
+  experiments: "experiments"
+
+train:
+  # Model architecture
+  model_type: "transfer"
+  base_model: "efficientnetb0"
+  load_checkpoint: "experiments/exp_20251008_160357/checkpoints/best_model.h5"
+  unfreeze_last_n: 20  # Unfreeze top 20 layers
+
+  # Training parameters
+  batch_size: 32
+  epochs: 40
+  learning_rate: 0.00001  # 1e-5 (10x lower than baseline)
+  optimizer: "adam"
+
+  # Regularization
+  dropout: 0.5
+
+  # Learning rate schedule
+  lr_schedule: "cosine_warmup"
+  warmup_epochs: 4
+  min_learning_rate: 0.000001  # 1e-6
+
+  # Early stopping
+  early_stopping: true
+  patience: 12
+
+  # Data
+  image_size: [224, 224]
+  num_classes: 120

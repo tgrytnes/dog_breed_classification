@@ -89,43 +89,114 @@ def train_model(config_path: str = "configs/cnn_baseline.yaml"):
 
     # Check if preprocessed data exists (.npy format for memory mapping)
     preprocessed_dir = Path("artifacts/preprocessed")
-    # Use on-the-fly loading with model-specific preprocessing
-    train_gen, val_gen = create_data_loaders(
-        train_metadata_path=train_metadata,
-        val_metadata_path=val_metadata,
-        data_root=data_root,
-        batch_size=batch_size,
-        model_name=base_model,  # Critical: model-specific preprocessing
-        augment_train=True,
-        seed=42
-    )
+    train_images_path = preprocessed_dir / "train_data_images.npy"
+    val_images_path = preprocessed_dir / "val_data_images.npy"
+    use_preprocessed = train_images_path.exists() and val_images_path.exists()
+
+    if use_preprocessed:
+        print(f"\n✓ Found preprocessed data, using instant memory-mapped loading!")
+        from .data_loader import create_preprocessed_loaders
+        train_gen, val_gen = create_preprocessed_loaders(
+            preprocessed_dir=preprocessed_dir,
+            batch_size=batch_size,
+            augment_train=True,
+            seed=42
+        )
+    else:
+        print(f"\nUsing on-the-fly image loading with model-specific preprocessing")
+        train_gen, val_gen = create_data_loaders(
+            train_metadata_path=train_metadata,
+            val_metadata_path=val_metadata,
+            data_root=data_root,
+            batch_size=batch_size,
+            model_name=base_model,  # Critical: model-specific preprocessing
+            augment_train=True,
+            seed=42
+        )
 
     # Build model
     print(f"\nBuilding {model_type} model...")
     num_classes = 120  # Stanford Dogs has 120 breeds
 
-    if model_type == 'transfer':
-        model = build_transfer_learning_model(
-            base_model_name=base_model,
-            num_classes=num_classes,
-            input_shape=(*image_size, 3),
-            trainable_base=train_cfg.get('trainable_base', False),
-            dropout_rate=train_cfg.get('dropout', 0.5)
-        )
-    elif model_type == 'custom':
-        model = build_custom_cnn(
-            num_classes=num_classes,
-            input_shape=(*image_size, 3),
-            dropout_rate=train_cfg.get('dropout', 0.3)
-        )
-    else:
-        raise ValueError(f"Unknown model_type: {model_type}. Use 'transfer' or 'custom'")
+    # Check if we should load from checkpoint
+    load_checkpoint = train_cfg.get('load_checkpoint', None)
 
-    # Compile model
+    if load_checkpoint:
+        print(f"\n✓ Loading model from checkpoint: {load_checkpoint}")
+        model = keras.models.load_model(load_checkpoint)
+
+        # Update trainable status if specified
+        if model_type == 'transfer':
+            # Find the base model layer (ResNet50, VGG16, etc.)
+            base_layer = None
+            for layer in model.layers:
+                if layer.name in ['resnet50', 'vgg16', 'efficientnetb0', 'efficientnetb4']:
+                    base_layer = layer
+                    break
+
+            if base_layer and 'unfreeze_last_n' in train_cfg:
+                # Selective unfreezing: freeze first N layers, unfreeze last M layers
+                unfreeze_last_n = train_cfg.get('unfreeze_last_n')
+                total_layers = len(base_layer.layers)
+                freeze_until = total_layers - unfreeze_last_n
+
+                print(f"  Selective unfreezing: {base_layer.name} has {total_layers} layers")
+                print(f"  Freezing first {freeze_until} layers, unfreezing last {unfreeze_last_n} layers")
+
+                # Freeze all layers first
+                base_layer.trainable = True
+                batchnorm_count = 0
+                for i, layer in enumerate(base_layer.layers):
+                    if i >= freeze_until:
+                        # Unfreeze this layer, but keep BatchNormalization layers frozen
+                        # This is critical for fine-tuning - BatchNorm layers must stay frozen
+                        if 'BatchNormalization' in layer.__class__.__name__:
+                            layer.trainable = False
+                            batchnorm_count += 1
+                        else:
+                            layer.trainable = True
+                    else:
+                        layer.trainable = False
+
+                if batchnorm_count > 0:
+                    print(f"  Kept {batchnorm_count} BatchNormalization layers frozen (critical for fine-tuning)")
+
+            elif base_layer and 'trainable_base' in train_cfg:
+                # Full freeze/unfreeze
+                trainable = train_cfg.get('trainable_base', False)
+                base_layer.trainable = trainable
+                print(f"  Set base model ({base_layer.name}) trainable={trainable}")
+
+        print(f"  Loaded model with {model.count_params():,} parameters")
+        trainable_params = sum([keras.backend.count_params(w) for w in model.trainable_weights])
+        print(f"  Trainable parameters: {trainable_params:,}")
+
+    else:
+        # Build new model
+        if model_type == 'transfer':
+            model = build_transfer_learning_model(
+                base_model_name=base_model,
+                num_classes=num_classes,
+                input_shape=(*image_size, 3),
+                trainable_base=train_cfg.get('trainable_base', False),
+                dropout_rate=train_cfg.get('dropout', 0.5)
+            )
+        elif model_type == 'custom':
+            model = build_custom_cnn(
+                num_classes=num_classes,
+                input_shape=(*image_size, 3),
+                dropout_rate=train_cfg.get('dropout', 0.3)
+            )
+        else:
+            raise ValueError(f"Unknown model_type: {model_type}. Use 'transfer' or 'custom'")
+
+    # Compile model (always recompile with new learning rate)
+    label_smoothing = train_cfg.get('label_smoothing', 0.0)
     model = compile_model(
         model,
         learning_rate=learning_rate,
-        optimizer=train_cfg.get('optimizer', 'adam')
+        optimizer=train_cfg.get('optimizer', 'adam'),
+        label_smoothing=label_smoothing
     )
 
     # Print model summary
@@ -175,15 +246,38 @@ def train_model(config_path: str = "configs/cnn_baseline.yaml"):
         )
         callbacks.append(early_stop_cb)
 
-    # Reduce learning rate on plateau
-    reduce_lr_cb = keras.callbacks.ReduceLROnPlateau(
-        monitor='val_loss',
-        factor=0.5,
-        patience=3,
-        min_lr=1e-7,
-        verbose=1
-    )
-    callbacks.append(reduce_lr_cb)
+    # Learning rate schedule: Cosine Annealing with Warmup or ReduceLROnPlateau
+    lr_schedule_type = train_cfg.get('lr_schedule', 'reduce_on_plateau')
+
+    if lr_schedule_type == 'cosine_warmup':
+        # Cosine Annealing with Warmup (research-based, smoother convergence)
+        warmup_epochs = train_cfg.get('warmup_epochs', int(epochs * 0.1))
+        min_lr = train_cfg.get('min_learning_rate', learning_rate * 0.1)
+
+        def cosine_annealing_with_warmup(epoch, lr):
+            """Cosine annealing learning rate schedule with warmup."""
+            if epoch < warmup_epochs:
+                # Warmup phase: linearly increase LR
+                return learning_rate * (epoch + 1) / warmup_epochs
+            else:
+                # Cosine annealing phase
+                import math
+                progress = (epoch - warmup_epochs) / (epochs - warmup_epochs)
+                return min_lr + (learning_rate - min_lr) * 0.5 * (1 + math.cos(math.pi * progress))
+
+        lr_scheduler_cb = keras.callbacks.LearningRateScheduler(cosine_annealing_with_warmup, verbose=1)
+        callbacks.append(lr_scheduler_cb)
+        print(f"  ✓ Cosine annealing with warmup: {warmup_epochs} warmup epochs, min_lr={min_lr}")
+    else:
+        # Default: Reduce learning rate on plateau
+        reduce_lr_cb = keras.callbacks.ReduceLROnPlateau(
+            monitor='val_loss',
+            factor=0.5,
+            patience=3,
+            min_lr=1e-7,
+            verbose=1
+        )
+        callbacks.append(reduce_lr_cb)
 
     # CSV logger
     csv_path = exp_dir / "training_log.csv"

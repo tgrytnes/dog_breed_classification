@@ -1,0 +1,43 @@
+# ResNet50 Selective Fine-Tuning - Version 2
+# FIX: Use on-the-fly loading (NOT preprocessed data) for proper aug+preprocessing order
+# Expected: 75-85% validation accuracy
+
+experiment_name: "ResNet50 Selective Fine-Tuning v2"
+experiment_description: "On-the-fly loading, last 50 layers unfrozen, LR=0.0001"
+experiment_tags: ["finetune", "resnet50", "selective", "v2"]
+
+paths:
+  data: "data/raw"
+  artifacts: "artifacts"
+  experiments: "experiments"
+
+train:
+  # Model architecture
+  model_type: "transfer"
+  base_model: "resnet50"
+
+  # Load from frozen baseline checkpoint
+  load_checkpoint: "experiments/exp_20251008_072125/checkpoints/best_model.h5"
+
+  # Selective unfreezing - MORE layers (50 instead of 30)
+  unfreeze_last_n: 50  # Unfreeze last 50 layers (out of 175)
+
+  # Force on-the-fly loading (delete preprocessed data or rename)
+  use_preprocessed: false
+
+  # Training parameters
+  batch_size: 32  # Back to 32 for on-the-fly (64 was for preprocessed)
+  epochs: 50
+  learning_rate: 0.0001
+  optimizer: "adam"
+
+  # Regularization
+  dropout: 0.5
+
+  # Early stopping
+  early_stopping: true
+  patience: 10
+
+  # Data
+  image_size: [224, 224]
+  num_classes: 120

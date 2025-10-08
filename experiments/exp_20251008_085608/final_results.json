@@ -1,0 +1,19 @@
+{
+  "experiment_id": "exp_20251008_085608",
+  "model_type": "transfer",
+  "base_model": "resnet50",
+  "val_loss": 1.0732749700546265,
+  "val_accuracy": 0.776768147945404,
+  "val_top5_accuracy": 0.9523575901985168,
+  "epochs_trained": 36,
+  "batch_size": 32,
+  "learning_rate": 0.0001,
+  "image_size": [
+    224,
+    224
+  ],
+  "timestamp": "2025-10-08T09:47:11",
+  "config_path": "configs/cnn_selective_finetune_v2.yaml",
+  "checkpoint_path": "experiments/exp_20251008_085608/checkpoints/best_model.h5",
+  "completed_at": "2025-10-08T09:47:11"
+}
