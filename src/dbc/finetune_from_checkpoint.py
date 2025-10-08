@@ -19,7 +19,8 @@ def finetune_from_checkpoint(
     config_path: str,
     learning_rate: float = 0.00001,
     epochs: int = 20,
-    batch_size: int = 64
+    batch_size: int = 64,
+    unfreeze_last_n_layers: int = None
 ):
     """
     Fine-tune a model from a frozen checkpoint.
@@ -27,9 +28,12 @@ def finetune_from_checkpoint(
     Args:
         checkpoint_path: Path to frozen model checkpoint (.h5 file)
         config_path: Path to config file for experiment setup
-        learning_rate: Learning rate for fine-tuning (very low)
+        learning_rate: Learning rate for fine-tuning (very low, typically 1e-5 to 1e-6)
         epochs: Number of fine-tuning epochs
         batch_size: Batch size for fine-tuning
+        unfreeze_last_n_layers: If set, freeze all layers except last N.
+                               If None, unfreezes all base layers.
+                               Recommended: VGG16=4-8, ResNet50=10-20, EfficientNet=20-40
     """
 
     print("="*60)
@@ -59,9 +63,36 @@ def finetune_from_checkpoint(
             break
 
     if base_model:
-        print(f"\nUnfreezing base model: {base_model.name}")
-        base_model.trainable = True
-        print(f"Trainable parameters: {sum([keras.backend.count_params(w) for w in model.trainable_weights]):,}")
+        total_base_layers = len(base_model.layers)
+        print(f"\nFound base model: {base_model.name} ({total_base_layers} layers)")
+
+        if unfreeze_last_n_layers is not None:
+            # Selective unfreezing strategy
+            print(f"Applying selective unfreezing: last {unfreeze_last_n_layers} layers")
+            base_model.trainable = True
+
+            # Freeze early layers
+            frozen_count = 0
+            for layer in base_model.layers[:-unfreeze_last_n_layers]:
+                layer.trainable = False
+                frozen_count += 1
+
+            # Unfreeze last N layers
+            unfrozen_count = 0
+            for layer in base_model.layers[-unfreeze_last_n_layers:]:
+                layer.trainable = True
+                unfrozen_count += 1
+
+            print(f"  Frozen: {frozen_count} layers")
+            print(f"  Unfrozen: {unfrozen_count} layers")
+        else:
+            # Unfreeze all base layers
+            print(f"Unfreezing all {total_base_layers} base layers")
+            base_model.trainable = True
+
+        trainable_params = sum([keras.backend.count_params(w) for w in model.trainable_weights])
+        total_params = model.count_params()
+        print(f"Trainable parameters: {trainable_params:,} / {total_params:,} ({trainable_params/total_params*100:.1f}%)")
     else:
         print("\nWarning: Could not find base model to unfreeze. Unfreezing all layers.")
         for layer in model.layers:
@@ -111,6 +142,7 @@ def finetune_from_checkpoint(
     finetune_config['train']['batch_size'] = batch_size
     finetune_config['train']['epochs'] = epochs
     finetune_config['train']['trainable_base'] = True
+    finetune_config['train']['unfreeze_last_n_layers'] = unfreeze_last_n_layers
     finetune_config['parent_checkpoint'] = checkpoint_path
 
     with open(exp_dir / 'config.json', 'w') as f:
@@ -190,9 +222,11 @@ def main():
     parser = argparse.ArgumentParser(description='Fine-tune from checkpoint')
     parser.add_argument('checkpoint', type=str, help='Path to frozen model checkpoint')
     parser.add_argument('config', type=str, help='Path to config file')
-    parser.add_argument('--lr', type=float, default=0.00001, help='Learning rate')
+    parser.add_argument('--lr', type=float, default=0.00001, help='Learning rate (default: 1e-5)')
     parser.add_argument('--epochs', type=int, default=20, help='Number of epochs')
     parser.add_argument('--batch-size', type=int, default=64, help='Batch size')
+    parser.add_argument('--unfreeze-last-n', type=int, default=None,
+                       help='Unfreeze only last N layers (VGG16:4-8, ResNet50:10-20, EfficientNet:20-40)')
 
     args = parser.parse_args()
 
@@ -201,7 +235,8 @@ def main():
         config_path=args.config,
         learning_rate=args.lr,
         epochs=args.epochs,
-        batch_size=args.batch_size
+        batch_size=args.batch_size,
+        unfreeze_last_n_layers=args.unfreeze_last_n
     )
 
 

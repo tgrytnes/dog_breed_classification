@@ -18,7 +18,8 @@ def build_transfer_learning_model(
     num_classes: int = 120,
     input_shape: tuple = (224, 224, 3),
     trainable_base: bool = False,
-    dropout_rate: float = 0.5
+    dropout_rate: float = 0.5,
+    unfreeze_last_n_layers: int = None
 ) -> Model:
     """
     Build a transfer learning model with a pre-trained base.
@@ -29,6 +30,8 @@ def build_transfer_learning_model(
         input_shape: Input image shape (height, width, channels)
         trainable_base: Whether to make base layers trainable (False = feature extraction)
         dropout_rate: Dropout rate before final classification layer
+        unfreeze_last_n_layers: If set, freeze all layers except last N (overrides trainable_base)
+                               Recommended: 4-8 for VGG16, 10-20 for ResNet50, 20-40 for EfficientNet
 
     Returns:
         Compiled Keras model
@@ -53,8 +56,29 @@ def build_transfer_learning_model(
         input_shape=input_shape
     )
 
-    # Freeze or unfreeze base model
-    base_model.trainable = trainable_base
+    # Apply freezing strategy
+    if unfreeze_last_n_layers is not None:
+        # Selective unfreezing: freeze all except last N layers
+        base_model.trainable = True
+        total_layers = len(base_model.layers)
+
+        # Freeze early layers
+        for layer in base_model.layers[:-unfreeze_last_n_layers]:
+            layer.trainable = False
+
+        # Unfreeze last N layers
+        for layer in base_model.layers[-unfreeze_last_n_layers:]:
+            layer.trainable = True
+
+        trainable_count = sum([1 for layer in base_model.layers if layer.trainable])
+        print(f"  Selective unfreezing: {trainable_count}/{total_layers} layers trainable (last {unfreeze_last_n_layers})")
+    else:
+        # All-or-nothing freezing
+        base_model.trainable = trainable_base
+        if trainable_base:
+            print(f"  All {len(base_model.layers)} base layers trainable")
+        else:
+            print(f"  All {len(base_model.layers)} base layers frozen")
 
     # Build full model
     inputs = keras.Input(shape=input_shape)

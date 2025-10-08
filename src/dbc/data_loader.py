@@ -7,6 +7,47 @@ from typing import Tuple, Optional, List
 import random
 from tensorflow import keras
 import tensorflow as tf
+from tensorflow.keras.applications.imagenet_utils import preprocess_input as keras_preprocess_input
+
+
+def get_model_preprocessing_config(model_name: str) -> dict:
+    """
+    Get preprocessing configuration for specific models.
+
+    Args:
+        model_name: Name of the model ('vgg16', 'resnet50', 'efficientnetb0')
+
+    Returns:
+        dict with preprocessing config: {
+            'preprocess_mode': preprocessing mode for keras,
+            'image_size': (width, height),
+            'description': human-readable description
+        }
+    """
+    model_name = model_name.lower()
+
+    configs = {
+        'vgg16': {
+            'preprocess_mode': 'caffe',
+            'image_size': (224, 224),
+            'description': 'VGG16: RGB->BGR, mean=[103.939, 116.779, 123.68] subtraction'
+        },
+        'resnet50': {
+            'preprocess_mode': 'caffe',
+            'image_size': (224, 224),
+            'description': 'ResNet50: RGB->BGR, mean=[103.939, 116.779, 123.68] subtraction'
+        },
+        'efficientnetb0': {
+            'preprocess_mode': 'torch',
+            'image_size': (224, 224),
+            'description': 'EfficientNet: RGB, normalize with ImageNet mean/std to ~[-2, +2]'
+        }
+    }
+
+    if model_name not in configs:
+        raise ValueError(f"Unknown model: {model_name}. Available: {list(configs.keys())}")
+
+    return configs[model_name]
 
 
 class DogBreedDataset:
@@ -27,7 +68,8 @@ class DogBreedDataset:
         image_size: Tuple[int, int] = (224, 224),
         normalize: str = 'imagenet',
         augment: bool = False,
-        augment_params: Optional[dict] = None
+        augment_params: Optional[dict] = None,
+        model_name: Optional[str] = None
     ):
         """
         Initialize dataset.
@@ -36,23 +78,37 @@ class DogBreedDataset:
             metadata_df: DataFrame with columns: file_path, breed_name, class_id
             data_root: Root directory containing the images
             image_size: Target size for images (width, height)
-            normalize: 'imagenet' for ImageNet stats, 'scale' for [0,1], None for no normalization
+            normalize: 'imagenet' for ImageNet stats, 'scale' for [0,1], 'model' for model-specific, None for no normalization
             augment: Whether to apply data augmentation
             augment_params: Dict with augmentation parameters
+            model_name: Name of model for model-specific preprocessing (e.g., 'vgg16', 'resnet50')
         """
         self.metadata_df = metadata_df.reset_index(drop=True)
         self.data_root = Path(data_root)
         self.image_size = image_size
         self.normalize = normalize
         self.augment = augment
+        self.model_name = model_name
 
-        # Default augmentation parameters
+        # Setup model-specific preprocessing if specified
+        self.model_preprocess_mode = None
+        if model_name is not None:
+            config = get_model_preprocessing_config(model_name)
+            self.model_preprocess_mode = config['preprocess_mode']
+            self.image_size = config['image_size']  # Use model's required size
+            print(f"  Model-specific preprocessing: {config['description']}")
+
+        # Strong augmentation parameters (proven effective for fine-grained classification)
         self.augment_params = augment_params or {
-            'rotation_range': 15,      # ±15 degrees
-            'horizontal_flip': True,   # 50% probability
-            'zoom_range': (0.9, 1.1),  # 90-110%
-            'brightness_range': (0.8, 1.2),  # ±20%
-            'contrast_range': (0.8, 1.2)     # ±20%
+            'rotation_range': 20,           # ±20 degrees
+            'horizontal_flip': True,        # 50% probability
+            'zoom_range': 0.2,              # 0.2 = zoom in/out by 20%
+            'width_shift_range': 0.2,       # ±20% horizontal shift
+            'height_shift_range': 0.2,      # ±20% vertical shift
+            'shear_range': 0.15,            # 0.15 radians shear
+            'brightness_range': (0.8, 1.2), # ±20%
+            'contrast_range': (0.8, 1.2),   # ±20%
+            'fill_mode': 'nearest'          # Fill empty regions
         }
 
         # ImageNet normalization statistics
@@ -97,7 +153,10 @@ class DogBreedDataset:
             img_array = self._augment_image(img_array)
 
         # Normalize
-        if self.normalize == 'imagenet':
+        if self.model_preprocess_mode is not None:
+            # Use model-specific preprocessing (Keras preprocess_input with mode)
+            img_array = keras_preprocess_input(img_array, mode=self.model_preprocess_mode)
+        elif self.normalize == 'imagenet':
             img_array = img_array / 255.0  # Scale to [0,1]
             img_array = (img_array - self.imagenet_mean) / self.imagenet_std
         elif self.normalize == 'scale':
@@ -106,9 +165,21 @@ class DogBreedDataset:
         # Convert class_id from 1-120 to 0-119 for Keras
         return img_array, row['class_id'] - 1, row['breed_name']
 
+    def _get_fill_value(self, img: Image.Image) -> tuple:
+        """Get fill value based on fill_mode parameter."""
+        fill_mode = self.augment_params.get('fill_mode', 'nearest')
+        if fill_mode == 'nearest':
+            # Use edge pixels (approximate nearest behavior with constant edge color)
+            # For simplicity, use a neutral gray that blends well
+            return (128, 128, 128)
+        else:
+            return (128, 128, 128)
+
     def _augment_image(self, img_array: np.ndarray) -> np.ndarray:
         """
-        Apply data augmentation to image.
+        Apply strong data augmentation to image.
+
+        Includes: rotation, flip, zoom, width/height shift, shear, brightness, contrast
 
         Args:
             img_array: Image as numpy array (H, W, 3)
@@ -116,7 +187,9 @@ class DogBreedDataset:
         Returns:
             Augmented image array
         """
+        import math
         img = Image.fromarray(img_array.astype(np.uint8))
+        fill_color = self._get_fill_value(img)
 
         # Random rotation
         if 'rotation_range' in self.augment_params:
@@ -124,16 +197,60 @@ class DogBreedDataset:
                 -self.augment_params['rotation_range'],
                 self.augment_params['rotation_range']
             )
-            img = img.rotate(angle, resample=Image.BILINEAR, fillcolor=(128, 128, 128))
+            img = img.rotate(angle, resample=Image.BILINEAR, fillcolor=fill_color)
 
         # Random horizontal flip
         if self.augment_params.get('horizontal_flip', False):
             if random.random() > 0.5:
                 img = img.transpose(Image.FLIP_LEFT_RIGHT)
 
+        # Random shear transform
+        if 'shear_range' in self.augment_params:
+            # shear_range is in radians (0.15 = 8.6 degrees)
+            shear_radians = random.uniform(
+                -self.augment_params['shear_range'],
+                self.augment_params['shear_range']
+            )
+            shear_factor = math.tan(shear_radians)
+            img = img.transform(
+                img.size,
+                Image.AFFINE,
+                (1, shear_factor, 0, 0, 1, 0),
+                resample=Image.BILINEAR,
+                fillcolor=fill_color
+            )
+
+        # Random width shift
+        if 'width_shift_range' in self.augment_params:
+            max_shift_w = int(self.image_size[0] * self.augment_params['width_shift_range'])
+            shift_w = random.randint(-max_shift_w, max_shift_w)
+            if shift_w != 0:
+                img = img.transform(
+                    img.size,
+                    Image.AFFINE,
+                    (1, 0, -shift_w, 0, 1, 0),
+                    resample=Image.BILINEAR,
+                    fillcolor=fill_color
+                )
+
+        # Random height shift
+        if 'height_shift_range' in self.augment_params:
+            max_shift_h = int(self.image_size[1] * self.augment_params['height_shift_range'])
+            shift_h = random.randint(-max_shift_h, max_shift_h)
+            if shift_h != 0:
+                img = img.transform(
+                    img.size,
+                    Image.AFFINE,
+                    (1, 0, 0, 0, 1, -shift_h),
+                    resample=Image.BILINEAR,
+                    fillcolor=fill_color
+                )
+
         # Random zoom (resize then crop/pad)
         if 'zoom_range' in self.augment_params:
-            zoom_factor = random.uniform(*self.augment_params['zoom_range'])
+            # zoom_range is a single value (e.g., 0.2 means zoom from 0.8 to 1.2)
+            zoom_range_val = self.augment_params['zoom_range']
+            zoom_factor = random.uniform(1.0 - zoom_range_val, 1.0 + zoom_range_val)
             new_size = tuple(int(dim * zoom_factor) for dim in img.size)
             img = img.resize(new_size, Image.BILINEAR)
 
@@ -143,7 +260,7 @@ class DogBreedDataset:
                 top = (new_size[1] - self.image_size[1]) // 2
                 img = img.crop((left, top, left + self.image_size[0], top + self.image_size[1]))
             else:  # Zoomed out, need to pad
-                new_img = Image.new('RGB', self.image_size, (128, 128, 128))
+                new_img = Image.new('RGB', self.image_size, fill_color)
                 paste_x = (self.image_size[0] - new_size[0]) // 2
                 paste_y = (self.image_size[1] - new_size[1]) // 2
                 new_img.paste(img, (paste_x, paste_y))
@@ -444,7 +561,8 @@ def create_data_loaders(
     normalize: str = 'imagenet',
     augment_train: bool = True,
     seed: int = 42,
-    use_prefetch: bool = True
+    use_prefetch: bool = True,
+    model_name: Optional[str] = None
 ) -> Tuple[DataGenerator, DataGenerator]:
     """
     Create train and validation data loaders with optimized prefetching.
@@ -454,11 +572,12 @@ def create_data_loaders(
         val_metadata_path: Path to validation metadata CSV
         data_root: Root directory containing images
         batch_size: Batch size
-        image_size: Target image size (width, height)
-        normalize: Normalization method ('imagenet', 'scale', or None)
+        image_size: Target image size (width, height) - overridden if model_name is specified
+        normalize: Normalization method ('imagenet', 'scale', or None) - ignored if model_name is specified
         augment_train: Whether to augment training data
         seed: Random seed
         use_prefetch: Use tf.data pipeline with prefetching for better GPU utilization
+        model_name: Name of model for model-specific preprocessing (e.g., 'vgg16', 'resnet50', 'efficientnetb0')
 
     Returns:
         (train_generator, val_generator)
@@ -469,6 +588,8 @@ def create_data_loaders(
 
     print("\n" + "="*60)
     print("CREATING DATA LOADERS WITH OPTIMIZED PREFETCHING")
+    if model_name:
+        print(f"Model: {model_name.upper()}")
     print("="*60)
 
     # Create datasets
@@ -478,7 +599,8 @@ def create_data_loaders(
         data_root,
         image_size=image_size,
         normalize=normalize,
-        augment=augment_train
+        augment=augment_train,
+        model_name=model_name
     )
 
     print("\nValidation dataset:")
@@ -487,7 +609,8 @@ def create_data_loaders(
         data_root,
         image_size=image_size,
         normalize=normalize,
-        augment=False  # No augmentation for validation
+        augment=False,  # No augmentation for validation
+        model_name=model_name
     )
 
     # Create optimized generators with prefetching
