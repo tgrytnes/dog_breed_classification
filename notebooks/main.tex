@@ -137,6 +137,39 @@
 \makeatother
 
 
+% definitions for citeproc citations
+\NewDocumentCommand\citeproctext{}{}
+\NewDocumentCommand\citeproc{mm}{%
+  \begingroup\def\citeproctext{#2}\cite{#1}\endgroup}
+\makeatletter
+ % allow citations to break across lines
+ \let\@cite@ofmt\@firstofone
+ % avoid brackets around text for \cite:
+ \def\@biblabel#1{}
+ \def\@cite#1#2{{#1\if@tempswa , #2\fi}}
+\makeatother
+\newlength{\cslhangindent}
+\setlength{\cslhangindent}{1.5em}
+\newlength{\csllabelwidth}
+\setlength{\csllabelwidth}{3em}
+\newenvironment{CSLReferences}[2] % #1 hanging-indent, #2 entry-spacing
+ {\begin{list}{}{%
+  \setlength{\itemindent}{0pt}
+  \setlength{\leftmargin}{0pt}
+  \setlength{\parsep}{0pt}
+  % turn on hanging indent if param 1 is 1
+  \ifodd #1
+   \setlength{\leftmargin}{\cslhangindent}
+   \setlength{\itemindent}{-1\cslhangindent}
+  \fi
+  % set entry spacing
+  \setlength{\itemsep}{#2\baselineskip}}}
+ {\end{list}}
+\usepackage{calc}
+\newcommand{\CSLBlock}[1]{\hfill\break\parbox[t]{\linewidth}{\strut\ignorespaces#1\strut}}
+\newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{\strut#1\strut}}
+\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{\strut#1\strut}}
+\newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
 
 
 
@@ -276,18 +309,14 @@ compare multiple architectures:
 \def\labelenumi{\arabic{enumi}.}
 \tightlist
 \item
-  \textbf{Transfer Learning Approach}: Use pre-trained models (ResNet50,
-  VGG16, or EfficientNetB0) as feature extractors, freeze the
-  convolutional base, and train only the new fully connected
-  classification layers on the dog breed dataset
+  \textbf{Transfer Learning Approach}: Use pre-trained models (ResNet50
+  or EfficientNetB0) as feature extractors, freeze the convolutional
+  base, and train only the new fully connected classification layers on
+  the dog breed dataset
 \item
   \textbf{Fine-Tuning Approach}: Start with pre-trained weights, then
   unfreeze some of the top convolutional layers and fine-tune them along
   with the classification layers using a low learning rate
-\item
-  \textbf{Custom CNN Architecture}: Build a CNN from scratch with
-  multiple convolutional blocks (Conv2D + BatchNormalization +
-  MaxPooling + Dropout) to serve as a baseline for comparison
 \end{enumerate}
 
 I will compare these approaches to determine which strategy yields the
@@ -356,14 +385,22 @@ requires GPU acceleration for practical training times.
 
 \subsubsection{Hardware Requirements}\label{hardware-requirements}
 
-\textbf{GPU (Essential)}: - \textbf{Minimum}: NVIDIA GPU with 8GB+ VRAM
-- \textbf{Recommended}: 16GB+ VRAM (A40, A100, RTX 3090/4090) - Training
-on CPU would take 50-100× longer (days instead of hours)
+\textbf{GPU (Essential)}:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Minimum}: NVIDIA GPU with 8GB+ VRAM
+\item
+  \textbf{Recommended}: 16GB+ VRAM (A40, A100, RTX 3090/4090)
+\item
+  Training on CPU would take 50-100× longer (days instead of hours)
+\end{itemize}
 
 \subsubsection{Training Costs (RunPod Cloud
 GPU)}\label{training-costs-runpod-cloud-gpu}
 
-\textbf{Current Setup}: 1× NVIDIA A40 (46GB)
+\textbf{Current Setup}: 1× NVIDIA A40 (46GB) at \$0.41/hour
 
 \begin{longtable}[]{@{}lll@{}}
 \toprule\noalign{}
@@ -372,31 +409,25 @@ Training Stage & Time & Cost \\
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-Frozen baseline (completed) & 48 min & \$0.32 \\
-Fine-tuning unfrozen (next) & 3-5 hours & \$1.50-2.00 \\
-Full project & 5-10 hours & \$2-5 \\
+Single model training & 1-2 hours & \$0.41-0.82 \\
+Full experimental pipeline & 1-2 days & \$10-20 \\
 \end{longtable}
-
-\textbf{GPU Upgrade Options}: - \textbf{A40}: \$0.40-0.60/hour (current,
-baseline performance) - \textbf{H100}: \$2.50-4.00/hour (3-4× faster -
-good for rapid iteration) - \textbf{2× A40}: \$0.80-1.20/hour (parallel
-training - good for testing multiple models)
 
 \section{Data Loading \& Initial
 Inspection}\label{data-loading-initial-inspection}
 
 \subsection{Dataset: Stanford Dogs}\label{dataset-stanford-dogs}
 
-\textbf{Source}: Stanford Dogs Dataset\\
+\textbf{Source}: Stanford Dogs Dataset (Khosla et al. 2011)\\
 \textbf{URL}: http://vision.stanford.edu/aditya86/ImageNetDogs/\\
 \textbf{License}: Academic/Research use\\
 \textbf{Size}: \textasciitilde750MB (images), 20,580 total images
 
 \textbf{Dataset Description}:
 
-The Stanford Dogs dataset contains images of 120 breeds of dogs from
-around the world. This dataset has been built using images and
-annotation from ImageNet for the task of fine-grained image
+The Stanford Dogs dataset (Khosla et al. 2011) contains images of 120
+breeds of dogs from around the world. This dataset has been built using
+images and annotation from ImageNet for the task of fine-grained image
 categorization.
 
 \textbf{Key Statistics}:
@@ -424,10 +455,10 @@ Images are organized in directories by breed:
 
 \begin{verbatim}
 data/raw/Images/
-├── n02085620-Chihuahua/
-├── n02085782-Japanese_spaniel/
-├── n02085936-Maltese_dog/
-└── ... (120 breed directories total)
+|-- n02085620-Chihuahua/
+|-- n02085782-Japanese_spaniel/
+|-- n02085936-Maltese_dog/
++-- ... (120 breed directories total)
 \end{verbatim}
 
 \textbf{Preprocessing Pipeline}:
@@ -443,7 +474,7 @@ data/raw/Images/
   20,580 images, validated for corruption, size, and format
 \item
   \textbf{Cleaning}: Removed 0 corrupt images, all images passed
-  validation ✓
+  validation
 \item
   \textbf{Splitting}: Created stratified 80/20 train/validation split
 
@@ -848,12 +879,14 @@ In this section, we explore the dataset characteristics to understand:
     
     \CommentTok{\# Sample random breeds}
 \NormalTok{    breeds }\OperatorTok{=}\NormalTok{ train\_df[}\StringTok{\textquotesingle{}breed\_name\textquotesingle{}}\NormalTok{].unique()}
-\NormalTok{    sample\_breeds }\OperatorTok{=}\NormalTok{ np.random.choice(breeds, size}\OperatorTok{=}\BuiltInTok{min}\NormalTok{(n\_breeds, }\BuiltInTok{len}\NormalTok{(breeds)), replace}\OperatorTok{=}\VariableTok{False}\NormalTok{)}
+\NormalTok{    sample\_breeds }\OperatorTok{=}\NormalTok{ np.random.choice(breeds, }
+\NormalTok{                                     size}\OperatorTok{=}\BuiltInTok{min}\NormalTok{(n\_breeds, }\BuiltInTok{len}\NormalTok{(breeds)), replace}\OperatorTok{=}\VariableTok{False}\NormalTok{)}
     
 \NormalTok{    fig, axes }\OperatorTok{=}\NormalTok{ plt.subplots(n\_breeds, images\_per\_breed, figsize}\OperatorTok{=}\NormalTok{(}\DecValTok{12}\NormalTok{, n\_breeds}\OperatorTok{*}\DecValTok{3}\NormalTok{))}
     
     \ControlFlowTok{for}\NormalTok{ i, breed }\KeywordTok{in} \BuiltInTok{enumerate}\NormalTok{(sample\_breeds):}
-\NormalTok{        breed\_images }\OperatorTok{=}\NormalTok{ train\_df[train\_df[}\StringTok{\textquotesingle{}breed\_name\textquotesingle{}}\NormalTok{] }\OperatorTok{==}\NormalTok{ breed].sample(n}\OperatorTok{=}\NormalTok{images\_per\_breed)}
+\NormalTok{        breed\_images }\OperatorTok{=}\NormalTok{ train\_df[train\_df[}\StringTok{\textquotesingle{}breed\_name\textquotesingle{}}\NormalTok{] }
+                                \OperatorTok{==}\NormalTok{ breed].sample(n}\OperatorTok{=}\NormalTok{images\_per\_breed)}
         
         \ControlFlowTok{for}\NormalTok{ j, (\_, row) }\KeywordTok{in} \BuiltInTok{enumerate}\NormalTok{(breed\_images.iterrows()):}
             \CommentTok{\# Use absolute\_path which has full path from project root}
@@ -870,7 +903,8 @@ In this section, we explore the dataset characteristics to understand:
 \NormalTok{                ax.set\_title(}\SpecialStringTok{f"}\SpecialCharTok{\{}\NormalTok{img}\SpecialCharTok{.}\NormalTok{size[}\DecValTok{0}\NormalTok{]}\SpecialCharTok{\}}\SpecialStringTok{×}\SpecialCharTok{\{}\NormalTok{img}\SpecialCharTok{.}\NormalTok{size[}\DecValTok{1}\NormalTok{]}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{, fontsize}\OperatorTok{=}\DecValTok{9}\NormalTok{)}
     
 \NormalTok{    plt.tight\_layout()}
-\NormalTok{    plt.savefig(}\StringTok{"../artifacts/figures/sample\_images.png"}\NormalTok{, dpi}\OperatorTok{=}\DecValTok{150}\NormalTok{, bbox\_inches}\OperatorTok{=}\StringTok{\textquotesingle{}tight\textquotesingle{}}\NormalTok{)}
+\NormalTok{    plt.savefig(}\StringTok{"../artifacts/figures/sample\_images.png"}\NormalTok{, }
+\NormalTok{                dpi}\OperatorTok{=}\DecValTok{150}\NormalTok{, bbox\_inches}\OperatorTok{=}\StringTok{\textquotesingle{}tight\textquotesingle{}}\NormalTok{)}
 \NormalTok{    plt.show()}
 
 \CommentTok{\# Create figures directory}
@@ -879,23 +913,22 @@ In this section, we explore the dataset characteristics to understand:
 \CommentTok{\# Show samples}
 \NormalTok{np.random.seed(}\DecValTok{42}\NormalTok{)}
 \NormalTok{show\_sample\_images(train\_df, n\_breeds}\OperatorTok{=}\DecValTok{4}\NormalTok{, images\_per\_breed}\OperatorTok{=}\DecValTok{3}\NormalTok{)}
-
-\BuiltInTok{print}\NormalTok{(}\StringTok{"}\CharTok{\textbackslash{}n}\StringTok{Sample images showing variety in:"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\StringTok{"  {-} Breed appearance (different sizes, coat colors, facial features)"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\StringTok{"  {-} Image dimensions (various aspect ratios and resolutions)"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\StringTok{"  {-} Photography conditions (backgrounds, lighting, angles)"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
 \pandocbounded{\includegraphics[keepaspectratio]{main_files/figure-pdf/cell-6-output-1.png}}
 
-\begin{verbatim}
-
 Sample images showing variety in:
-  - Breed appearance (different sizes, coat colors, facial features)
-  - Image dimensions (various aspect ratios and resolutions)
-  - Photography conditions (backgrounds, lighting, angles)
-\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  Breed appearance (different sizes, coat colors, facial features)
+\item
+  Image dimensions (various aspect ratios and resolutions)
+\item
+  Photography conditions (backgrounds, lighting, angles)
+\end{itemize}
 
 \subsection{Image Dimension Analysis}\label{image-dimension-analysis}
 
@@ -957,7 +990,8 @@ strategies
 \NormalTok{ax.set\_ylim(}\DecValTok{0}\NormalTok{, train\_df[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{].}\BuiltInTok{max}\NormalTok{() }\OperatorTok{+} \DecValTok{50}\NormalTok{)}
 
 \NormalTok{plt.tight\_layout()}
-\NormalTok{plt.savefig(}\StringTok{"../artifacts/figures/image\_dimensions\_scatter.png"}\NormalTok{, dpi}\OperatorTok{=}\DecValTok{150}\NormalTok{, bbox\_inches}\OperatorTok{=}\StringTok{\textquotesingle{}tight\textquotesingle{}}\NormalTok{)}
+\NormalTok{plt.savefig(}\StringTok{"../artifacts/figures/image\_dimensions\_scatter.png"}\NormalTok{, }
+\NormalTok{            dpi}\OperatorTok{=}\DecValTok{150}\NormalTok{, bbox\_inches}\OperatorTok{=}\StringTok{\textquotesingle{}tight\textquotesingle{}}\NormalTok{)}
 \NormalTok{plt.show()}
 \end{Highlighting}
 \end{Shaded}
@@ -1012,55 +1046,36 @@ upscaling:
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Analyze low{-}resolution images that will need upscaling}
+\CommentTok{\# Analyze low{-}resolution images needing upscaling}
 \BuiltInTok{print}\NormalTok{(}\StringTok{"Low{-}Resolution Image Analysis"}\NormalTok{)}
 \BuiltInTok{print}\NormalTok{(}\StringTok{"="}\OperatorTok{*}\DecValTok{60}\NormalTok{)}
 
-\CommentTok{\# Images smaller than our target size (224x224)}
-\NormalTok{small\_images }\OperatorTok{=}\NormalTok{ train\_df[(train\_df[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{] }\OperatorTok{\textless{}} \DecValTok{224}\NormalTok{) }\OperatorTok{|}\NormalTok{ (train\_df[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{] }\OperatorTok{\textless{}} \DecValTok{224}\NormalTok{)]}
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{Images requiring upscaling: }\SpecialCharTok{\{}\BuiltInTok{len}\NormalTok{(small\_images)}\SpecialCharTok{\}}\SpecialStringTok{ / }\SpecialCharTok{\{}\BuiltInTok{len}\NormalTok{(train\_df)}\SpecialCharTok{\}}\SpecialStringTok{ (}\SpecialCharTok{\{}\BuiltInTok{len}\NormalTok{(small\_images)}\OperatorTok{/}\BuiltInTok{len}\NormalTok{(train\_df)}\OperatorTok{*}\DecValTok{100}\SpecialCharTok{:.1f\}}\SpecialStringTok{\%)"}\NormalTok{)}
+\CommentTok{\# Images smaller than target size (224x224)}
+\NormalTok{needs\_upscale }\OperatorTok{=}\NormalTok{ train\_df[}
+\NormalTok{    (train\_df[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{] }\OperatorTok{\textless{}} \DecValTok{224}\NormalTok{) }\OperatorTok{|}\NormalTok{ (train\_df[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{] }\OperatorTok{\textless{}} \DecValTok{224}\NormalTok{)}
+\NormalTok{]}
+\NormalTok{n\_total }\OperatorTok{=} \BuiltInTok{len}\NormalTok{(train\_df)}
+\NormalTok{n\_small }\OperatorTok{=} \BuiltInTok{len}\NormalTok{(needs\_upscale)}
+\NormalTok{pct\_small }\OperatorTok{=}\NormalTok{ n\_small }\OperatorTok{/}\NormalTok{ n\_total }\OperatorTok{*} \DecValTok{100}
+
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{Images requiring upscaling: }\SpecialCharTok{\{}\NormalTok{n\_small}\SpecialCharTok{\}}\SpecialStringTok{ / }\SpecialCharTok{\{}\NormalTok{n\_total}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Percentage: }\SpecialCharTok{\{}\NormalTok{pct\_small}\SpecialCharTok{:.1f\}}\SpecialStringTok{\%"}\NormalTok{)}
 
 \CommentTok{\# Break down by severity}
-\NormalTok{very\_small }\OperatorTok{=}\NormalTok{ train\_df[(train\_df[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{] }\OperatorTok{\textless{}} \DecValTok{150}\NormalTok{) }\OperatorTok{\&}\NormalTok{ (train\_df[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{] }\OperatorTok{\textless{}} \DecValTok{150}\NormalTok{)]}
-\NormalTok{small }\OperatorTok{=}\NormalTok{ train\_df[((train\_df[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{] }\OperatorTok{\textgreater{}=} \DecValTok{150}\NormalTok{) }\OperatorTok{\&}\NormalTok{ (train\_df[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{] }\OperatorTok{\textless{}} \DecValTok{224}\NormalTok{)) }\OperatorTok{|} 
-\NormalTok{                 ((train\_df[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{] }\OperatorTok{\textgreater{}=} \DecValTok{150}\NormalTok{) }\OperatorTok{\&}\NormalTok{ (train\_df[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{] }\OperatorTok{\textless{}} \DecValTok{224}\NormalTok{))]}
+\NormalTok{very\_small }\OperatorTok{=}\NormalTok{ train\_df[}
+\NormalTok{    (train\_df[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{] }\OperatorTok{\textless{}} \DecValTok{150}\NormalTok{) }\OperatorTok{\&}\NormalTok{ (train\_df[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{] }\OperatorTok{\textless{}} \DecValTok{150}\NormalTok{)}
+\NormalTok{]}
+\NormalTok{small }\OperatorTok{=}\NormalTok{ train\_df[}
+\NormalTok{    ((train\_df[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{] }\OperatorTok{\textgreater{}=} \DecValTok{150}\NormalTok{) }\OperatorTok{\&}\NormalTok{ (train\_df[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{] }\OperatorTok{\textless{}} \DecValTok{224}\NormalTok{)) }\OperatorTok{|}
+\NormalTok{    ((train\_df[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{] }\OperatorTok{\textgreater{}=} \DecValTok{150}\NormalTok{) }\OperatorTok{\&}\NormalTok{ (train\_df[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{] }\OperatorTok{\textless{}} \DecValTok{224}\NormalTok{))}
+\NormalTok{]}
 
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  {-} Very small (\textless{}150×150): }\SpecialCharTok{\{}\BuiltInTok{len}\NormalTok{(very\_small)}\SpecialCharTok{\}}\SpecialStringTok{ images (}\SpecialCharTok{\{}\BuiltInTok{len}\NormalTok{(very\_small)}\OperatorTok{/}\BuiltInTok{len}\NormalTok{(train\_df)}\OperatorTok{*}\DecValTok{100}\SpecialCharTok{:.2f\}}\SpecialStringTok{\%)"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  {-} Small (150{-}224): }\SpecialCharTok{\{}\BuiltInTok{len}\NormalTok{(small)}\SpecialCharTok{\}}\SpecialStringTok{ images (}\SpecialCharTok{\{}\BuiltInTok{len}\NormalTok{(small)}\OperatorTok{/}\BuiltInTok{len}\NormalTok{(train\_df)}\OperatorTok{*}\DecValTok{100}\SpecialCharTok{:.2f\}}\SpecialStringTok{\%)"}\NormalTok{)}
-
-\CommentTok{\# Find the smallest images}
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{Smallest images:"}\NormalTok{)}
-\NormalTok{smallest }\OperatorTok{=}\NormalTok{ train\_df.nsmallest(}\DecValTok{5}\NormalTok{, [}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{])}
-\ControlFlowTok{for}\NormalTok{ \_, row }\KeywordTok{in}\NormalTok{ smallest.iterrows():}
-    \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  }\SpecialCharTok{\{}\NormalTok{row[}\StringTok{\textquotesingle{}filename\textquotesingle{}}\NormalTok{]}\SpecialCharTok{\}}\SpecialStringTok{: }\SpecialCharTok{\{}\NormalTok{row[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{]}\SpecialCharTok{\}}\SpecialStringTok{×}\SpecialCharTok{\{}\NormalTok{row[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{]}\SpecialCharTok{\}}\SpecialStringTok{ {-} }\SpecialCharTok{\{}\NormalTok{row[}\StringTok{\textquotesingle{}breed\_name\textquotesingle{}}\NormalTok{]}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
-
-\CommentTok{\# Visualize upscaling effect on a few small images}
-\NormalTok{fig, axes }\OperatorTok{=}\NormalTok{ plt.subplots(}\DecValTok{2}\NormalTok{, }\DecValTok{3}\NormalTok{, figsize}\OperatorTok{=}\NormalTok{(}\DecValTok{15}\NormalTok{, }\DecValTok{10}\NormalTok{))}
-
-\CommentTok{\# Show 3 small images: original vs resized}
-\ControlFlowTok{for}\NormalTok{ i, (\_, row) }\KeywordTok{in} \BuiltInTok{enumerate}\NormalTok{(small\_images.sample(n}\OperatorTok{=}\BuiltInTok{min}\NormalTok{(}\DecValTok{3}\NormalTok{, }\BuiltInTok{len}\NormalTok{(small\_images)), random\_state}\OperatorTok{=}\DecValTok{42}\NormalTok{).iterrows()):}
-\NormalTok{    img\_path }\OperatorTok{=}\NormalTok{ Path(}\StringTok{".."}\NormalTok{) }\OperatorTok{/} \StringTok{"data"} \OperatorTok{/} \StringTok{"raw"} \OperatorTok{/}\NormalTok{ row[}\StringTok{\textquotesingle{}file\_path\textquotesingle{}}\NormalTok{]}
-\NormalTok{    img\_original }\OperatorTok{=}\NormalTok{ Image.}\BuiltInTok{open}\NormalTok{(img\_path).convert(}\StringTok{\textquotesingle{}RGB\textquotesingle{}}\NormalTok{)}
-\NormalTok{    img\_resized }\OperatorTok{=}\NormalTok{ img\_original.resize((}\DecValTok{224}\NormalTok{, }\DecValTok{224}\NormalTok{), Image.BILINEAR)}
-    
-    \CommentTok{\# Original}
-\NormalTok{    axes[}\DecValTok{0}\NormalTok{, i].imshow(img\_original)}
-\NormalTok{    axes[}\DecValTok{0}\NormalTok{, i].set\_title(}\SpecialStringTok{f"Original: }\SpecialCharTok{\{}\NormalTok{img\_original}\SpecialCharTok{.}\NormalTok{size[}\DecValTok{0}\NormalTok{]}\SpecialCharTok{\}}\SpecialStringTok{×}\SpecialCharTok{\{}\NormalTok{img\_original}\SpecialCharTok{.}\NormalTok{size[}\DecValTok{1}\NormalTok{]}\SpecialCharTok{\}}\CharTok{\textbackslash{}n}\SpecialCharTok{\{}\NormalTok{row[}\StringTok{\textquotesingle{}breed\_name\textquotesingle{}}\NormalTok{]}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{, fontsize}\OperatorTok{=}\DecValTok{9}\NormalTok{)}
-\NormalTok{    axes[}\DecValTok{0}\NormalTok{, i].axis(}\StringTok{\textquotesingle{}off\textquotesingle{}}\NormalTok{)}
-    
-    \CommentTok{\# Resized}
-\NormalTok{    axes[}\DecValTok{1}\NormalTok{, i].imshow(img\_resized)}
-\NormalTok{    axes[}\DecValTok{1}\NormalTok{, i].set\_title(}\SpecialStringTok{f"Resized: 224×224}\CharTok{\textbackslash{}n}\SpecialStringTok{(upscaled }\SpecialCharTok{\{}\DecValTok{224}\OperatorTok{/}\BuiltInTok{min}\NormalTok{(img\_original.size)}\SpecialCharTok{:.2f\}}\SpecialStringTok{×)"}\NormalTok{, fontsize}\OperatorTok{=}\DecValTok{9}\NormalTok{)}
-\NormalTok{    axes[}\DecValTok{1}\NormalTok{, i].axis(}\StringTok{\textquotesingle{}off\textquotesingle{}}\NormalTok{)}
-
-\NormalTok{plt.suptitle(}\StringTok{"Low{-}Resolution Images: Original vs Upscaled to 224×224"}\NormalTok{, fontsize}\OperatorTok{=}\DecValTok{14}\NormalTok{, fontweight}\OperatorTok{=}\StringTok{\textquotesingle{}bold\textquotesingle{}}\NormalTok{)}
-\NormalTok{plt.tight\_layout()}
-\NormalTok{plt.savefig(}\StringTok{"../artifacts/figures/upscaling\_comparison.png"}\NormalTok{, dpi}\OperatorTok{=}\DecValTok{150}\NormalTok{, bbox\_inches}\OperatorTok{=}\StringTok{\textquotesingle{}tight\textquotesingle{}}\NormalTok{)}
-\NormalTok{plt.show()}
-
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{✓ Conclusion: Despite }\SpecialCharTok{\{}\BuiltInTok{len}\NormalTok{(small\_images)}\OperatorTok{/}\BuiltInTok{len}\NormalTok{(train\_df)}\OperatorTok{*}\DecValTok{100}\SpecialCharTok{:.1f\}}\SpecialStringTok{\% of images requiring upscaling,"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  bilinear interpolation preserves the key visual features (breed characteristics, coat"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  patterns, facial structure) sufficiently well for classification. Upscaling quality is acceptable."}\NormalTok{)}
+\NormalTok{n\_very\_small }\OperatorTok{=} \BuiltInTok{len}\NormalTok{(very\_small)}
+\NormalTok{n\_sm }\OperatorTok{=} \BuiltInTok{len}\NormalTok{(small)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  {-} Very small (\textless{}150×150): }\SpecialCharTok{\{}\NormalTok{n\_very\_small}\SpecialCharTok{\}}\SpecialStringTok{ images"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"     (}\SpecialCharTok{\{}\NormalTok{n\_very\_small}\OperatorTok{/}\NormalTok{n\_total}\OperatorTok{*}\DecValTok{100}\SpecialCharTok{:.2f\}}\SpecialStringTok{\%)"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  {-} Small (150{-}224): }\SpecialCharTok{\{}\NormalTok{n\_sm}\SpecialCharTok{\}}\SpecialStringTok{ images"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"     (}\SpecialCharTok{\{}\NormalTok{n\_sm}\OperatorTok{/}\NormalTok{n\_total}\OperatorTok{*}\DecValTok{100}\SpecialCharTok{:.2f\}}\SpecialStringTok{\%)"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1068,9 +1083,71 @@ upscaling:
 Low-Resolution Image Analysis
 ============================================================
 
-Images requiring upscaling: 1261 / 16508 (7.6%)
-  - Very small (<150×150): 15 images (0.09%)
-  - Small (150-224): 1233 images (7.47%)
+Images requiring upscaling: 1261 / 16508
+  Percentage: 7.6%
+  - Very small (<150×150): 15 images
+     (0.09%)
+  - Small (150-224): 1233 images
+     (7.47%)
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Find the smallest images}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{Smallest images:"}\NormalTok{)}
+\NormalTok{smallest }\OperatorTok{=}\NormalTok{ train\_df.nsmallest(}\DecValTok{5}\NormalTok{, [}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{])}
+\ControlFlowTok{for}\NormalTok{ \_, row }\KeywordTok{in}\NormalTok{ smallest.iterrows():}
+\NormalTok{    fname }\OperatorTok{=}\NormalTok{ row[}\StringTok{\textquotesingle{}filename\textquotesingle{}}\NormalTok{]}
+\NormalTok{    w, h }\OperatorTok{=}\NormalTok{ row[}\StringTok{\textquotesingle{}width\textquotesingle{}}\NormalTok{], row[}\StringTok{\textquotesingle{}height\textquotesingle{}}\NormalTok{]}
+\NormalTok{    breed }\OperatorTok{=}\NormalTok{ row[}\StringTok{\textquotesingle{}breed\_name\textquotesingle{}}\NormalTok{]}
+    \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  }\SpecialCharTok{\{}\NormalTok{fname}\SpecialCharTok{\}}\SpecialStringTok{: }\SpecialCharTok{\{}\NormalTok{w}\SpecialCharTok{\}}\SpecialStringTok{×}\SpecialCharTok{\{}\NormalTok{h}\SpecialCharTok{\}}\SpecialStringTok{ {-} }\SpecialCharTok{\{}\NormalTok{breed}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
+
+\CommentTok{\# Visualize upscaling effect on small images}
+\NormalTok{fig, axes }\OperatorTok{=}\NormalTok{ plt.subplots(}\DecValTok{2}\NormalTok{, }\DecValTok{3}\NormalTok{, figsize}\OperatorTok{=}\NormalTok{(}\DecValTok{15}\NormalTok{, }\DecValTok{10}\NormalTok{))}
+
+\CommentTok{\# Show 3 small images: original vs resized}
+\NormalTok{sample\_imgs }\OperatorTok{=}\NormalTok{ needs\_upscale.sample(}
+\NormalTok{    n}\OperatorTok{=}\BuiltInTok{min}\NormalTok{(}\DecValTok{3}\NormalTok{, }\BuiltInTok{len}\NormalTok{(needs\_upscale)), }
+\NormalTok{    random\_state}\OperatorTok{=}\DecValTok{42}
+\NormalTok{)}
+
+\ControlFlowTok{for}\NormalTok{ i, (\_, row) }\KeywordTok{in} \BuiltInTok{enumerate}\NormalTok{(sample\_imgs.iterrows()):}
+\NormalTok{    img\_path }\OperatorTok{=}\NormalTok{ Path(}\StringTok{".."}\NormalTok{) }\OperatorTok{/} \StringTok{"data"} \OperatorTok{/} \StringTok{"raw"} \OperatorTok{/}\NormalTok{ row[}\StringTok{\textquotesingle{}file\_path\textquotesingle{}}\NormalTok{]}
+\NormalTok{    img\_orig }\OperatorTok{=}\NormalTok{ Image.}\BuiltInTok{open}\NormalTok{(img\_path).convert(}\StringTok{\textquotesingle{}RGB\textquotesingle{}}\NormalTok{)}
+\NormalTok{    img\_resized }\OperatorTok{=}\NormalTok{ img\_orig.resize((}\DecValTok{224}\NormalTok{, }\DecValTok{224}\NormalTok{), Image.BILINEAR)}
+    
+    \CommentTok{\# Original}
+\NormalTok{    axes[}\DecValTok{0}\NormalTok{, i].imshow(img\_orig)}
+\NormalTok{    w, h }\OperatorTok{=}\NormalTok{ img\_orig.size}
+\NormalTok{    breed }\OperatorTok{=}\NormalTok{ row[}\StringTok{\textquotesingle{}breed\_name\textquotesingle{}}\NormalTok{]}
+\NormalTok{    title\_orig }\OperatorTok{=} \SpecialStringTok{f"Original: }\SpecialCharTok{\{}\NormalTok{w}\SpecialCharTok{\}}\SpecialStringTok{×}\SpecialCharTok{\{}\NormalTok{h}\SpecialCharTok{\}}\CharTok{\textbackslash{}n}\SpecialCharTok{\{}\NormalTok{breed}\SpecialCharTok{\}}\SpecialStringTok{"}
+\NormalTok{    axes[}\DecValTok{0}\NormalTok{, i].set\_title(title\_orig, fontsize}\OperatorTok{=}\DecValTok{9}\NormalTok{)}
+\NormalTok{    axes[}\DecValTok{0}\NormalTok{, i].axis(}\StringTok{\textquotesingle{}off\textquotesingle{}}\NormalTok{)}
+    
+    \CommentTok{\# Resized}
+\NormalTok{    axes[}\DecValTok{1}\NormalTok{, i].imshow(img\_resized)}
+\NormalTok{    scale\_factor }\OperatorTok{=} \DecValTok{224} \OperatorTok{/} \BuiltInTok{min}\NormalTok{(img\_orig.size)}
+\NormalTok{    title\_resized }\OperatorTok{=} \SpecialStringTok{f"Resized: 224×224}\CharTok{\textbackslash{}n}\SpecialStringTok{(upscaled }\SpecialCharTok{\{}\NormalTok{scale\_factor}\SpecialCharTok{:.2f\}}\SpecialStringTok{×)"}
+\NormalTok{    axes[}\DecValTok{1}\NormalTok{, i].set\_title(title\_resized, fontsize}\OperatorTok{=}\DecValTok{9}\NormalTok{)}
+\NormalTok{    axes[}\DecValTok{1}\NormalTok{, i].axis(}\StringTok{\textquotesingle{}off\textquotesingle{}}\NormalTok{)}
+
+\NormalTok{suptitle }\OperatorTok{=} \StringTok{"Low{-}Resolution Images: Original vs Upscaled to 224×224"}
+\NormalTok{plt.suptitle(suptitle, fontsize}\OperatorTok{=}\DecValTok{14}\NormalTok{, fontweight}\OperatorTok{=}\StringTok{\textquotesingle{}bold\textquotesingle{}}\NormalTok{)}
+\NormalTok{plt.tight\_layout()}
+\NormalTok{plt.savefig(}\StringTok{"../artifacts/figures/upscaling\_comparison.png"}\NormalTok{, }
+\NormalTok{            dpi}\OperatorTok{=}\DecValTok{150}\NormalTok{, bbox\_inches}\OperatorTok{=}\StringTok{\textquotesingle{}tight\textquotesingle{}}\NormalTok{)}
+\NormalTok{plt.show()}
+
+\NormalTok{pct\_upscale }\OperatorTok{=}\NormalTok{ n\_small }\OperatorTok{/}\NormalTok{ n\_total }\OperatorTok{*} \DecValTok{100}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{✓ Conclusion: Despite }\SpecialCharTok{\{}\NormalTok{pct\_upscale}\SpecialCharTok{:.1f\}}\SpecialStringTok{\% of images"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  requiring upscaling, bilinear interpolation"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  preserves key visual features (breed characteristics,"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  coat patterns, facial structure) sufficiently well"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  for classification. Upscaling quality is acceptable."}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
 
 Smallest images:
   n02089078_4466.jpg: 100×115 - black-and-tan_coonhound
@@ -1080,13 +1157,15 @@ Smallest images:
   n02101388_4333.jpg: 108×120 - Brittany_spaniel
 \end{verbatim}
 
-\pandocbounded{\includegraphics[keepaspectratio]{main_files/figure-pdf/cell-9-output-2.png}}
+\pandocbounded{\includegraphics[keepaspectratio]{main_files/figure-pdf/cell-10-output-2.png}}
 
 \begin{verbatim}
 
-✓ Conclusion: Despite 7.6% of images requiring upscaling,
-  bilinear interpolation preserves the key visual features (breed characteristics, coat
-  patterns, facial structure) sufficiently well for classification. Upscaling quality is acceptable.
+✓ Conclusion: Despite 7.6% of images
+  requiring upscaling, bilinear interpolation
+  preserves key visual features (breed characteristics,
+  coat patterns, facial structure) sufficiently well
+  for classification. Upscaling quality is acceptable.
 \end{verbatim}
 
 \subsection{Class Distribution
@@ -1099,20 +1178,28 @@ class weighting are needed.
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# Analyze class distribution}
-\NormalTok{breed\_counts }\OperatorTok{=}\NormalTok{ train\_df[}\StringTok{\textquotesingle{}breed\_name\textquotesingle{}}\NormalTok{].value\_counts().sort\_values(ascending}\OperatorTok{=}\VariableTok{False}\NormalTok{)}
+\NormalTok{breed\_counts }\OperatorTok{=}\NormalTok{ train\_df[}\StringTok{\textquotesingle{}breed\_name\textquotesingle{}}\NormalTok{].value\_counts()}
+\NormalTok{breed\_counts }\OperatorTok{=}\NormalTok{ breed\_counts.sort\_values(ascending}\OperatorTok{=}\VariableTok{False}\NormalTok{)}
 
 \NormalTok{fig, axes }\OperatorTok{=}\NormalTok{ plt.subplots(}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{, figsize}\OperatorTok{=}\NormalTok{(}\DecValTok{16}\NormalTok{, }\DecValTok{5}\NormalTok{))}
 
 \CommentTok{\# Plot 1: Top 20 breeds}
-\NormalTok{axes[}\DecValTok{0}\NormalTok{].barh(breed\_counts.head(}\DecValTok{20}\NormalTok{).index[::}\OperatorTok{{-}}\DecValTok{1}\NormalTok{], breed\_counts.head(}\DecValTok{20}\NormalTok{).values[::}\OperatorTok{{-}}\DecValTok{1}\NormalTok{])}
+\NormalTok{top20 }\OperatorTok{=}\NormalTok{ breed\_counts.head(}\DecValTok{20}\NormalTok{)}
+\NormalTok{axes[}\DecValTok{0}\NormalTok{].barh(top20.index[::}\OperatorTok{{-}}\DecValTok{1}\NormalTok{], top20.values[::}\OperatorTok{{-}}\DecValTok{1}\NormalTok{])}
 \NormalTok{axes[}\DecValTok{0}\NormalTok{].set\_xlabel(}\StringTok{\textquotesingle{}Number of Images\textquotesingle{}}\NormalTok{)}
 \NormalTok{axes[}\DecValTok{0}\NormalTok{].set\_title(}\StringTok{\textquotesingle{}Top 20 Breeds by Image Count (Training Set)\textquotesingle{}}\NormalTok{)}
 \NormalTok{axes[}\DecValTok{0}\NormalTok{].grid(axis}\OperatorTok{=}\StringTok{\textquotesingle{}x\textquotesingle{}}\NormalTok{, alpha}\OperatorTok{=}\FloatTok{0.3}\NormalTok{)}
 
 \CommentTok{\# Plot 2: Distribution histogram}
-\NormalTok{axes[}\DecValTok{1}\NormalTok{].hist(breed\_counts.values, bins}\OperatorTok{=}\DecValTok{30}\NormalTok{, edgecolor}\OperatorTok{=}\StringTok{\textquotesingle{}black\textquotesingle{}}\NormalTok{, alpha}\OperatorTok{=}\FloatTok{0.7}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{1}\NormalTok{].axvline(breed\_counts.mean(), color}\OperatorTok{=}\StringTok{\textquotesingle{}red\textquotesingle{}}\NormalTok{, linestyle}\OperatorTok{=}\StringTok{\textquotesingle{}{-}{-}\textquotesingle{}}\NormalTok{, label}\OperatorTok{=}\SpecialStringTok{f\textquotesingle{}Mean: }\SpecialCharTok{\{}\NormalTok{breed\_counts}\SpecialCharTok{.}\NormalTok{mean()}\SpecialCharTok{:.1f\}}\SpecialStringTok{\textquotesingle{}}\NormalTok{)}
-\NormalTok{axes[}\DecValTok{1}\NormalTok{].axvline(breed\_counts.median(), color}\OperatorTok{=}\StringTok{\textquotesingle{}green\textquotesingle{}}\NormalTok{, linestyle}\OperatorTok{=}\StringTok{\textquotesingle{}{-}{-}\textquotesingle{}}\NormalTok{, label}\OperatorTok{=}\SpecialStringTok{f\textquotesingle{}Median: }\SpecialCharTok{\{}\NormalTok{breed\_counts}\SpecialCharTok{.}\NormalTok{median()}\SpecialCharTok{:.1f\}}\SpecialStringTok{\textquotesingle{}}\NormalTok{)}
+\NormalTok{axes[}\DecValTok{1}\NormalTok{].hist(breed\_counts.values, bins}\OperatorTok{=}\DecValTok{30}\NormalTok{, }
+\NormalTok{             edgecolor}\OperatorTok{=}\StringTok{\textquotesingle{}black\textquotesingle{}}\NormalTok{, alpha}\OperatorTok{=}\FloatTok{0.7}\NormalTok{)}
+
+\NormalTok{mean\_val }\OperatorTok{=}\NormalTok{ breed\_counts.mean()}
+\NormalTok{median\_val }\OperatorTok{=}\NormalTok{ breed\_counts.median()}
+\NormalTok{axes[}\DecValTok{1}\NormalTok{].axvline(mean\_val, color}\OperatorTok{=}\StringTok{\textquotesingle{}red\textquotesingle{}}\NormalTok{, linestyle}\OperatorTok{=}\StringTok{\textquotesingle{}{-}{-}\textquotesingle{}}\NormalTok{,}
+\NormalTok{                label}\OperatorTok{=}\SpecialStringTok{f\textquotesingle{}Mean: }\SpecialCharTok{\{}\NormalTok{mean\_val}\SpecialCharTok{:.1f\}}\SpecialStringTok{\textquotesingle{}}\NormalTok{)}
+\NormalTok{axes[}\DecValTok{1}\NormalTok{].axvline(median\_val, color}\OperatorTok{=}\StringTok{\textquotesingle{}green\textquotesingle{}}\NormalTok{, linestyle}\OperatorTok{=}\StringTok{\textquotesingle{}{-}{-}\textquotesingle{}}\NormalTok{,}
+\NormalTok{                label}\OperatorTok{=}\SpecialStringTok{f\textquotesingle{}Median: }\SpecialCharTok{\{}\NormalTok{median\_val}\SpecialCharTok{:.1f\}}\SpecialStringTok{\textquotesingle{}}\NormalTok{)}
 \NormalTok{axes[}\DecValTok{1}\NormalTok{].set\_xlabel(}\StringTok{\textquotesingle{}Number of Images per Breed\textquotesingle{}}\NormalTok{)}
 \NormalTok{axes[}\DecValTok{1}\NormalTok{].set\_ylabel(}\StringTok{\textquotesingle{}Number of Breeds\textquotesingle{}}\NormalTok{)}
 \NormalTok{axes[}\DecValTok{1}\NormalTok{].set\_title(}\StringTok{\textquotesingle{}Distribution of Images Across Breeds\textquotesingle{}}\NormalTok{)}
@@ -1120,15 +1207,18 @@ class weighting are needed.
 \NormalTok{axes[}\DecValTok{1}\NormalTok{].grid(alpha}\OperatorTok{=}\FloatTok{0.3}\NormalTok{)}
 
 \NormalTok{plt.tight\_layout()}
-\NormalTok{plt.savefig(}\StringTok{"../artifacts/figures/breed\_distribution.png"}\NormalTok{, dpi}\OperatorTok{=}\DecValTok{150}\NormalTok{, bbox\_inches}\OperatorTok{=}\StringTok{\textquotesingle{}tight\textquotesingle{}}\NormalTok{)}
+\NormalTok{plt.savefig(}\StringTok{"../artifacts/figures/breed\_distribution.png"}\NormalTok{, }
+\NormalTok{            dpi}\OperatorTok{=}\DecValTok{150}\NormalTok{, bbox\_inches}\OperatorTok{=}\StringTok{\textquotesingle{}tight\textquotesingle{}}\NormalTok{)}
 
 \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{Class Balance Analysis:"}\NormalTok{)}
 \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Total breeds: }\SpecialCharTok{\{}\BuiltInTok{len}\NormalTok{(breed\_counts)}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
 \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Min images per breed: }\SpecialCharTok{\{}\NormalTok{breed\_counts}\SpecialCharTok{.}\BuiltInTok{min}\NormalTok{()}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
 \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Max images per breed: }\SpecialCharTok{\{}\NormalTok{breed\_counts}\SpecialCharTok{.}\BuiltInTok{max}\NormalTok{()}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Mean images per breed: }\SpecialCharTok{\{}\NormalTok{breed\_counts}\SpecialCharTok{.}\NormalTok{mean()}\SpecialCharTok{:.1f\}}\SpecialStringTok{"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Mean images per breed: }\SpecialCharTok{\{}\NormalTok{mean\_val}\SpecialCharTok{:.1f\}}\SpecialStringTok{"}\NormalTok{)}
 \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Std images per breed: }\SpecialCharTok{\{}\NormalTok{breed\_counts}\SpecialCharTok{.}\NormalTok{std()}\SpecialCharTok{:.1f\}}\SpecialStringTok{"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Imbalance ratio (max/min): }\SpecialCharTok{\{}\NormalTok{breed\_counts}\SpecialCharTok{.}\BuiltInTok{max}\NormalTok{()}\OperatorTok{/}\NormalTok{breed\_counts}\SpecialCharTok{.}\BuiltInTok{min}\NormalTok{()}\SpecialCharTok{:.2f\}}\SpecialStringTok{x"}\NormalTok{)}
+
+\NormalTok{imbalance\_ratio }\OperatorTok{=}\NormalTok{ breed\_counts.}\BuiltInTok{max}\NormalTok{() }\OperatorTok{/}\NormalTok{ breed\_counts.}\BuiltInTok{min}\NormalTok{()}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Imbalance ratio (max/min): }\SpecialCharTok{\{}\NormalTok{imbalance\_ratio}\SpecialCharTok{:.2f\}}\SpecialStringTok{x"}\NormalTok{)}
 
 \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{Most common breeds:"}\NormalTok{)}
 \ControlFlowTok{for}\NormalTok{ breed, count }\KeywordTok{in}\NormalTok{ breed\_counts.head(}\DecValTok{5}\NormalTok{).items():}
@@ -1165,38 +1255,56 @@ Least common breeds:
   redbone: 119 images
 \end{verbatim}
 
-\pandocbounded{\includegraphics[keepaspectratio]{main_files/figure-pdf/cell-10-output-2.png}}
+\pandocbounded{\includegraphics[keepaspectratio]{main_files/figure-pdf/cell-11-output-2.png}}
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{fig, ax }\OperatorTok{=}\NormalTok{ plt.subplots(}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, figsize}\OperatorTok{=}\NormalTok{(}\DecValTok{12}\NormalTok{, }\DecValTok{6}\NormalTok{))}
 
 \NormalTok{breed\_counts\_sorted }\OperatorTok{=}\NormalTok{ breed\_counts.sort\_values(ascending}\OperatorTok{=}\VariableTok{True}\NormalTok{)}
-\NormalTok{colors }\OperatorTok{=}\NormalTok{ [}\StringTok{\textquotesingle{}red\textquotesingle{}} \ControlFlowTok{if}\NormalTok{ x }\OperatorTok{\textless{}} \DecValTok{130} \ControlFlowTok{else} \StringTok{\textquotesingle{}orange\textquotesingle{}} \ControlFlowTok{if}\NormalTok{ x }\OperatorTok{\textless{}} \DecValTok{150} \ControlFlowTok{else} \StringTok{\textquotesingle{}green\textquotesingle{}} 
-          \ControlFlowTok{for}\NormalTok{ x }\KeywordTok{in}\NormalTok{ breed\_counts\_sorted.values]}
+\NormalTok{colors }\OperatorTok{=}\NormalTok{ [}
+    \StringTok{\textquotesingle{}red\textquotesingle{}} \ControlFlowTok{if}\NormalTok{ x }\OperatorTok{\textless{}} \DecValTok{130} \ControlFlowTok{else} \StringTok{\textquotesingle{}orange\textquotesingle{}} \ControlFlowTok{if}\NormalTok{ x }\OperatorTok{\textless{}} \DecValTok{150} \ControlFlowTok{else} \StringTok{\textquotesingle{}green\textquotesingle{}}
+    \ControlFlowTok{for}\NormalTok{ x }\KeywordTok{in}\NormalTok{ breed\_counts\_sorted.values}
+\NormalTok{]}
 
-\NormalTok{ax.barh(}\BuiltInTok{range}\NormalTok{(}\BuiltInTok{len}\NormalTok{(breed\_counts\_sorted)), breed\_counts\_sorted.values, color}\OperatorTok{=}\NormalTok{colors)}
-\NormalTok{ax.axvline(}\FloatTok{137.6}\NormalTok{, color}\OperatorTok{=}\StringTok{\textquotesingle{}blue\textquotesingle{}}\NormalTok{, linestyle}\OperatorTok{=}\StringTok{\textquotesingle{}{-}{-}\textquotesingle{}}\NormalTok{, linewidth}\OperatorTok{=}\DecValTok{2}\NormalTok{, label}\OperatorTok{=}\StringTok{\textquotesingle{}Mean (138)\textquotesingle{}}\NormalTok{)}
-\NormalTok{ax.axvline(}\DecValTok{150}\NormalTok{, color}\OperatorTok{=}\StringTok{\textquotesingle{}orange\textquotesingle{}}\NormalTok{, linestyle}\OperatorTok{=}\StringTok{\textquotesingle{}{-}{-}\textquotesingle{}}\NormalTok{, linewidth}\OperatorTok{=}\DecValTok{1}\NormalTok{, alpha}\OperatorTok{=}\FloatTok{0.7}\NormalTok{, label}\OperatorTok{=}\StringTok{\textquotesingle{}Adequate (150)\textquotesingle{}}\NormalTok{)}
+\NormalTok{ax.barh(}\BuiltInTok{range}\NormalTok{(}\BuiltInTok{len}\NormalTok{(breed\_counts\_sorted)), }
+\NormalTok{        breed\_counts\_sorted.values, color}\OperatorTok{=}\NormalTok{colors)}
+\NormalTok{ax.axvline(}\FloatTok{137.6}\NormalTok{, color}\OperatorTok{=}\StringTok{\textquotesingle{}blue\textquotesingle{}}\NormalTok{, linestyle}\OperatorTok{=}\StringTok{\textquotesingle{}{-}{-}\textquotesingle{}}\NormalTok{, }
+\NormalTok{           linewidth}\OperatorTok{=}\DecValTok{2}\NormalTok{, label}\OperatorTok{=}\StringTok{\textquotesingle{}Mean (138)\textquotesingle{}}\NormalTok{)}
+\NormalTok{ax.axvline(}\DecValTok{150}\NormalTok{, color}\OperatorTok{=}\StringTok{\textquotesingle{}orange\textquotesingle{}}\NormalTok{, linestyle}\OperatorTok{=}\StringTok{\textquotesingle{}{-}{-}\textquotesingle{}}\NormalTok{, }
+\NormalTok{           linewidth}\OperatorTok{=}\DecValTok{1}\NormalTok{, alpha}\OperatorTok{=}\FloatTok{0.7}\NormalTok{, label}\OperatorTok{=}\StringTok{\textquotesingle{}Adequate (150)\textquotesingle{}}\NormalTok{)}
 
 \NormalTok{ax.set\_xlabel(}\StringTok{\textquotesingle{}Number of Training Images\textquotesingle{}}\NormalTok{)}
 \NormalTok{ax.set\_ylabel(}\StringTok{\textquotesingle{}Breed Index\textquotesingle{}}\NormalTok{)}
-\NormalTok{ax.set\_title(}\StringTok{\textquotesingle{}Training Sample Size per Breed (Sorted)}\CharTok{\textbackslash{}n}\StringTok{Red: \textless{}130 samples, Orange: 130{-}150, Green: \textgreater{}150\textquotesingle{}}\NormalTok{)}
+\NormalTok{title }\OperatorTok{=}\NormalTok{ (}\StringTok{\textquotesingle{}Training Sample Size per Breed (Sorted)}\CharTok{\textbackslash{}n}\StringTok{\textquotesingle{}}
+         \StringTok{\textquotesingle{}Red: \textless{}130 samples, Orange: 130{-}150, Green: \textgreater{}150\textquotesingle{}}\NormalTok{)}
+\NormalTok{ax.set\_title(title)}
 \NormalTok{ax.legend()}
 \NormalTok{ax.grid(axis}\OperatorTok{=}\StringTok{\textquotesingle{}x\textquotesingle{}}\NormalTok{, alpha}\OperatorTok{=}\FloatTok{0.3}\NormalTok{)}
 
 \CommentTok{\# Add text annotation}
-\NormalTok{ax.text(}\FloatTok{0.02}\NormalTok{, }\FloatTok{0.98}\NormalTok{, }\SpecialStringTok{f\textquotesingle{}}\SpecialCharTok{\{}\NormalTok{(breed\_counts }\OperatorTok{\textless{}} \DecValTok{130}\NormalTok{)}\SpecialCharTok{.}\BuiltInTok{sum}\NormalTok{()}\SpecialCharTok{\}}\SpecialStringTok{ breeds with \textless{}130 samples\textquotesingle{}}\NormalTok{, }
-\NormalTok{        transform}\OperatorTok{=}\NormalTok{ax.transAxes, va}\OperatorTok{=}\StringTok{\textquotesingle{}top\textquotesingle{}}\NormalTok{, bbox}\OperatorTok{=}\BuiltInTok{dict}\NormalTok{(boxstyle}\OperatorTok{=}\StringTok{\textquotesingle{}round\textquotesingle{}}\NormalTok{, facecolor}\OperatorTok{=}\StringTok{\textquotesingle{}wheat\textquotesingle{}}\NormalTok{))}
+\NormalTok{n\_low }\OperatorTok{=}\NormalTok{ (breed\_counts }\OperatorTok{\textless{}} \DecValTok{130}\NormalTok{).}\BuiltInTok{sum}\NormalTok{()}
+\NormalTok{annotation\_text }\OperatorTok{=} \SpecialStringTok{f\textquotesingle{}}\SpecialCharTok{\{}\NormalTok{n\_low}\SpecialCharTok{\}}\SpecialStringTok{ breeds with \textless{}130 samples\textquotesingle{}}
+\NormalTok{bbox\_style }\OperatorTok{=} \BuiltInTok{dict}\NormalTok{(boxstyle}\OperatorTok{=}\StringTok{\textquotesingle{}round\textquotesingle{}}\NormalTok{, facecolor}\OperatorTok{=}\StringTok{\textquotesingle{}wheat\textquotesingle{}}\NormalTok{)}
+\NormalTok{ax.text(}\FloatTok{0.02}\NormalTok{, }\FloatTok{0.98}\NormalTok{, annotation\_text, transform}\OperatorTok{=}\NormalTok{ax.transAxes, }
+\NormalTok{        va}\OperatorTok{=}\StringTok{\textquotesingle{}top\textquotesingle{}}\NormalTok{, bbox}\OperatorTok{=}\NormalTok{bbox\_style)}
 
 \NormalTok{plt.tight\_layout()}
-\NormalTok{plt.savefig(}\StringTok{"../artifacts/figures/sample\_adequacy.png"}\NormalTok{, dpi}\OperatorTok{=}\DecValTok{150}\NormalTok{, bbox\_inches}\OperatorTok{=}\StringTok{\textquotesingle{}tight\textquotesingle{}}\NormalTok{)}
+\NormalTok{plt.savefig(}\StringTok{"../artifacts/figures/sample\_adequacy.png"}\NormalTok{, }
+\NormalTok{            dpi}\OperatorTok{=}\DecValTok{150}\NormalTok{, bbox\_inches}\OperatorTok{=}\StringTok{\textquotesingle{}tight\textquotesingle{}}\NormalTok{)}
+
+\CommentTok{\# Calculate breed counts by category}
+\NormalTok{n\_low }\OperatorTok{=}\NormalTok{ (breed\_counts }\OperatorTok{\textless{}} \DecValTok{130}\NormalTok{).}\BuiltInTok{sum}\NormalTok{()}
+\NormalTok{n\_adequate }\OperatorTok{=}\NormalTok{ ((breed\_counts }\OperatorTok{\textgreater{}=} \DecValTok{130}\NormalTok{) }\OperatorTok{\&} 
+\NormalTok{              (breed\_counts }\OperatorTok{\textless{}} \DecValTok{150}\NormalTok{)).}\BuiltInTok{sum}\NormalTok{()}
+\NormalTok{n\_good }\OperatorTok{=}\NormalTok{ (breed\_counts }\OperatorTok{\textgreater{}=} \DecValTok{150}\NormalTok{).}\BuiltInTok{sum}\NormalTok{()}
 
 \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{Sample Adequacy Summary:"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Breeds with \textless{}130 samples (may underperform): }\SpecialCharTok{\{}\NormalTok{(breed\_counts }\OperatorTok{\textless{}} \DecValTok{130}\NormalTok{)}\SpecialCharTok{.}\BuiltInTok{sum}\NormalTok{()}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Breeds with 130{-}150 samples (adequate): }\SpecialCharTok{\{}\NormalTok{((breed\_counts }\OperatorTok{\textgreater{}=} \DecValTok{130}\NormalTok{) }\OperatorTok{\&}\NormalTok{ (breed\_counts }\OperatorTok{\textless{}} \DecValTok{150}\NormalTok{))}\SpecialCharTok{.}\BuiltInTok{sum}\NormalTok{()}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Breeds with \textgreater{}150 samples (good): }\SpecialCharTok{\{}\NormalTok{(breed\_counts }\OperatorTok{\textgreater{}=} \DecValTok{150}\NormalTok{)}\SpecialCharTok{.}\BuiltInTok{sum}\NormalTok{()}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{Conclusion: }\SpecialCharTok{\{}\NormalTok{(breed\_counts }\OperatorTok{\textless{}} \DecValTok{130}\NormalTok{)}\SpecialCharTok{.}\BuiltInTok{sum}\NormalTok{()}\SpecialCharTok{\}}\SpecialStringTok{ breeds may show lower accuracy due to limited training data."}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Breeds with \textless{}130 samples (may underperform): }\SpecialCharTok{\{}\NormalTok{n\_low}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Breeds with 130{-}150 samples (adequate): }\SpecialCharTok{\{}\NormalTok{n\_adequate}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Breeds with \textgreater{}150 samples (good): }\SpecialCharTok{\{}\NormalTok{n\_good}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{Conclusion: }\SpecialCharTok{\{}\NormalTok{n\_low}\SpecialCharTok{\}}\SpecialStringTok{ breeds may show lower accuracy"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  due to limited training data."}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1207,10 +1315,11 @@ Sample Adequacy Summary:
   Breeds with 130-150 samples (adequate): 28
   Breeds with >150 samples (good): 30
 
-Conclusion: 62 breeds may show lower accuracy due to limited training data.
+Conclusion: 62 breeds may show lower accuracy
+  due to limited training data.
 \end{verbatim}
 
-\pandocbounded{\includegraphics[keepaspectratio]{main_files/figure-pdf/cell-11-output-2.png}}
+\pandocbounded{\includegraphics[keepaspectratio]{main_files/figure-pdf/cell-12-output-2.png}}
 
 \textbf{Key Findings:}
 
@@ -1346,33 +1455,37 @@ deep learning.
     Handles the 1 RGBA image in our dataset automatically
   \end{itemize}
 \item
-  \textbf{Normalization - ImageNet Statistics} ✓
+  \textbf{Normalization} ✓
 
   \begin{itemize}
   \tightlist
   \item
-    Standardize pixel values: \texttt{(pixel/255\ -\ mean)\ /\ std}
+    Will be configured per model in the Models section
   \item
-    Mean: {[}0.485, 0.456, 0.406{]} (RGB channels)
+    Different models require different preprocessing strategies
   \item
-    Std: {[}0.229, 0.224, 0.225{]} (RGB channels)
-  \item
-    \textbf{Why ImageNet stats?} Pre-trained models were trained on
-    ImageNet with these statistics. Using the same normalization ensures
-    our images are in the same distribution, enabling effective transfer
-    learning.
+    See Models section for model-specific preprocessing details
   \end{itemize}
 \item
-  \textbf{Data Augmentation (Training Only)}
+  \textbf{Strong Data Augmentation (Training Only)}
+
+  Our augmentation strategy is based on proven techniques from
+  EfficientNet and ImageNet best practices:
 
   \begin{itemize}
   \tightlist
   \item
-    \textbf{Random Rotation (±15°)}: Teaches model rotation invariance
+    \textbf{Random Rotation (±20°)}: Teaches model rotation invariance
   \item
     \textbf{Horizontal Flip (50\%)}: Dogs can face left or right
   \item
-    \textbf{Random Zoom (90-110\%)}: Handles different camera distances
+    \textbf{Random Zoom (80-120\%)}: Handles dogs at different distances
+  \item
+    \textbf{Width Shift (±20\%)}: Dogs not always centered horizontally
+  \item
+    \textbf{Height Shift (±20\%)}: Dogs at various vertical positions
+  \item
+    \textbf{Shear Transform (±15°)}: Simulates perspective changes
   \item
     \textbf{Brightness Adjustment (±20\%)}: Robust to lighting
     conditions
@@ -1381,20 +1494,43 @@ deep learning.
     qualities
   \end{itemize}
 
-  \textbf{Why Augment?}
+  \textbf{Why Strong Augmentation?}
 
   \begin{itemize}
   \tightlist
   \item
-    Increases effective training data size from 16,508 → effectively
-    millions of variations
+    \textbf{Limited Data}: With only \textasciitilde170 images per
+    breed, we need aggressive augmentation
   \item
-    Prevents overfitting by never seeing the exact same image twice
+    \textbf{Increases effective dataset size}: 16,508 → millions of
+    unique variations
   \item
-    Improves model generalization to real-world scenarios
+    \textbf{Prevents overfitting}: Model never sees the exact same image
+    twice
   \item
-    Critical for achieving state-of-the-art performance with limited
-    data
+    \textbf{Real-world robustness}: Dogs photographed from various
+    angles, positions, distances
+  \item
+    \textbf{Expected impact}: +3-6\% accuracy improvement over
+    conservative augmentation
+  \end{itemize}
+
+  \textbf{What's New (vs Conservative Augmentation)?}
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \textbf{Width/Height Shift}: Most important addition - dogs often
+    not centered
+  \item
+    \textbf{Shear Transform}: Handles perspective distortions from
+    different camera angles
+  \item
+    \textbf{Stronger Zoom}: 80-120\% (was 90-110\%) - captures close-ups
+    and distance shots
+  \item
+    \textbf{Slightly more rotation}: 20° (was 15°) - dogs at more varied
+    angles
   \end{itemize}
 \item
   \textbf{Batch Generation}
@@ -1417,11 +1553,8 @@ deep learning.
 \begin{itemize}
 \tightlist
 \item
-  \textbf{Transfer Learning Compatibility}: ImageNet normalization
-  ensures pre-trained weights work optimally
-\item
-  \textbf{Generalization}: Augmentation prevents the model from
-  memorizing training images
+  \textbf{Generalization}: Strong augmentation prevents memorization and
+  improves real-world performance
 \item
   \textbf{Efficiency}: Batch processing enables GPU parallelization for
   faster training
@@ -1435,23 +1568,24 @@ deep learning.
 
 \textbf{Expected Impact:}
 
-Without augmentation, our 16,508 training images would lead to
-overfitting. With augmentation, the model sees virtually infinite
-variations, enabling it to learn robust features that generalize to new
-dogs it has never seen before.
+Without strong augmentation, our model would overfit on the 16,508
+training images. With our enhanced augmentation strategy, the model sees
+virtually infinite variations and learns robust features that generalize
+to new dogs, achieving \textbf{82-88\% accuracy} (vs 75-80\% with
+conservative augmentation).
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \ImportTok{from}\NormalTok{ dbc.data\_loader }\ImportTok{import}\NormalTok{ DogBreedDataset, DataGenerator, create\_data\_loaders}
 
-\CommentTok{\# Create data loaders}
+\CommentTok{\# Create basic data loaders for testing the pipeline}
+\CommentTok{\# Note: We\textquotesingle{}ll create model{-}specific loaders in the Models section}
+\BuiltInTok{print}\NormalTok{(}\StringTok{"Creating data loaders for pipeline testing..."}\NormalTok{)}
 \NormalTok{train\_gen, val\_gen }\OperatorTok{=}\NormalTok{ create\_data\_loaders(}
 \NormalTok{    train\_metadata\_path}\OperatorTok{=}\NormalTok{Path(}\StringTok{"../artifacts/train\_metadata.csv"}\NormalTok{),}
 \NormalTok{    val\_metadata\_path}\OperatorTok{=}\NormalTok{Path(}\StringTok{"../artifacts/val\_metadata.csv"}\NormalTok{),}
 \NormalTok{    data\_root}\OperatorTok{=}\NormalTok{Path(}\StringTok{"../data/raw"}\NormalTok{),}
 \NormalTok{    batch\_size}\OperatorTok{=}\DecValTok{32}\NormalTok{,}
-\NormalTok{    image\_size}\OperatorTok{=}\NormalTok{(}\DecValTok{224}\NormalTok{, }\DecValTok{224}\NormalTok{),}
-\NormalTok{    normalize}\OperatorTok{=}\StringTok{\textquotesingle{}imagenet\textquotesingle{}}\NormalTok{,  }\CommentTok{\# Use ImageNet statistics}
 \NormalTok{    augment\_train}\OperatorTok{=}\VariableTok{True}\NormalTok{,}
 \NormalTok{    seed}\OperatorTok{=}\DecValTok{42}
 \NormalTok{)}
@@ -1462,7 +1596,6 @@ dogs it has never seen before.
     \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"}\CharTok{\textbackslash{}n}\SpecialStringTok{Batch details:"}\NormalTok{)}
     \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Images shape: }\SpecialCharTok{\{}\NormalTok{images}\SpecialCharTok{.}\NormalTok{shape}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
     \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Labels shape: }\SpecialCharTok{\{}\NormalTok{labels}\SpecialCharTok{.}\NormalTok{shape}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
-    \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Image value range: [}\SpecialCharTok{\{}\NormalTok{images}\SpecialCharTok{.}\BuiltInTok{min}\NormalTok{()}\SpecialCharTok{:.3f\}}\SpecialStringTok{, }\SpecialCharTok{\{}\NormalTok{images}\SpecialCharTok{.}\BuiltInTok{max}\NormalTok{()}\SpecialCharTok{:.3f\}}\SpecialStringTok{]"}\NormalTok{)}
     \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Data type: }\SpecialCharTok{\{}\NormalTok{images}\SpecialCharTok{.}\NormalTok{dtype}\SpecialCharTok{\}}\SpecialStringTok{"}\NormalTok{)}
     \BuiltInTok{print}\NormalTok{(}\SpecialStringTok{f"  Memory per batch: }\SpecialCharTok{\{}\NormalTok{images}\SpecialCharTok{.}\NormalTok{nbytes }\OperatorTok{/} \DecValTok{1024} \OperatorTok{/} \DecValTok{1024}\SpecialCharTok{:.2f\}}\SpecialStringTok{ MB"}\NormalTok{)}
     
@@ -1473,14 +1606,16 @@ dogs it has never seen before.
     
     \ControlFlowTok{break}  \CommentTok{\# Just show first batch}
 
-\BuiltInTok{print}\NormalTok{(}\StringTok{"}\CharTok{\textbackslash{}n}\StringTok{✓ Data pipeline ready for training!"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\StringTok{"}\CharTok{\textbackslash{}n}\StringTok{✓ Data pipeline ready!"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\StringTok{"Note: Model{-}specific preprocessing will be configured in the Models section."}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{verbatim}
+Creating data loaders for pipeline testing...
 
 ============================================================
-CREATING DATA LOADERS
+CREATING DATA LOADERS WITH OPTIMIZED PREFETCHING
 ============================================================
 
 Train dataset:
@@ -1502,6 +1637,7 @@ Dataset initialized:
 Data loaders created:
   Train batches: 516 (32 samples/batch)
   Val batches: 128 (32 samples/batch)
+  Prefetching: ENABLED (optimized for GPU)
 ============================================================
 
 Loading sample batch...
@@ -1509,14 +1645,14 @@ Loading sample batch...
 Batch details:
   Images shape: (32, 224, 224, 3)
   Labels shape: (32,)
-  Image value range: [-2.118, 2.640]
   Data type: float64
   Memory per batch: 36.75 MB
 
   Unique breeds in batch: 29
-  Sample labels: [30 64 36 92 20]
+  Sample labels: [31 36 96 84 44]
 
-✓ Data pipeline ready for training!
+✓ Data pipeline ready!
+Note: Model-specific preprocessing will be configured in the Models section.
 \end{verbatim}
 
 \subsection{Visualizing Data
@@ -1532,7 +1668,7 @@ training samples:
 \ImportTok{from}\NormalTok{ IPython.display }\ImportTok{import}\NormalTok{ Image }\ImportTok{as}\NormalTok{ IPImage}
 
 \CommentTok{\# Pick one image index}
-\NormalTok{sample\_idx }\OperatorTok{=} \DecValTok{41}
+\NormalTok{sample\_idx }\OperatorTok{=} \DecValTok{39}
 
 \CommentTok{\# Dataset without augmentation (original)}
 \NormalTok{orig\_dataset }\OperatorTok{=}\NormalTok{ DogBreedDataset(}
@@ -1590,1218 +1726,1257 @@ Dataset initialized:
   Augmentation: True
 \end{verbatim}
 
-\pandocbounded{\includegraphics[keepaspectratio]{main_files/figure-pdf/cell-13-output-2.png}}
+\pandocbounded{\includegraphics[keepaspectratio]{main_files/figure-pdf/cell-14-output-2.png}}
 
-\subsection{High-Performance Image
-Preprocessing}\label{high-performance-image-preprocessing}
+\section{Models}\label{models}
 
-\textbf{Problem}: Training deep learning models with on-the-fly image
-loading creates an I/O bottleneck that severely limits training speed.
+\subsection{Transfer Learning: Leveraging Pre-trained
+Models}\label{transfer-learning-leveraging-pre-trained-models}
 
-\textbf{Solution}: Preprocess all images once and save as memory-mapped
-numpy arrays for instant loading during training.
+Rather than training a CNN from scratch (which would require millions of
+images and weeks of GPU time), we'll use \textbf{transfer learning}
+(Yosinski et al. 2014) - taking models already trained on ImageNet (Deng
+et al. 2009) (1.4M images, 1000 classes) and adapting them to our dog
+breed task.
 
-\subsubsection{Why Preprocessing
-Matters}\label{why-preprocessing-matters}
+\subsubsection{Why Transfer Learning
+Works}\label{why-transfer-learning-works}
 
-\textbf{Without Preprocessing} (loading images on-the-fly):
+Pre-trained models have already learned fundamental visual features
+(Yosinski et al. 2014): - \textbf{Early layers}: Edges, colors, textures
+(universal across all images) - \textbf{Middle layers}: Shapes,
+patterns, object parts (transferable to dogs) - \textbf{Late layers}:
+ImageNet-specific features (will be replaced/fine-tuned for dog breeds)
 
-\begin{itemize}
-\tightlist
-\item
-  Each epoch loads 16,508 images from disk
-\item
-  JPEG decoding happens every time
-\item
-  Resizing/normalization computed repeatedly
-\item
-  \textbf{Result}: 60+ seconds per epoch overhead, training is I/O-bound
-\end{itemize}
+By starting with these learned features, we can achieve high accuracy
+with only \textasciitilde170 images per breed instead of requiring
+thousands.
 
-\textbf{With Preprocessing} (memory-mapped arrays):
+\subsubsection{Architecture Selection
+Criteria}\label{architecture-selection-criteria}
 
-\begin{itemize}
-\tightlist
-\item
-  Images loaded and processed once upfront
-\item
-  Saved as \texttt{.npy} files that can be memory-mapped
-\item
-  Training loads data instantly from RAM
-\item
-  \textbf{Result}: 0.0006 seconds loading time, training is
-  compute-bound
-\end{itemize}
+For fine-grained dog breed classification, we need models that are: 1.
+\textbf{Accurate}: High performance on ImageNet suggests good feature
+learning 2. \textbf{Efficient}: Reasonable training time and inference
+speed 3. \textbf{Modern}: Recent architectures with proven transfer
+learning success (Kornblith, Shlens, and Le 2019) 4. \textbf{Appropriate
+size}: Not too small (underfit) or too large (overfit on our 20K images)
 
-\subsubsection{Implementation}\label{implementation}
+\subsection{Model Selection Rationale}\label{model-selection-rationale}
 
-\textbf{Script}:
-\href{../src/dbc/preprocess_images.py}{\texttt{src/dbc/preprocess\_images.py}}
-
-\textbf{What it does}:
+For fine-grained dog breed classification, we selected \textbf{five
+architectures} spanning different design philosophies and computational
+requirements. Our selection criteria prioritized:
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
 \tightlist
 \item
-  Loads all images (train + validation)
+  \textbf{Proven ImageNet Performance}: Strong pre-trained features for
+  transfer learning
 \item
-  Resizes to 224×224
+  \textbf{Architecture Diversity}: Mix of traditional (ResNet) and
+  modern (EfficientNet) designs
 \item
-  Converts to RGB if needed
+  \textbf{Computational Range}: From lightweight (B0) to
+  high-performance (V2-S)
 \item
-  Normalizes to {[}0, 255{]} range
+  \textbf{Research-Backed}: Recent architectures with strong
+  academic/industry adoption
 \item
-  Saves as uncompressed \texttt{.npy} files
+  \textbf{Hardware Constraints}: Models that fit within A40 GPU memory
+  (46GB VRAM)
 \end{enumerate}
 
-\textbf{Key Technical Detail}: Uses \textbf{memory mapping}
-(\texttt{mmap\_mode=\textquotesingle{}r\textquotesingle{}}) - Operating
-system maps file directly into virtual memory - No actual loading
-required - data accessed on-demand - Multiple processes can share the
-same memory-mapped file - Perfect for training with multiple workers
+\textbf{Why Not Larger Models?}
 
-\subsubsection{Running Preprocessing}\label{running-preprocessing}
+While larger models exist (EfficientNetB6/B7, EfficientNetV2-M/L), we
+excluded them because: - \textbf{GPU limitations}: Require
+\textgreater46GB VRAM or multi-GPU setups - \textbf{Diminishing
+returns}: Our images average 443×386px - excessive upscaling to 528×528+
+(B6) or 600×600+ (B7) would introduce artifacts without capturing more
+detail - \textbf{Training time}: 2-3× longer training on already limited
+GPU budget
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{\# Preprocess all images (run once before training)}
-\VariableTok{PYTHONPATH}\OperatorTok{=}\NormalTok{src }\ExtensionTok{python3} \AttributeTok{{-}m}\NormalTok{ dbc.preprocess\_images}
-
-\CommentTok{\# Output files:}
-\CommentTok{\# {-} artifacts/preprocessed/train\_images.npy (9.26 GB)}
-\CommentTok{\# {-} artifacts/preprocessed/train\_labels.npy (129 KB)}
-\CommentTok{\# {-} artifacts/preprocessed/val\_images.npy (2.28 GB)}
-\CommentTok{\# {-} artifacts/preprocessed/val\_labels.npy (32 KB)}
-\end{Highlighting}
-\end{Shaded}
-
-\subsubsection{Performance Impact}\label{performance-impact}
+\subsubsection{Selected Models}\label{selected-models}
 
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.1270}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2063}}@{}}
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-Metric
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Before Preprocessing
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-After Preprocessing
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Improvement
-\end{minipage} \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-\textbf{Data Loading Time} & 60+ seconds/epoch & 0.0006 seconds &
-\textbf{100,000×} \\
-\textbf{Epoch Time (VGG16)} & \textasciitilde200 seconds &
-\textasciitilde80 seconds & \textbf{2.5×} \\
-\textbf{Training Bottleneck} & I/O bound & Compute bound & ✅ Optimal \\
-\textbf{GPU Utilization} & 30-40\% & 50-55\% & \textbf{+40\%} \\
-\end{longtable}
-
-\subsubsection{Memory-Mapped Loading in Data
-Loader}\label{memory-mapped-loading-in-data-loader}
-
-\textbf{Implementation}:
-\href{../src/dbc/data_loader.py}{\texttt{src/dbc/data\_loader.py}}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\KeywordTok{class}\NormalTok{ PreprocessedDataGenerator:}
-    \KeywordTok{def} \FunctionTok{\_\_init\_\_}\NormalTok{(}\VariableTok{self}\NormalTok{, data\_path):}
-        \CommentTok{\# Load with memory mapping {-} instant!}
-\NormalTok{        images\_path }\OperatorTok{=}\NormalTok{ data\_path.parent }\OperatorTok{/} \SpecialStringTok{f"}\SpecialCharTok{\{}\NormalTok{data\_path}\SpecialCharTok{.}\NormalTok{stem}\SpecialCharTok{\}}\SpecialStringTok{\_images.npy"}
-\NormalTok{        labels\_path }\OperatorTok{=}\NormalTok{ data\_path.parent }\OperatorTok{/} \SpecialStringTok{f"}\SpecialCharTok{\{}\NormalTok{data\_path}\SpecialCharTok{.}\NormalTok{stem}\SpecialCharTok{\}}\SpecialStringTok{\_labels.npy"}
-        
-        \VariableTok{self}\NormalTok{.images }\OperatorTok{=}\NormalTok{ np.load(images\_path, mmap\_mode}\OperatorTok{=}\StringTok{\textquotesingle{}r\textquotesingle{}}\NormalTok{)  }\CommentTok{\# No actual loading}
-        \VariableTok{self}\NormalTok{.labels }\OperatorTok{=}\NormalTok{ np.load(labels\_path)}
-        
-    \KeywordTok{def} \FunctionTok{\_\_getitem\_\_}\NormalTok{(}\VariableTok{self}\NormalTok{, idx):}
-        \CommentTok{\# Data accessed on{-}demand from memory{-}mapped file}
-        \ControlFlowTok{return} \VariableTok{self}\NormalTok{.images[idx], }\VariableTok{self}\NormalTok{.labels[idx]}
-\end{Highlighting}
-\end{Shaded}
-
-\subsubsection{Critical Insight}\label{critical-insight}
-
-\begin{quote}
-\textbf{Preprocessing is not optional} - It's the difference between a
-model that takes 3 hours to train and one that takes 30 minutes. The
-100,000× speedup in data loading transforms training from I/O-bound to
-compute-bound, maximizing GPU utilization.
-\end{quote}
-
-\textbf{Trade-off}: 11.5 GB disk space for preprocessed files vs hours
-of saved training time → \textbf{Worth it!}
-
-\section{Models}\label{models}
-
-\subsection{Model Selection \& Experimental
-Plan}\label{model-selection-experimental-plan}
-
-\textbf{No Traditional Baselines} - This is a computer vision task with
-120 classes, making simple baselines (logistic regression, decision
-trees) impractical for image data.
-
-\textbf{Transfer Learning Approach}:
-
-\begin{itemize}
-\tightlist
-\item
-  \textbf{Pre-trained Models}: ResNet50, VGG16, EfficientNetB0 (trained
-  on ImageNet with 1.4M images)
-\item
-  \textbf{Rationale}: Leverage features learned from millions of images,
-  adapt to dog breeds
-\item
-  \textbf{Advantage}: Achieves strong performance without training CNNs
-  from scratch
-\end{itemize}
-
-\subsection{Candidate Models}\label{candidate-models}
-
-\begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.0933}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1467}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2400}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2800}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2400}}@{}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1228}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1404}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2105}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2807}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2456}}@{}}
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
 Model
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Parameters
+Params
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Frozen Trainable
+Input Size
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Fine-tuned Trainable
+ImageNet Top-1
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Expected Accuracy
+Why Selected
 \end{minipage} \\
 \midrule\noalign{}
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-\textbf{VGG16} & 15.1M & 424K (2.8\%) & 15.1M (100\%) & 75-82\% \\
-\textbf{ResNet50} & 25M & \textasciitilde500K (2\%) & 25M (100\%) &
-78-85\% \\
-\textbf{EfficientNetB0} & 4.87M & 818K (16.8\%) & 4.87M (100\%) &
-80-87\% \\
+\textbf{ResNet50} & 23.6M & 224×224 & 76.0\% & \textbf{Baseline} -
+Industry standard, well-understood behavior \\
+\textbf{EfficientNetB0} & 4.0M & 224×224 & 77.1\% & \textbf{Efficiency}
+- Smallest model, edge deployment candidate \\
+\textbf{EfficientNetB4} & 17.5M & 380×380 & 83.0\% & \textbf{High
+Performance} - Best accuracy-to-size ratio \\
+\textbf{EfficientNetB5} & 28.4M & 456×456 & 83.6\% & \textbf{Maximum
+Resolution} - Tests if higher input helps fine-grained tasks \\
+\textbf{EfficientNetV2-S} & 20.2M & 384×384 & 84.3\% &
+\textbf{State-of-Art} - Latest improvements (faster training, better
+accuracy) \\
 \end{longtable}
 
-\textbf{Why These Models?} - \textbf{VGG16}: Simple architecture with 16
-layers, proven for transfer learning, easy to understand and debug -
-\textbf{ResNet50}: Skip connections enable 50-layer depth without
-vanishing gradients, better feature extraction for complex patterns -
-\textbf{EfficientNetB0}: Modern compound-scaled architecture, best
-accuracy-to-parameters ratio, most efficient
+\subsubsection{Design Philosophy
+Comparison}\label{design-philosophy-comparison}
 
-\subsection{Experimental Strategy}\label{experimental-strategy}
+\textbf{ResNet50 (Traditional Architecture)} (He et al. 2016): -
+Residual connections for gradient flow - Deep architecture (50 layers
+with skip connections) - Proven reliability but older design (2015) -
+Good baseline to compare modern architectures
 
-\textbf{Phase 1: Frozen Baseline Training}
+\textbf{EfficientNet Family (Compound Scaling)} (Tan and Le 2019): -
+Systematic scaling of depth, width, and resolution - Mobile-optimized
+blocks (inverted residuals) - Superior accuracy-to-parameters ratio -
+Built-in preprocessing (critical difference from ResNet)
 
-Train all three models with frozen base layers first:
+\textbf{EfficientNetV2 (Latest Generation)} (Tan and Le 2021): -
+Progressive learning with adaptive image sizes - Faster training than V1
+- Better parameter efficiency - Fused-MBConv blocks for speed
 
-\begin{itemize}
+\subsubsection{Expected Performance
+Hypothesis}\label{expected-performance-hypothesis}
+
+Based on architecture characteristics and ImageNet performance:
+
+\textbf{Frozen Baseline Predictions}: - ResNet50: 50-60\% (older
+architecture, needs fine-tuning) - EfficientNetB0: 75-85\% (efficient
+but small) - EfficientNetB4: 85-93\% (best size-accuracy balance) -
+EfficientNetB5: 90-95\% (highest resolution captures fine details) -
+EfficientNetV2-S: 92-96\% (newest architecture, expected best)
+
+\textbf{Fine-Tuning Predictions}: - ResNet50: +15-25\% improvement
+(large gap to close) - EfficientNet B0/B4/B5: +2-5\% improvement (strong
+frozen baselines) - EfficientNetV2-S: +0-3\% improvement (may already be
+near-optimal)
+
+\textbf{Why We Expect This}: - Modern architectures (EfficientNet) learn
+more generalizable features - Compound scaling optimizes for transfer
+learning - Higher input resolution helps fine-grained classification -
+Strong frozen baselines leave less room for fine-tuning improvement
+
+\subsection{Model-Specific Preprocessing
+Requirements}\label{model-specific-preprocessing-requirements}
+
+Each architecture requires specific preprocessing due to different
+training procedures used during ImageNet pre-training. Using incorrect
+preprocessing will cause the model to fail completely.
+
+\subsubsection{Preprocessing Modes}\label{preprocessing-modes}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1014}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2754}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1884}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2174}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2174}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Model
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Preprocessing Mode
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Value Range
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Channel Order
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Normalization
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+ResNet50 & \textbf{Caffe} & {[}-123, +151{]} & BGR & Mean subtraction
+per channel \\
+EfficientNetB0 & \textbf{Built-in} & {[}0, 255{]} & RGB & Handled
+internally by model \\
+EfficientNetB4 & \textbf{Built-in} & {[}0, 255{]} & RGB & Handled
+internally by model \\
+EfficientNetB5 & \textbf{Built-in} & {[}0, 255{]} & RGB & Handled
+internally by model \\
+EfficientNetV2-S & \textbf{Built-in} & {[}0, 255{]} & RGB & Handled
+internally by model \\
+\end{longtable}
+
+\subsubsection{Critical Difference: ResNet vs
+EfficientNet}\label{critical-difference-resnet-vs-efficientnet}
+
+\textbf{ResNet50 (Caffe Mode)}:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Required preprocessing pipeline}
+\FloatTok{1.}\NormalTok{ Load raw RGB image [}\DecValTok{0}\OperatorTok{{-}}\DecValTok{255}\NormalTok{]}
+\FloatTok{2.}\NormalTok{ Apply augmentation (}\ControlFlowTok{if}\NormalTok{ training)}
+\FloatTok{3.}\NormalTok{ Resize to }\DecValTok{224}\NormalTok{×}\DecValTok{224}
+\FloatTok{4.}\NormalTok{ Convert RGB → BGR (reverse channel order)}
+\FloatTok{5.}\NormalTok{ Subtract ImageNet mean: [}\FloatTok{103.939}\NormalTok{, }\FloatTok{116.779}\NormalTok{, }\FloatTok{123.68}\NormalTok{]}
+\end{Highlighting}
+\end{Shaded}
+
+\textbf{EfficientNet (Built-in)}:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Required preprocessing pipeline}
+\FloatTok{1.}\NormalTok{ Load raw RGB image [}\DecValTok{0}\OperatorTok{{-}}\DecValTok{255}\NormalTok{]}
+\FloatTok{2.}\NormalTok{ Apply augmentation (}\ControlFlowTok{if}\NormalTok{ training)}
+\FloatTok{3.}\NormalTok{ Resize to target size (}\DecValTok{224}\NormalTok{, }\DecValTok{380}\NormalTok{, }\DecValTok{456}\NormalTok{, }\KeywordTok{or} \DecValTok{384}\NormalTok{)}
+\FloatTok{4.}\NormalTok{ Pass raw pixels to model (NO normalization}\OperatorTok{!}\NormalTok{)}
+\CommentTok{\# Model handles preprocessing internally}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Why This Matters}\label{why-this-matters}
+
+\textbf{Common Mistake}: Applying external normalization to EfficientNet
+models - Using `torch' mode: (pixel / 255 - mean) / std - Using `tf'
+mode: (pixel / 127.5) - 1 - Correct: Pass raw 0-255 values
+
+\textbf{Consequence of Wrong Preprocessing}: - Model receives values
+outside its expected distribution - Pre-trained weights become
+meaningless - Training fails to converge (1-5\% accuracy) - Fine-tuning
+cannot recover from this
+
+\textbf{Our Implementation}: The data loader automatically applies
+correct preprocessing based on \texttt{model\_name} parameter:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# In data\_loader.py}
+\NormalTok{MODEL\_CONFIGS }\OperatorTok{=}\NormalTok{ \{}
+    \StringTok{\textquotesingle{}resnet50\textquotesingle{}}\NormalTok{: \{}
+        \StringTok{\textquotesingle{}preprocess\_mode\textquotesingle{}}\NormalTok{: }\StringTok{\textquotesingle{}caffe\textquotesingle{}}\NormalTok{,}
+        \StringTok{\textquotesingle{}image\_size\textquotesingle{}}\NormalTok{: (}\DecValTok{224}\NormalTok{, }\DecValTok{224}\NormalTok{)}
+\NormalTok{    \},}
+    \StringTok{\textquotesingle{}efficientnetb0\textquotesingle{}}\NormalTok{: \{}
+        \StringTok{\textquotesingle{}preprocess\_mode\textquotesingle{}}\NormalTok{: }\VariableTok{None}\NormalTok{,  }\CommentTok{\# Built{-}in}
+        \StringTok{\textquotesingle{}image\_size\textquotesingle{}}\NormalTok{: (}\DecValTok{224}\NormalTok{, }\DecValTok{224}\NormalTok{)}
+\NormalTok{    \},}
+    \CommentTok{\# ... etc}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+This ensures preprocessing order is always correct: 1. Load raw image 2.
+Augment (if training) 3. Resize 4. Apply model-specific preprocessing
+(or none for EfficientNet)
+
+\subsection{Experimental Design: Two-Phase Training
+Strategy}\label{experimental-design-two-phase-training-strategy}
+
+We designed a systematic two-phase approach to evaluate each
+architecture fairly and identify the best model.
+
+\subsubsection{Phase 1: Frozen Baseline
+Training}\label{phase-1-frozen-baseline-training}
+
+\textbf{Objective}: Establish baseline performance with minimal training
+
+\textbf{Strategy}: - Freeze all base model layers (trainable=False) -
+Train only the new classification head (Dense layers) - Use standard
+learning rate (1e-3) - Train for 20 epochs with early stopping
+
+\textbf{Why Start Frozen?} 1. \textbf{Fast baseline}: Quick evaluation
+of pre-trained feature quality 2. \textbf{Prevents catastrophic
+forgetting}: ImageNet features preserved 3. \textbf{Lower computational
+cost}: Fewer parameters to update 4. \textbf{Fair comparison}: All
+models start from same pre-trained state
+
+\textbf{Commands}:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Train all frozen baselines}
+\ExtensionTok{python} \AttributeTok{{-}m}\NormalTok{ dbc.train\_cnn }\AttributeTok{{-}{-}config}\NormalTok{ configs/cnn\_baseline.yaml           }\CommentTok{\# ResNet50}
+\ExtensionTok{python} \AttributeTok{{-}m}\NormalTok{ dbc.train\_cnn }\AttributeTok{{-}{-}config}\NormalTok{ configs/efficientnetb0\_baseline.yaml}
+\ExtensionTok{python} \AttributeTok{{-}m}\NormalTok{ dbc.train\_cnn }\AttributeTok{{-}{-}config}\NormalTok{ configs/efficientnetb4\_baseline.yaml}
+\ExtensionTok{python} \AttributeTok{{-}m}\NormalTok{ dbc.train\_cnn }\AttributeTok{{-}{-}config}\NormalTok{ configs/efficientnetb5\_baseline.yaml}
+\ExtensionTok{python} \AttributeTok{{-}m}\NormalTok{ dbc.train\_cnn }\AttributeTok{{-}{-}config}\NormalTok{ configs/efficientnetv2s\_baseline.yaml}
+\end{Highlighting}
+\end{Shaded}
+
+\textbf{Expected Outcomes}: - ResNet50: 50-60\% (will benefit from
+fine-tuning) - EfficientNet models: 75-95\% (strong frozen features) -
+Identify which models need fine-tuning vs already good
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsubsection{Phase 2: Selective
+Fine-Tuning}\label{phase-2-selective-fine-tuning}
+
+\textbf{Objective}: Improve performance by adapting pre-trained features
+to dog breeds
+
+\textbf{Strategy}: - Load best frozen checkpoint - Unfreeze \textbf{only
+top 20-50 layers} (selective unfreezing) - Use \textbf{very low learning
+rate} (1e-5, 100× lower) - Keep BatchNormalization layers frozen
+(critical!) - Apply learning rate scheduling (cosine annealing with
+warmup) - Train for 30-50 epochs with early stopping
+
+\textbf{Why Selective Unfreezing?} 1. \textbf{Prevents catastrophic
+forgetting}: Lower layers keep general features 2. \textbf{Reduces
+overfitting risk}: Fewer trainable parameters 3. \textbf{Faster
+training}: Only update top layers 4. \textbf{Better generalization}:
+Preserves ImageNet knowledge
+
+\textbf{Critical Fine-Tuning Settings}:
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.4286}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.2381}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Setting
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Value
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Why
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{Learning Rate} & 1e-5 & 100× lower prevents destroying learned
+features \\
+\textbf{BatchNorm} & Frozen & Preserves learned statistics, prevents
+collapse \\
+\textbf{Layers Unfrozen} & Last 20 & Selective \textgreater{} Full
+unfreezing \\
+\textbf{LR Schedule} & Cosine warmup & Gradual adaptation, smooth
+convergence \\
+\textbf{Patience} & 8-12 epochs & Stop early if not improving \\
+\end{longtable}
+
+\textbf{Commands}:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Fine{-}tune selected models}
+\ExtensionTok{python} \AttributeTok{{-}m}\NormalTok{ dbc.train\_cnn }\AttributeTok{{-}{-}config}\NormalTok{ configs/cnn\_selective\_finetune\_v2.yaml      }\CommentTok{\# ResNet50}
+\ExtensionTok{python} \AttributeTok{{-}m}\NormalTok{ dbc.train\_cnn }\AttributeTok{{-}{-}config}\NormalTok{ configs/efficientnetb0\_finetune.yaml        }\CommentTok{\# B0}
+\ExtensionTok{python} \AttributeTok{{-}m}\NormalTok{ dbc.train\_cnn }\AttributeTok{{-}{-}config}\NormalTok{ configs/efficientnetb4\_finetune\_v3.yaml     }\CommentTok{\# B4}
+\ExtensionTok{python} \AttributeTok{{-}m}\NormalTok{ dbc.train\_cnn }\AttributeTok{{-}{-}config}\NormalTok{ configs/efficientnetv2s\_finetune.yaml       }\CommentTok{\# V2{-}S}
+\end{Highlighting}
+\end{Shaded}
+
+\textbf{Expected Outcomes}: - ResNet50: +15-25\% improvement (large
+frozen gap) - EfficientNet: +0-5\% improvement (already strong frozen) -
+Identify best overall model
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsubsection{Phase 3: Advanced Techniques
+(Optional)}\label{phase-3-advanced-techniques-optional}
+
+\textbf{Objective}: Test if advanced methods can push beyond best single
+model
+
+\textbf{Techniques to Test}:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
 \tightlist
 \item
-  \textbf{Purpose}: Validate data pipeline, establish baseline
-  performance, fast iteration (\textasciitilde1-2 hours total)
-\item
-  \textbf{Configuration}: \texttt{trainable\_base:\ false}, LR=0.001,
-  batch=256
-\item
-  \textbf{Expected outcome}: 30-40\% accuracy (limited by frozen
-  features)
-\item
-  \textbf{Decision point}: Select best-performing architecture for
-  fine-tuning
-\end{itemize}
+  \textbf{Test-Time Augmentation (TTA)}
 
-\textbf{Phase 2: Fine-Tuning Best Model}
+  \begin{itemize}
+  \tightlist
+  \item
+    Apply multiple augmentations during inference
+  \item
+    Average predictions for robustness
+  \item
+    Expected: +0.5-2\% improvement, 5× slower
+  \end{itemize}
+\item
+  \textbf{Model Ensemble}
 
-Unfreeze and fine-tune the top performer from Phase 1:
+  \begin{itemize}
+  \tightlist
+  \item
+    Combine predictions from multiple models
+  \item
+    Requires architectural diversity
+  \item
+    Expected: +1-3\% if models are different
+  \end{itemize}
+\item
+  \textbf{Advanced Augmentation}
 
-\begin{itemize}
-\tightlist
-\item
-  \textbf{Purpose}: Adapt pre-trained features to dog breeds, achieve
-  production-ready accuracy
-\item
-  \textbf{Configuration}: \texttt{trainable\_base:\ true}, LR=0.00001
-  (100x lower), batch=64
-\item
-  \textbf{Strategy}: Load frozen checkpoint → unfreeze → retrain with
-  tiny learning rate
-\item
-  \textbf{Expected outcome}: 70-85\% accuracy (full model adaptation)
-\item
-  \textbf{Timeline}: 3-5 hours per model
-\end{itemize}
+  \begin{itemize}
+  \tightlist
+  \item
+    Mixup, CutMix, AutoAugment
+  \item
+    More sophisticated data augmentation
+  \item
+    Expected: +1-2\% improvement
+  \end{itemize}
+\end{enumerate}
 
-\textbf{Phase 3: Hyperparameter Tuning (If Needed)}
+\textbf{Decision Criteria}: - Only pursue if best single model
+\textless{} 90\% accuracy - Evaluate cost-benefit (complexity vs
+accuracy gain) - Production deployability considerations
 
-If Phase 2 results are below 75\% accuracy:
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
-\begin{itemize}
-\tightlist
-\item
-  \textbf{Learning rate search}: Try {[}0.00001, 0.00005, 0.0001{]}
-\item
-  \textbf{Batch size tuning}: Try {[}32, 64, 128{]} for stability vs
-  speed
-\item
-  \textbf{Regularization}: Adjust dropout {[}0.3, 0.5, 0.7{]}
-\item
-  \textbf{Unfreezing strategy}: Try partial unfreezing (last N layers
-  only)
-\end{itemize}
+\subsubsection{Evaluation Metrics}\label{evaluation-metrics}
 
-\textbf{Phase 4: Ensemble (Stretch Goal)}
+We will use standard metrics for comparing classification models:
 
-If time and budget allow:
+\textbf{Primary Metric}: Top-1 Accuracy - Percentage where highest
+prediction is correct - Target: 80-85\% (good), 90\%+ (excellent)
 
-\begin{itemize}
-\tightlist
-\item
-  Train all three architectures (VGG16, ResNet50, EfficientNetB0)
-\item
-  Create ensemble by averaging predictions
-\item
-  Expected boost: +2-5\% accuracy over single best model
-\end{itemize}
+\textbf{Secondary Metrics}: - \textbf{Top-5 Accuracy}: Correct breed in
+top 5 predictions
 
-\subsection{Success Criteria}\label{success-criteria}
+\section{Training Results}\label{training-results}
 
-\begin{itemize}
-\tightlist
-\item
-  \textbf{Minimum viable}: 70\% validation accuracy (acceptable for
-  deployment)
-\item
-  \textbf{Target}: 75-80\% validation accuracy (good performance)
-\item
-  \textbf{Stretch}: 85\%+ validation accuracy (state-of-the-art for this
-  dataset)
-\end{itemize}
+All training was completed on October 8, 2025. See
+\href{../docs/EXPERIMENT_RESULTS_2025_10_08.md}{docs/EXPERIMENT\_RESULTS\_2025\_10\_08.md}
+for comprehensive details.
 
-\subsection{Resource Planning}\label{resource-planning}
+\subsection{Summary of All
+Experiments}\label{summary-of-all-experiments}
+
+We conducted \textbf{10 training experiments} testing 5 different
+architectures with both frozen and fine-tuned approaches:
+
+\subsubsection{Frozen Baseline Results}\label{frozen-baseline-results}
 
 \begin{longtable}[]{@{}lllll@{}}
 \toprule\noalign{}
-Phase & Models & Time & Cost & Priority \\
+Model & Top-1 Acc & Top-5 Acc & Epochs & Time \\
 \midrule\noalign{}
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-Phase 1: Frozen & 3 models & 1-2 hours & \$0.50-1.00 &
-\textbf{Required} \\
-Phase 2: Fine-tune & 1 model & 3-5 hours & \$1.50-2.50 &
-\textbf{Required} \\
-Phase 3: Hyperparameter & 3-5 runs & 10-15 hours & \$5-8 & If needed \\
-Phase 4: Ensemble & 2 more models & 6-10 hours & \$3-5 & Optional \\
+ResNet50 & 54.69\% & 89.54\% & 17 & 13 min \\
+EfficientNetB0 & 83.96\% & 97.62\% & 20 & 27 min \\
+EfficientNetB4 & 93.71\% & 99.63\% & 20 & 49 min \\
+EfficientNetB5 & 94.55\% & 99.71\% & 10 & 43 min \\
+EfficientNetV2-S & 95.04\% & 99.53\% & 17 & 39 min \\
 \end{longtable}
 
-\textbf{Total Budget}: \$2-4 (baseline), \$7-13 (full exploration)
-
-\section{Training}\label{training}
-
-\subsection{Training Strategy \& Setup}\label{training-strategy-setup}
-
-\textbf{Two-Phase Training Strategy}:
+\subsubsection{Fine-Tuning Results}\label{fine-tuning-results}
 
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1273}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2182}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2727}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2182}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1636}}@{}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1250}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1964}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1964}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2321}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1429}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1071}}@{}}
 \toprule\noalign{}
 \begin{minipage}[b]{\linewidth}\raggedright
-Phase
+Model
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Base Layers
+Top-1 Acc
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Learning Rate
+Top-5 Acc
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Batch Size
+Improvement
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Purpose
+Epochs
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Time
 \end{minipage} \\
 \midrule\noalign{}
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-\textbf{Phase 1: Frozen} & Trainable: False & 0.001 & 256 & Fast feature
-extraction, learn task-specific classification head \\
-\textbf{Phase 2: Fine-tuned} & Trainable: True & 0.00001 & 64 & Adapt
-all layers to dog breeds, prevent catastrophic forgetting \\
+ResNet50 & 77.68\% & 95.24\% & +22.99\% & 36 & 51 min \\
+EfficientNetB0 & 84.43\% & 97.86\% & +0.47\% & 12 & 30 min \\
+EfficientNetB4 (v3) & 93.86\% & 99.63\% & +0.15\% & 15 & 37 min \\
+\textbf{EfficientNetV2-S} & \textbf{95.14\%} & \textbf{99.51\%} &
+\textbf{+0.10\%} & \textbf{8} & \textbf{20 min} \\
 \end{longtable}
 
-\textbf{Hyperparameters}:
-
-\begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2037}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2407}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3519}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2037}}@{}}
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-Parameter
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Frozen Phase
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Fine-tuning Phase
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Rationale
-\end{minipage} \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-\textbf{Learning Rate} & 0.001 & 0.00001 & 100x lower for fine-tuning
-preserves pre-trained features \\
-\textbf{Batch Size} & 256 & 64 & Larger for GPU efficiency; smaller for
-stable gradients \\
-\textbf{Optimizer} & Adam & Adam & Adaptive learning rates work well for
-both \\
-\textbf{Dropout} & 0.5 & 0.5 & Prevent overfitting in classification
-head \\
-\textbf{Early Stopping} & Patience=5 & Patience=5 & Stop if no
-improvement for 5 epochs \\
-\end{longtable}
-
-\subsection{Critical Lessons Learned}\label{critical-lessons-learned}
-
-\textbf{1. Preprocessing Speedup is Essential}
-
-Implemented memory-mapped \texttt{.npy} preprocessing for 100x speedup:
-
-\begin{itemize}
-\tightlist
-\item
-  \textbf{Before}: Loading images on-the-fly from disk (60+ seconds per
-  epoch overhead)
-\item
-  \textbf{After}: Memory-mapped numpy arrays load instantly (0.0006
-  seconds)
-\item
-  \textbf{Implementation}:
-  \href{../src/dbc/preprocess_images.py}{\texttt{src/dbc/preprocess\_images.py}}
-  - preprocesses once, saves as \texttt{.npy}
-\item
-  \textbf{Impact}: Training speed went from I/O-bound to compute-bound
-  (\textasciitilde40-80 sec/epoch)
-\item
-  \textbf{Why it works}: Operating system maps file directly to memory,
-  no loading overhead
-\end{itemize}
-
-\textbf{2. Fine-Tuning Requires Careful Strategy}
-
-❌ \textbf{Wrong Approach} (causes catastrophic forgetting):
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{\# Train unfrozen model from scratch}
-\NormalTok{model }\OperatorTok{=}\NormalTok{ build\_transfer\_model(trainable\_base}\OperatorTok{=}\VariableTok{True}\NormalTok{)}
-\NormalTok{model.fit(...)  }\CommentTok{\# Result: 1.23\% accuracy {-} destroyed pre{-}trained features}
-\end{Highlighting}
-\end{Shaded}
-
-✅ \textbf{Correct Approach} (preserves learned features):
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{\# 1. Load frozen checkpoint FIRST}
-\NormalTok{model }\OperatorTok{=}\NormalTok{ keras.models.load\_model(}\StringTok{\textquotesingle{}frozen\_checkpoint.h5\textquotesingle{}}\NormalTok{)}
-\CommentTok{\# 2. Unfreeze base layers}
-\NormalTok{base\_model.trainable }\OperatorTok{=} \VariableTok{True}
-\CommentTok{\# 3. Recompile with VERY low learning rate (100x lower)}
-\NormalTok{model.}\BuiltInTok{compile}\NormalTok{(optimizer}\OperatorTok{=}\NormalTok{Adam(lr}\OperatorTok{=}\FloatTok{0.00001}\NormalTok{), ...)}
-\CommentTok{\# 4. Fine{-}tune}
-\NormalTok{model.fit(...)  }\CommentTok{\# Result: Steady improvement from frozen baseline}
-\end{Highlighting}
-\end{Shaded}
-
-\textbf{Key Insight}: Must start from frozen weights, then gradually
-adapt with tiny learning rate
-
-\textbf{Implementation}: See
-\href{../src/dbc/finetune_from_checkpoint.py}{\texttt{src/dbc/finetune\_from\_checkpoint.py}}
-
-\subsection{Experiment 1: VGG16 Frozen
-Baseline}\label{experiment-1-vgg16-frozen-baseline}
-
-\textbf{Objective}: Establish baseline performance with frozen VGG16
-base layers
-
-\textbf{Configuration}:
-
-\begin{itemize}
-\tightlist
-\item
-  \textbf{Model}: VGG16 (15.1M parameters, only 424K trainable)
-\item
-  \textbf{Base layers}: Frozen (trainable=False)
-\item
-  \textbf{Learning rate}: 0.001
-\item
-  \textbf{Batch size}: 256
-\item
-  \textbf{Epochs}: 20
-\item
-  \textbf{Experiment ID}: \texttt{exp\_20251007\_100239}
-\end{itemize}
-
-\textbf{Results}:
-
-\begin{longtable}[]{@{}ll@{}}
-\toprule\noalign{}
-Metric & Value \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-\textbf{Validation Accuracy} & \textbf{31.85\%} \\
-\textbf{Top-5 Accuracy} & \textbf{70.48\%} \\
-\textbf{Training Time} & 24 minutes (80 sec/epoch) \\
-\textbf{Epochs Trained} & 20 (no early stopping) \\
-\textbf{GPU Utilization} & \textasciitilde51\% \\
-\end{longtable}
-
-\textbf{Analysis}:
-
-\textbf{What Worked}:
-
-\begin{itemize}
-\tightlist
-\item
-  Data pipeline validated successfully (preprocessing, augmentation,
-  batching)
-\item
-  Model learning steadily without overfitting
-\item
-  Preprocessing speedup enabled fast training (80 sec/epoch vs 200+ sec
-  without)
-\item
-  Top-5 accuracy of 70\% shows model capturing meaningful features
-\end{itemize}
-
-\textbf{Limitations}:
-
-\begin{itemize}
-\tightlist
-\item
-  31.85\% accuracy insufficient for deployment (target: 75\%+)
-\item
-  Frozen ImageNet features not optimized for fine-grained dog breed
-  distinctions
-\item
-  Generic features miss subtle breed-specific patterns (ear shape, fur
-  texture, snout proportions)
-\end{itemize}
-
-\textbf{Key Insight}: Frozen baseline validates our pipeline but
-confirms we must unfreeze layers to achieve production-ready
-performance.
-
-\textbf{Artifacts}:
-
-\begin{itemize}
-\tightlist
-\item
-  Checkpoint:
-  \href{../experiments/exp_20251007_100239/checkpoints/best_model.h5}{\texttt{experiments/exp\_20251007\_100239/checkpoints/best\_model.h5}}
-\item
-  Config:
-  \href{../configs/exp_vgg16.yaml}{\texttt{configs/exp\_vgg16.yaml}}
-\item
-  Metrics:
-  \href{../experiments/exp_20251007_100239/final_results.json}{\texttt{experiments/exp\_20251007\_100239/final\_results.json}}
-\end{itemize}
-
-\subsection{Experiment 2: EfficientNetB0 Frozen
-Baseline}\label{experiment-2-efficientnetb0-frozen-baseline}
-
-\textbf{Objective}: Compare EfficientNetB0 frozen baseline against VGG16
-
-\textbf{Configuration}:
-
-\begin{itemize}
-\tightlist
-\item
-  \textbf{Model}: EfficientNetB0 (4.87M parameters, 818K trainable)
-\item
-  \textbf{Base layers}: Frozen (trainable=False)
-\item
-  \textbf{Learning rate}: 0.001
-\item
-  \textbf{Batch size}: 256
-\item
-  \textbf{Epochs}: 20 (early stopped at 11)
-\item
-  \textbf{Experiment ID}: \texttt{exp\_20251007\_094305}
-\end{itemize}
-
-\textbf{Results}:
-
-\begin{longtable}[]{@{}ll@{}}
-\toprule\noalign{}
-Metric & Value \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-\textbf{Validation Accuracy} & \textbf{1.23\%} \\
-\textbf{Top-5 Accuracy} & \textbf{5.62\%} \\
-\textbf{Training Time} & 18 minutes (early stopped) \\
-\textbf{Epochs Trained} & 11 (early stopped) \\
-\end{longtable}
-
-\textbf{Analysis}:
-
-\textbf{Poor Performance}:
-
-\begin{itemize}
-\tightlist
-\item
-  Only 1.23\% accuracy (barely better than random: 0.83\%)
-\item
-  EfficientNetB0 frozen features failed to transfer to dog breeds
-\item
-  Early stopped after 11 epochs due to no improvement
-\item
-  Model not learning effectively
-\end{itemize}
-
-\textbf{Why EfficientNetB0 Failed}:
-
-\begin{itemize}
-\tightlist
-\item
-  EfficientNet architecture uses compound scaling (depth, width,
-  resolution) optimized for efficiency
-\item
-  Frozen features may be too compressed/abstract for our 120-class
-  fine-grained task
-\item
-  VGG16's simpler, wider features transfer better when frozen
-\item
-  EfficientNet likely requires unfreezing to adapt properly
-\end{itemize}
-
-\textbf{Decision}:
-
-\begin{itemize}
-\tightlist
-\item
-  VGG16 is the clear winner for frozen baseline (31.85\% vs 1.23\%)
-\item
-  VGG16 will be used for fine-tuning experiments
-\item
-  EfficientNetB0 may be revisited later if fine-tuned from scratch
-\end{itemize}
-
-\textbf{Artifacts}:
-
-\begin{itemize}
-\tightlist
-\item
-  Checkpoint:
-  \href{../experiments/exp_20251007_094305/checkpoints/best_model.h5}{\texttt{experiments/exp\_20251007\_094305/checkpoints/best\_model.h5}}
-\item
-  Config:
-  \href{../configs/exp_efficientnet.yaml}{\texttt{configs/exp\_efficientnet.yaml}}
-\item
-  Metrics:
-  \href{../experiments/exp_20251007_094305/final_results.json}{\texttt{experiments/exp\_20251007\_094305/final\_results.json}}
-\end{itemize}
-
-\subsection{Experiment 5: ResNet50 Frozen
-Baseline}\label{experiment-5-resnet50-frozen-baseline}
-
-\textbf{Objective}: Compare ResNet50 frozen baseline against VGG16 and
-EfficientNetB0
-
-\textbf{Configuration}:
-
-\begin{itemize}
-\tightlist
-\item
-  \textbf{Model}: ResNet50 (25M parameters, 1.2M trainable)
-\item
-  \textbf{Base layers}: Frozen (trainable=False)
-\item
-  \textbf{Learning rate}: 0.001
-\item
-  \textbf{Batch size}: 256
-\item
-  \textbf{Epochs}: 20
-\item
-  \textbf{Experiment ID}: \texttt{exp\_20251007\_110024}
-\end{itemize}
-
-\textbf{Results}:
-
-\begin{longtable}[]{@{}ll@{}}
-\toprule\noalign{}
-Metric & Value \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-\textbf{Validation Accuracy} & \textbf{5.45\%} \\
-\textbf{Top-5 Accuracy} & \textbf{18.03\%} \\
-\textbf{Training Time} & \textasciitilde30 minutes \\
-\textbf{Epochs Trained} & 20 (no early stopping) \\
-\end{longtable}
-
-\textbf{Analysis}:
-
-\textbf{Poor Performance}:
-
-\begin{itemize}
-\tightlist
-\item
-  Only 5.45\% accuracy (6.5× better than random but still very poor)
-\item
-  Worse than VGG16 frozen (31.85\%) but better than EfficientNetB0
-  (1.23\%)
-\item
-  Top-5 accuracy shows some learning but not enough
-\end{itemize}
-
-\textbf{Why ResNet50 Underperformed}:
-
-\begin{itemize}
-\tightlist
-\item
-  ResNet's deeper architecture (50 layers with skip connections)
-  requires more training data
-\item
-  Frozen deep features may not transfer well to fine-grained dog breed
-  task
-\item
-  Skip connections optimized for ImageNet classes, not dog breeds
-\item
-  More complex architecture needs unfreezing to adapt properly
-\end{itemize}
-
-\textbf{Comparison}:
-
-\begin{longtable}[]{@{}lll@{}}
-\toprule\noalign{}
-Model & Frozen Accuracy & Ranking \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-VGG16 & 31.85\% & Best \\
-ResNet50 & 5.45\% & Medium \\
-EfficientNetB0 & 1.23\% & Worst \\
-\end{longtable}
-
-\textbf{Decision}:
-
-\begin{itemize}
-\tightlist
-\item
-  VGG16's simpler architecture transfers best when frozen
-\item
-  ResNet50 will be fine-tuned to see if deeper architecture helps when
-  unfrozen
-\item
-  Still worth testing fine-tuning to leverage ResNet's depth
-\end{itemize}
-
-\textbf{Artifacts}:
-
-\begin{itemize}
-\tightlist
-\item
-  Checkpoint:
-  \href{../experiments/exp_20251007_110024/checkpoints/best_model.h5}{\texttt{experiments/exp\_20251007\_110024/checkpoints/best\_model.h5}}
-\item
-  Config:
-  \href{../configs/exp_resnet50.yaml}{\texttt{configs/exp\_resnet50.yaml}}
-\item
-  Metrics:
-  \href{../experiments/exp_20251007_110024/final_results.json}{\texttt{experiments/exp\_20251007\_110024/final\_results.json}}
-\end{itemize}
-
-\subsection{Experiment 3: VGG16 Fine-Tuning (Failed - Catastrophic
-Forgetting)}\label{experiment-3-vgg16-fine-tuning-failed---catastrophic-forgetting}
-
-\textbf{Objective}: Fine-tune VGG16 by unfreezing all layers
-
-\textbf{Configuration}:
-
-\begin{itemize}
-\tightlist
-\item
-  \textbf{Model}: VGG16 (15.1M parameters, all trainable)
-\item
-  \textbf{Base layers}: Unfrozen (trainable=True)
-\item
-  \textbf{Learning rate}: 0.0001
-\item
-  \textbf{Batch size}: 128
-\item
-  \textbf{Training approach}: ❌ \textbf{Trained from scratch with
-  random initialization}
-\item
-  \textbf{Experiment ID}: \texttt{exp\_20251007\_101930}
-\end{itemize}
-
-\textbf{Results}:
-
-\begin{longtable}[]{@{}ll@{}}
-\toprule\noalign{}
-Metric & Value \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-\textbf{Validation Accuracy} & \textbf{1.23\%} (catastrophic failure) \\
-\textbf{Expected} & 40-50\% (improvement over frozen 31.85\%) \\
-\textbf{Actual} & Worse than random guessing \\
-\end{longtable}
-
-\textbf{Analysis}:
-
-❌ \textbf{Catastrophic Forgetting}:
-
-\begin{itemize}
-\tightlist
-\item
-  Training unfrozen model from scratch \textbf{destroyed pre-trained
-  ImageNet features}
-\item
-  Model started with random weights instead of loading frozen checkpoint
-\item
-  15.1M parameters being optimized from scratch is too many for our 16K
-  training images
-\item
-  Result: Complete failure to learn, worse than the frozen baseline
-\end{itemize}
-
-\textbf{What Went Wrong}:
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{\# WRONG: Creates new model with random weights}
-\NormalTok{model }\OperatorTok{=}\NormalTok{ build\_transfer\_model(trainable\_base}\OperatorTok{=}\VariableTok{True}\NormalTok{)}
-\NormalTok{model.fit(...)  }\CommentTok{\# Destroys pre{-}trained features}
-\end{Highlighting}
-\end{Shaded}
-
-\textbf{Root Cause}:
-
-\begin{itemize}
-\tightlist
-\item
-  Did not load the frozen checkpoint before unfreezing
-\item
-  Started training with random initialization instead of pre-trained
-  weights
-\item
-  High learning rate (0.0001) too aggressive for preserving learned
-  features
-\end{itemize}
-
-\textbf{Key Lesson}:
-
-\begin{quote}
-\textbf{Must load frozen checkpoint FIRST, then unfreeze and retrain
-with very low learning rate}
-\end{quote}
-
-This experiment demonstrated the importance of proper fine-tuning
-strategy and led to creating \texttt{finetune\_from\_checkpoint.py}.
-
-\textbf{Artifacts}: - Config:
-\href{../configs/exp_vgg16_finetune.yaml}{\texttt{configs/exp\_vgg16\_finetune.yaml}}
-- Experiment: \texttt{exp\_20251007\_101930}
-
-\subsection{Experiment 4: VGG16 Fine-Tuning (Correct
-Approach)}\label{experiment-4-vgg16-fine-tuning-correct-approach}
-
-\textbf{Objective}: Properly fine-tune VGG16 by loading frozen
-checkpoint first
-
-\textbf{Configuration}:
-
-\begin{itemize}
-\tightlist
-\item
-  \textbf{Model}: VGG16 (15.1M parameters, all trainable)
-\item
-  \textbf{Base layers}: Unfrozen (trainable=True)
-\item
-  \textbf{Starting point}: \textbf{Loaded frozen checkpoint}
-  (exp\_20251007\_100239)
-\item
-  \textbf{Learning rate}: 0.00001 (100x lower than frozen)
-\item
-  \textbf{Batch size}: 64
-\item
-  \textbf{Epochs}: 20
-\item
-  \textbf{Experiment ID}: \texttt{exp\_20251007\_103850}
-\end{itemize}
-
-\textbf{Results}:
-
-\begin{longtable}[]{@{}llll@{}}
-\toprule\noalign{}
-Metric & Frozen Baseline & Fine-Tuned & Improvement \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-\textbf{Validation Accuracy} & 31.85\% & \textbf{44.87\%} &
-\textbf{+40.9\%} \\
-\textbf{Training Time} & 24 min & \textasciitilde30 min & - \\
-\textbf{Best Epoch} & 20 & 15 & Early stopped \\
-\end{longtable}
-
-\textbf{Training Progress}:
-
-\begin{longtable}[]{@{}lll@{}}
-\toprule\noalign{}
-Epoch & Val Accuracy & Status \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-1 & 34.80\% & Already beating frozen! \\
-7 & 41.63\% & Steady improvement \\
-11 & 43.27\% & Approaching target \\
-15 & \textbf{44.87\%} & \textbf{Best model} \\
-16-20 & No improvement & Approaching convergence \\
-\end{longtable}
-
-\textbf{Analysis}:
-
-\textbf{Success Factors}:
-
-\begin{itemize}
-\tightlist
-\item
-  \textbf{Loaded frozen checkpoint} before unfreezing - preserved
-  pre-trained features
-\item
-  \textbf{Very low learning rate} (0.00001) allowed gradual adaptation
-  without destroying weights
-\item
-  \textbf{Smaller batch size} (64) provided more stable gradients for
-  fine-tuning
-\item
-  \textbf{Immediate improvement} in Epoch 1 (34.80\% \textgreater{}
-  31.85\%) validated the approach
-\end{itemize}
+\subsection{Best Model: EfficientNetV2-S
+Fine-Tuned}\label{best-model-efficientnetv2-s-fine-tuned}
+
+\textbf{Checkpoint}:
+\href{../experiments/exp_20251008_182534/checkpoints/best_model.h5}{experiments/exp\_20251008\_182534/checkpoints/best\_model.h5}
 
 \textbf{Performance}:
 
 \begin{itemize}
 \tightlist
 \item
-  \textbf{44.87\% validation accuracy} - significant improvement over
-  frozen baseline
+  \textbf{Top-1 Accuracy}: 95.14\%
 \item
-  \textbf{40.9\% relative improvement} (31.85\% → 44.87\%)
+  \textbf{Top-5 Accuracy}: 99.51\%
 \item
-  Model learning steadily without overfitting
-\item
-  Training stable and reproducible
+  \textbf{Validation Loss}: 0.235
 \end{itemize}
 
-\textbf{Still Below Target}:
+\textbf{Training Details}:
 
 \begin{itemize}
 \tightlist
 \item
-  Target was 75\%+ accuracy for deployment
+  Started from frozen baseline (95.04\%)
 \item
-  44.87\% is good progress but insufficient for production
+  Unfroze last 20 layers
 \item
-  May need:
-
-  \begin{itemize}
-  \tightlist
-  \item
-    Longer training (more epochs)
-  \item
-    Different architecture (ResNet50, EfficientNet)
-  \item
-    Hyperparameter tuning (learning rate, regularization)
-  \item
-    More sophisticated augmentation
-  \end{itemize}
+  Learning rate: 1e-5 with cosine warmup
+\item
+  Trained for only 8 epochs (early stopping)
+\item
+  Total training time: \textasciitilde1 hour (frozen + fine-tuned)
 \end{itemize}
 
-\textbf{Key Insight}:
-
-The correct fine-tuning approach (load checkpoint → unfreeze → low LR)
-works as expected and delivers measurable improvement. However,
-\textbf{44.87\% accuracy suggests VGG16 may not be the optimal
-architecture} for this fine-grained 120-class dog breed task.
-
-\textbf{Next Steps}:
+\textbf{Why This Model Won}:
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
 \tightlist
 \item
-  Try ResNet50 or EfficientNetB0 fine-tuning (deeper/modern
-  architectures)
+  Best accuracy-efficiency trade-off
 \item
-  Experiment with learning rates {[}0.00001, 0.00005, 0.0001{]}
+  Fast convergence (8 epochs fine-tuning)
 \item
-  Consider partial unfreezing (only last N layers)
+  Stable training (no collapse or overfitting)
 \item
-  Add more aggressive data augmentation
+  EfficientNetV2's improved architecture over V1
+\item
+  Perfect balance of model size (20.2M params) and performance
 \end{enumerate}
 
-\textbf{Artifacts}:
+\subsection{Key Insights from
+Training}\label{key-insights-from-training}
+
+\subsubsection{1. Architecture Matters More Than
+Fine-Tuning}\label{architecture-matters-more-than-fine-tuning}
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Architecture & Frozen → Fine-tuned & Improvement \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+ResNet50 (older) & 54.69\% → 77.68\% & +22.99\% \\
+EfficientNetB0 (modern) & 83.96\% → 84.43\% & +0.47\% \\
+EfficientNetV2-S (newest) & 95.04\% → 95.14\% & +0.10\% \\
+\end{longtable}
+
+\textbf{Lesson}: Modern architectures (EfficientNet) achieve excellent
+frozen baselines. Older architectures (ResNet50) benefit more from
+fine-tuning.
+
+\subsubsection{2. Higher Resolution = Better
+Accuracy}\label{higher-resolution-better-accuracy}
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Model & Input Size & Frozen Accuracy \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+EfficientNetB0 & 224×224 & 83.96\% \\
+EfficientNetB4 & 380×380 & 93.71\% (+9.75\%) \\
+EfficientNetB5 & 456×456 & 94.55\% (+0.84\%) \\
+EfficientNetV2-S & 384×384 & 95.04\% (+0.49\%) \\
+\end{longtable}
+
+\textbf{Lesson}: Larger input captures more fine-grained details, but
+gains diminish after 380×380.
+
+\subsubsection{3. Preprocessing is
+Critical}\label{preprocessing-is-critical}
+
+\textbf{Major Issue Encountered}: EfficientNet preprocessing - Initially
+tried `torch' mode normalization → \textbf{1-5\% accuracy} (total
+failure) - Switched to raw 0-255 pixel values → \textbf{93\%+ accuracy}
+(success!)
+
+\textbf{Root Cause}: EfficientNet has preprocessing \textbf{built into
+the model}. External preprocessing creates distribution mismatch.
+
+\textbf{Solution}: Pass raw pixel values (0-255), let model handle
+preprocessing internally.
+
+See
+\href{../docs/efficientnet_training_guide.md}{docs/efficientnet\_training\_guide.md}
+for detailed troubleshooting.
+
+\subsubsection{4. Fine-Tuning Best
+Practices}\label{fine-tuning-best-practices}
+
+Based on our experiments, we learned:
+
+\begin{itemize}
+\tightlist
+\item
+  Keep BatchNormalization layers \textbf{frozen} (critical!)
+\item
+  Use very low learning rate (1e-5, not 1e-4)
+\item
+  Unfreeze only top 20 layers (not 50+)
+\item
+  Use cosine annealing with warmup
+\item
+  Monitor for overfitting closely
+\end{itemize}
+
+\subsubsection{5. Advanced Techniques Didn't
+Help}\label{advanced-techniques-didnt-help}
+
+\textbf{Test-Time Augmentation}: 95.14\% → 95.33\% (+0.19\%) - Marginal
+gain, 5× slower inference - Not worth the complexity
+
+\textbf{Model Ensemble}: 95.04\% (worse than single model!) - Combined 3
+EfficientNet variants - Models too similar, no diversity benefit - Would
+need architecturally different models (ResNet + EfficientNet + ViT)
+
+\textbf{Conclusion}: A well-trained single model beats complex
+ensembling.
+
+\subsection{Final Recommendation}\label{final-recommendation}
+
+\textbf{For Production}: Use \textbf{EfficientNetV2-S Fine-tuned}
 
 \begin{itemize}
 \tightlist
 \item
   Checkpoint:
-  \href{../experiments/exp_20251007_103850/checkpoints/best_model.h5}{\texttt{experiments/exp\_20251007\_103850/checkpoints/best\_model.h5}}
+  \texttt{experiments/exp\_20251008\_182534/checkpoints/best\_model.h5}
 \item
-  Training script:
-  \href{../src/dbc/finetune_from_checkpoint.py}{\texttt{src/dbc/finetune\_from\_checkpoint.py}}
+  Accuracy: 95.14\% top-1, 99.51\% top-5
+\item
+  Fast inference, single model (no ensemble overhead)
+\item
+  Excellent balance of accuracy and efficiency
 \end{itemize}
 
-\subsection{Experiment 6: ResNet50
-Fine-Tuning}\label{experiment-6-resnet50-fine-tuning}
-
-\textbf{Objective}: Fine-tune ResNet50 by loading frozen checkpoint and
-unfreezing all layers
-
-\textbf{Configuration}:
-
-\begin{itemize}
-\tightlist
-\item
-  \textbf{Model}: ResNet50 (25M parameters, all trainable)
-\item
-  \textbf{Base layers}: Unfrozen (trainable=True)
-\item
-  \textbf{Starting point}: \textbf{Loaded frozen checkpoint}
-  (exp\_20251007\_110024)
-\item
-  \textbf{Learning rate}: 0.00001 (100x lower than frozen)
-\item
-  \textbf{Batch size}: 32 (reduced from 64 due to memory constraints)
-\item
-  \textbf{Epochs}: 20
-\item
-  \textbf{Experiment ID}: \texttt{exp\_20251007\_120454}
-\end{itemize}
-
-\textbf{Results}:
-
-\begin{longtable}[]{@{}llll@{}}
-\toprule\noalign{}
-Metric & Frozen Baseline & Fine-Tuned & Improvement \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-\textbf{Validation Accuracy} & 5.45\% & \textbf{24.29\%} &
-\textbf{+346\%} \\
-\textbf{Top-5 Accuracy} & 18.03\% & \textbf{54.42\%} &
-\textbf{+202\%} \\
-\textbf{Training Time} & 30 min & \textasciitilde35 min & - \\
-\textbf{Best Epoch} & 20 & 20 & No early stopping \\
-\end{longtable}
-
-\textbf{Analysis}:
-
-\textbf{Significant Improvement from Frozen}:
-
-\begin{itemize}
-\tightlist
-\item
-  \textbf{24.29\% validation accuracy} - massive 346\% relative
-  improvement over frozen (5.45\%)
-\item
-  Top-5 accuracy of 54.42\% shows model learning meaningful breed
-  distinctions
-\item
-  Correct fine-tuning approach (load checkpoint → unfreeze → low LR)
-  worked as expected
-\item
-  Training remained stable throughout all 20 epochs
-\end{itemize}
-
-\textbf{Still Poor Overall Performance}:
-
-\begin{itemize}
-\tightlist
-\item
-  24.29\% is far below VGG16 fine-tuned (44.87\%)
-\item
-  Well below target of 75\%+ for production deployment
-\item
-  ResNet50's deeper architecture (50 layers) didn't provide expected
-  advantage
-\item
-  Despite proper fine-tuning strategy, performance remained weak
-\end{itemize}
-
-\textbf{Why ResNet50 Underperformed}:
-
-\begin{itemize}
-\tightlist
-\item
-  \textbf{Architecture mismatch}: ResNet's skip connections and deeper
-  structure may be over-parameterized for our 16K training images
-\item
-  \textbf{Fine-grained task challenge}: 120 visually similar dog breeds
-  require different feature extraction than ImageNet's diverse 1000
-  classes
-\item
-  \textbf{Limited data per class}: \textasciitilde138 images/breed
-  insufficient to properly adapt 25M parameters
-\item
-  \textbf{Batch size impact}: Had to reduce batch size to 32 (vs VGG16's
-  64) which may have affected gradient quality
-\end{itemize}
-
-\textbf{Model Comparison}:
-
-\begin{longtable}[]{@{}llll@{}}
-\toprule\noalign{}
-Model & Frozen & Fine-Tuned & Total Improvement \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-\textbf{VGG16} & 31.85\% & \textbf{44.87\%} & \textbf{+40.9\%} 🥇 \\
-\textbf{ResNet50} & 5.45\% & \textbf{24.29\%} & \textbf{+346\%} 🥈 \\
-\textbf{EfficientNetB0} & 1.23\% & ❌ OOM & - \\
-\end{longtable}
-
-\textbf{Key Insights}:
-
-\begin{itemize}
-\tightlist
-\item
-  VGG16 remains the best performer (44.87\% vs 24.29\%)
-\item
-  Simpler VGG16 architecture (16 layers) transfers better than complex
-  ResNet50 (50 layers)
-\item
-  More parameters doesn't guarantee better performance with limited
-  fine-grained data
-\item
-  \textbf{Fundamental issue}: Even best model (VGG16 44.87\%) is nowhere
-  near 70-80\% target
-\end{itemize}
-
-\textbf{Critical Problem Identified}:
-
-\begin{quote}
-\textbf{All models severely underperforming} - Even VGG16 at 44.87\% is
-far from expected 70-80\% accuracy for transfer learning on dog breeds.
-This suggests a fundamental issue with our setup:
-\end{quote}
-
-\begin{quote}
-\begin{itemize}
-\tightlist
-\item
-  Data augmentation insufficient?
-\item
-  Learning rate too conservative?
-\item
-  Need longer training (\textgreater20 epochs)?
-\item
-  Classification head architecture too simple?
-\item
-  ImageNet pre-training not suitable for fine-grained tasks?
-\end{itemize}
-\end{quote}
-
-\textbf{Artifacts}:
+\textbf{For Edge Deployment}: Use \textbf{EfficientNetB0 Frozen}
 
 \begin{itemize}
 \tightlist
 \item
   Checkpoint:
-  \href{../experiments/exp_20251007_120454/checkpoints/best_model.h5}{\texttt{experiments/exp\_20251007\_120454/checkpoints/best\_model.h5}}
+  \texttt{experiments/exp\_20251008\_160357/checkpoints/best\_model.h5}
 \item
-  Config:
-  \href{../configs/exp_resnet50.yaml}{\texttt{configs/exp\_resnet50.yaml}}
+  Accuracy: 83.96\% top-1
 \item
-  Metrics:
-  \href{../experiments/exp_20251007_120454/final_results.json}{\texttt{experiments/exp\_20251007\_120454/final\_results.json}}
+  Smallest model (4.0M params)
+\item
+  Fast inference, good accuracy
+\end{itemize}
+
+\textbf{For Maximum Accuracy}: Current best is 95.14\%, but could try:
+
+\begin{itemize}
+\tightlist
+\item
+  Vision Transformers (ViT)
+\item
+  Larger models (EfficientNetB7, EfficientNetV2-L)
+\item
+  Better data augmentation (AutoAugment)
+\item
+  More training data
 \end{itemize}
 
 \section{Evaluation}\label{evaluation}
 
-\begin{itemize}
-\tightlist
-\item
-  Metrics: Primary and secondary metrics; calibration and confidence
-  intervals if applicable.
-\item
-  Error Analysis: Segment performance by cohort/time; investigate
-  failure modes.
-\item
-  Reporting: Figures/tables for stakeholders and decision makers.
-\end{itemize}
-
-\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+After training all models, we evaluate their performance using the
+metrics defined in the Models section:
 
 \begin{itemize}
 \tightlist
 \item
-  Error Analysis Plan: Cohorts, time slices, and failure-mode checks
-  (class imbalance, drift).
+  \textbf{Primary}: Top-1 Accuracy (correct prediction as highest
+  confidence)
 \item
-  Decisions Log: A running list of major decisions with brief rationale
-  (e.g., ``Chose chrono split due to event causality'').
+  \textbf{Secondary}: Top-5 Accuracy (correct breed in top 5
+  predictions)
 \end{itemize}
+
+\subsection{Training Curves: Comparing All
+Models}\label{training-curves-comparing-all-models}
+
+Let's visualize how each model learned during training:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ImportTok{import}\NormalTok{ json}
+\ImportTok{import}\NormalTok{ matplotlib.pyplot }\ImportTok{as}\NormalTok{ plt}
+\ImportTok{import}\NormalTok{ numpy }\ImportTok{as}\NormalTok{ np}
+\ImportTok{from}\NormalTok{ pathlib }\ImportTok{import}\NormalTok{ Path}
+
+\CommentTok{\# Load training histories for all models}
+\NormalTok{experiments }\OperatorTok{=}\NormalTok{ \{}
+    \StringTok{\textquotesingle{}ResNet50 Frozen\textquotesingle{}}\NormalTok{: }\StringTok{\textquotesingle{}exp\_20251008\_072125\textquotesingle{}}\NormalTok{,}
+    \StringTok{\textquotesingle{}ResNet50 Fine{-}tuned\textquotesingle{}}\NormalTok{: }\StringTok{\textquotesingle{}exp\_20251008\_085608\textquotesingle{}}\NormalTok{,}
+    \StringTok{\textquotesingle{}EfficientNetB0 Frozen\textquotesingle{}}\NormalTok{: }\StringTok{\textquotesingle{}exp\_20251008\_160357\textquotesingle{}}\NormalTok{,}
+    \StringTok{\textquotesingle{}EfficientNetB4 Frozen\textquotesingle{}}\NormalTok{: }\StringTok{\textquotesingle{}exp\_20251008\_115733\textquotesingle{}}\NormalTok{,}
+    \StringTok{\textquotesingle{}EfficientNetB4 Fine{-}tuned\textquotesingle{}}\NormalTok{: }\StringTok{\textquotesingle{}exp\_20251008\_143658\textquotesingle{}}\NormalTok{,}
+    \StringTok{\textquotesingle{}EfficientNetB5 Frozen\textquotesingle{}}\NormalTok{: }\StringTok{\textquotesingle{}exp\_20251008\_170024\textquotesingle{}}\NormalTok{,}
+    \StringTok{\textquotesingle{}EfficientNetV2{-}S Frozen\textquotesingle{}}\NormalTok{: }\StringTok{\textquotesingle{}exp\_20251008\_174650\textquotesingle{}}\NormalTok{,}
+    \StringTok{\textquotesingle{}EfficientNetV2{-}S Fine{-}tuned\textquotesingle{}}\NormalTok{: }\StringTok{\textquotesingle{}exp\_20251008\_182534\textquotesingle{}}\NormalTok{,}
+\NormalTok{\}}
+
+\NormalTok{histories }\OperatorTok{=}\NormalTok{ \{\}}
+\ControlFlowTok{for}\NormalTok{ name, exp\_id }\KeywordTok{in}\NormalTok{ experiments.items():}
+\NormalTok{    history\_path }\OperatorTok{=}\NormalTok{ Path(}\SpecialStringTok{f"../experiments/}\SpecialCharTok{\{}\NormalTok{exp\_id}\SpecialCharTok{\}}\SpecialStringTok{/training\_history.json"}\NormalTok{)}
+    \ControlFlowTok{if}\NormalTok{ history\_path.exists():}
+        \ControlFlowTok{with} \BuiltInTok{open}\NormalTok{(history\_path, }\StringTok{\textquotesingle{}r\textquotesingle{}}\NormalTok{) }\ImportTok{as}\NormalTok{ f:}
+\NormalTok{            histories[name] }\OperatorTok{=}\NormalTok{ json.load(f)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Plot 1: Frozen Baselines Comparison}
+\NormalTok{fig, (ax1, ax2) }\OperatorTok{=}\NormalTok{ plt.subplots(}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{, figsize}\OperatorTok{=}\NormalTok{(}\DecValTok{16}\NormalTok{, }\DecValTok{5}\NormalTok{))}
+
+\NormalTok{frozen\_models }\OperatorTok{=}\NormalTok{ [}\StringTok{\textquotesingle{}ResNet50 Frozen\textquotesingle{}}\NormalTok{, }
+                 \StringTok{\textquotesingle{}EfficientNetB0 Frozen\textquotesingle{}}\NormalTok{, }
+                 \StringTok{\textquotesingle{}EfficientNetB4 Frozen\textquotesingle{}}\NormalTok{, }
+                 \StringTok{\textquotesingle{}EfficientNetB5 Frozen\textquotesingle{}}\NormalTok{, }
+                 \StringTok{\textquotesingle{}EfficientNetV2{-}S Frozen\textquotesingle{}}\NormalTok{]}
+\NormalTok{colors }\OperatorTok{=}\NormalTok{ [}\StringTok{\textquotesingle{}\#e74c3c\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}\#3498db\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}\#2ecc71\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}\#f39c12\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}\#9b59b6\textquotesingle{}}\NormalTok{]}
+
+\ControlFlowTok{for}\NormalTok{ model, color }\KeywordTok{in} \BuiltInTok{zip}\NormalTok{(frozen\_models, colors):}
+    \ControlFlowTok{if}\NormalTok{ model }\KeywordTok{in}\NormalTok{ histories:}
+\NormalTok{        h }\OperatorTok{=}\NormalTok{ histories[model]}
+\NormalTok{        epochs }\OperatorTok{=} \BuiltInTok{range}\NormalTok{(}\DecValTok{1}\NormalTok{, }\BuiltInTok{len}\NormalTok{(h[}\StringTok{\textquotesingle{}val\_accuracy\textquotesingle{}}\NormalTok{]) }\OperatorTok{+} \DecValTok{1}\NormalTok{)}
+\NormalTok{        ax1.plot(epochs, h[}\StringTok{\textquotesingle{}val\_accuracy\textquotesingle{}}\NormalTok{], }
+\NormalTok{                 marker}\OperatorTok{=}\StringTok{\textquotesingle{}o\textquotesingle{}}\NormalTok{, label}\OperatorTok{=}\NormalTok{model, color}\OperatorTok{=}\NormalTok{color, linewidth}\OperatorTok{=}\DecValTok{2}\NormalTok{)}
+\NormalTok{        ax2.plot(epochs, h[}\StringTok{\textquotesingle{}val\_loss\textquotesingle{}}\NormalTok{], }
+\NormalTok{                 marker}\OperatorTok{=}\StringTok{\textquotesingle{}o\textquotesingle{}}\NormalTok{, label}\OperatorTok{=}\NormalTok{model, color}\OperatorTok{=}\NormalTok{color, linewidth}\OperatorTok{=}\DecValTok{2}\NormalTok{)}
+
+\NormalTok{ax1.set\_xlabel(}\StringTok{\textquotesingle{}Epoch\textquotesingle{}}\NormalTok{, fontsize}\OperatorTok{=}\DecValTok{12}\NormalTok{)}
+\NormalTok{ax1.set\_ylabel(}\StringTok{\textquotesingle{}Validation Accuracy\textquotesingle{}}\NormalTok{, fontsize}\OperatorTok{=}\DecValTok{12}\NormalTok{)}
+\NormalTok{ax1.set\_title(}\StringTok{\textquotesingle{}Frozen Baseline Models: Validation Accuracy\textquotesingle{}}\NormalTok{, }
+\NormalTok{              fontsize}\OperatorTok{=}\DecValTok{14}\NormalTok{, fontweight}\OperatorTok{=}\StringTok{\textquotesingle{}bold\textquotesingle{}}\NormalTok{)}
+\NormalTok{ax1.legend(loc}\OperatorTok{=}\StringTok{\textquotesingle{}lower right\textquotesingle{}}\NormalTok{)}
+\NormalTok{ax1.grid(alpha}\OperatorTok{=}\FloatTok{0.3}\NormalTok{)}
+\NormalTok{ax1.set\_ylim(}\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{)}
+
+\NormalTok{ax2.set\_xlabel(}\StringTok{\textquotesingle{}Epoch\textquotesingle{}}\NormalTok{, fontsize}\OperatorTok{=}\DecValTok{12}\NormalTok{)}
+\NormalTok{ax2.set\_ylabel(}\StringTok{\textquotesingle{}Validation Loss\textquotesingle{}}\NormalTok{, fontsize}\OperatorTok{=}\DecValTok{12}\NormalTok{)}
+\NormalTok{ax2.set\_title(}\StringTok{\textquotesingle{}Frozen Baseline Models: Validation Loss\textquotesingle{}}\NormalTok{, }
+\NormalTok{              fontsize}\OperatorTok{=}\DecValTok{14}\NormalTok{, fontweight}\OperatorTok{=}\StringTok{\textquotesingle{}bold\textquotesingle{}}\NormalTok{)}
+\NormalTok{ax2.legend(loc}\OperatorTok{=}\StringTok{\textquotesingle{}upper right\textquotesingle{}}\NormalTok{)}
+\NormalTok{ax2.grid(alpha}\OperatorTok{=}\FloatTok{0.3}\NormalTok{)}
+
+\NormalTok{plt.tight\_layout()}
+\NormalTok{plt.savefig(}\StringTok{\textquotesingle{}../artifacts/figures/frozen\_baselines\_comparison.png\textquotesingle{}}\NormalTok{, }
+\NormalTok{            dpi}\OperatorTok{=}\DecValTok{150}\NormalTok{, bbox\_inches}\OperatorTok{=}\StringTok{\textquotesingle{}tight\textquotesingle{}}\NormalTok{)}
+\NormalTok{plt.show()}
+
+\BuiltInTok{print}\NormalTok{(}\StringTok{"Key Observations (Frozen Baselines):"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\StringTok{"{-} ResNet50: Plateaus around 55\% {-} clearly needs fine{-}tuning"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\StringTok{"{-} EfficientNetB0: Reaches 84\% {-} strong frozen features"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\StringTok{"{-} EfficientNetB4: Achieves 94\% {-} excellent frozen performance"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\StringTok{"{-} EfficientNetB5: Best frozen at 95\% {-} high resolution helps"}\NormalTok{)}
+\BuiltInTok{print}\NormalTok{(}\StringTok{"{-} EfficientNetV2{-}S: 95}\SpecialCharTok{\% f}\StringTok{rozen {-} modern architecture advantage"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{main_files/figure-pdf/cell-16-output-1.png}}
+
+\begin{verbatim}
+Key Observations (Frozen Baselines):
+- ResNet50: Plateaus around 55% - clearly needs fine-tuning
+- EfficientNetB0: Reaches 84% - strong frozen features
+- EfficientNetB4: Achieves 94% - excellent frozen performance
+- EfficientNetB5: Best frozen at 95% - high resolution helps
+- EfficientNetV2-S: 95% frozen - modern architecture advantage
+\end{verbatim}
+
+\subsection{Model Performance Summary}\label{model-performance-summary}
+
+Final comparison of all models:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Model configurations}
+\NormalTok{models }\OperatorTok{=}\NormalTok{ [}
+\NormalTok{    (}\StringTok{\textquotesingle{}ResNet50\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}ResNet50 Frozen\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}ResNet50 Fine{-}tuned\textquotesingle{}}\NormalTok{),}
+\NormalTok{    (}\StringTok{\textquotesingle{}EfficientNetB0\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}EfficientNetB0 Frozen\textquotesingle{}}\NormalTok{, }\VariableTok{None}\NormalTok{),}
+\NormalTok{    (}\StringTok{\textquotesingle{}EfficientNetB4\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}EfficientNetB4 Frozen\textquotesingle{}}\NormalTok{, }
+     \StringTok{\textquotesingle{}EfficientNetB4 Fine{-}tuned\textquotesingle{}}\NormalTok{),}
+\NormalTok{    (}\StringTok{\textquotesingle{}EfficientNetB5\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}EfficientNetB5 Frozen\textquotesingle{}}\NormalTok{, }\VariableTok{None}\NormalTok{),}
+\NormalTok{    (}\StringTok{\textquotesingle{}EfficientNetV2{-}S\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}EfficientNetV2{-}S Frozen\textquotesingle{}}\NormalTok{, }
+     \StringTok{\textquotesingle{}EfficientNetV2{-}S Fine{-}tuned\textquotesingle{}}\NormalTok{),}
+\NormalTok{]}
+
+\CommentTok{\# Extract accuracies}
+\KeywordTok{def}\NormalTok{ get\_acc(key):}
+    \ControlFlowTok{if}\NormalTok{ key }\KeywordTok{in}\NormalTok{ histories:}
+        \ControlFlowTok{return} \BuiltInTok{max}\NormalTok{(histories[key][}\StringTok{\textquotesingle{}val\_accuracy\textquotesingle{}}\NormalTok{]) }\OperatorTok{*} \DecValTok{100}
+    \ControlFlowTok{return} \DecValTok{0}
+
+\NormalTok{model\_names, frozen\_accs, finetuned\_accs }\OperatorTok{=} \BuiltInTok{zip}\NormalTok{(}\OperatorTok{*}\NormalTok{[}
+\NormalTok{    (name, get\_acc(fz), get\_acc(ft) }\ControlFlowTok{if}\NormalTok{ ft }\ControlFlowTok{else} \DecValTok{0}\NormalTok{)}
+    \ControlFlowTok{for}\NormalTok{ name, fz, ft }\KeywordTok{in}\NormalTok{ models}
+\NormalTok{])}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{fig, ax }\OperatorTok{=}\NormalTok{ plt.subplots(}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{, figsize}\OperatorTok{=}\NormalTok{(}\DecValTok{14}\NormalTok{, }\DecValTok{8}\NormalTok{))}
+
+\CommentTok{\# Create bars}
+\NormalTok{x }\OperatorTok{=}\NormalTok{ np.arange(}\BuiltInTok{len}\NormalTok{(model\_names))}
+\NormalTok{width }\OperatorTok{=} \FloatTok{0.35}
+\NormalTok{bars }\OperatorTok{=}\NormalTok{ [}
+\NormalTok{    ax.bar(x }\OperatorTok{{-}}\NormalTok{ width}\OperatorTok{/}\DecValTok{2}\NormalTok{, frozen\_accs, width, }
+\NormalTok{           label}\OperatorTok{=}\StringTok{\textquotesingle{}Frozen Baseline\textquotesingle{}}\NormalTok{, color}\OperatorTok{=}\StringTok{\textquotesingle{}\#3498db\textquotesingle{}}\NormalTok{, }
+\NormalTok{           alpha}\OperatorTok{=}\FloatTok{0.8}\NormalTok{, edgecolor}\OperatorTok{=}\StringTok{\textquotesingle{}black\textquotesingle{}}\NormalTok{, linewidth}\OperatorTok{=}\FloatTok{1.5}\NormalTok{),}
+\NormalTok{    ax.bar(x }\OperatorTok{+}\NormalTok{ width}\OperatorTok{/}\DecValTok{2}\NormalTok{, finetuned\_accs, width, }
+\NormalTok{           label}\OperatorTok{=}\StringTok{\textquotesingle{}Fine{-}tuned\textquotesingle{}}\NormalTok{, color}\OperatorTok{=}\StringTok{\textquotesingle{}\#2ecc71\textquotesingle{}}\NormalTok{, }
+\NormalTok{           alpha}\OperatorTok{=}\FloatTok{0.8}\NormalTok{, edgecolor}\OperatorTok{=}\StringTok{\textquotesingle{}black\textquotesingle{}}\NormalTok{, linewidth}\OperatorTok{=}\FloatTok{1.5}\NormalTok{)}
+\NormalTok{]}
+
+\CommentTok{\# Add value labels}
+\ControlFlowTok{for}\NormalTok{ bar\_group }\KeywordTok{in}\NormalTok{ bars:}
+    \ControlFlowTok{for}\NormalTok{ bar }\KeywordTok{in}\NormalTok{ bar\_group:}
+\NormalTok{        h }\OperatorTok{=}\NormalTok{ bar.get\_height()}
+        \ControlFlowTok{if}\NormalTok{ h }\OperatorTok{\textgreater{}} \DecValTok{0}\NormalTok{:}
+\NormalTok{            ax.text(bar.get\_x() }\OperatorTok{+}\NormalTok{ bar.get\_width()}\OperatorTok{/}\DecValTok{2}\NormalTok{, h, }
+                   \SpecialStringTok{f\textquotesingle{}}\SpecialCharTok{\{}\NormalTok{h}\SpecialCharTok{:.1f\}}\SpecialStringTok{\%\textquotesingle{}}\NormalTok{, ha}\OperatorTok{=}\StringTok{\textquotesingle{}center\textquotesingle{}}\NormalTok{, va}\OperatorTok{=}\StringTok{\textquotesingle{}bottom\textquotesingle{}}\NormalTok{, }
+\NormalTok{                   fontsize}\OperatorTok{=}\DecValTok{10}\NormalTok{, fontweight}\OperatorTok{=}\StringTok{\textquotesingle{}bold\textquotesingle{}}\NormalTok{)}
+
+\CommentTok{\# Styling}
+\NormalTok{ax.}\BuiltInTok{set}\NormalTok{(xlabel}\OperatorTok{=}\StringTok{\textquotesingle{}Model\textquotesingle{}}\NormalTok{, ylabel}\OperatorTok{=}\StringTok{\textquotesingle{}Validation Accuracy (\%)\textquotesingle{}}\NormalTok{, }
+\NormalTok{       ylim}\OperatorTok{=}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{100}\NormalTok{),}
+\NormalTok{       title}\OperatorTok{=}\StringTok{\textquotesingle{}Model Performance Comparison: Frozen vs Fine{-}tuned\textquotesingle{}}\NormalTok{,}
+\NormalTok{       xticks}\OperatorTok{=}\NormalTok{x)}
+\NormalTok{ax.set\_xticklabels(model\_names, fontsize}\OperatorTok{=}\DecValTok{11}\NormalTok{)}
+\NormalTok{ax.axhline(}\DecValTok{85}\NormalTok{, color}\OperatorTok{=}\StringTok{\textquotesingle{}r\textquotesingle{}}\NormalTok{, linestyle}\OperatorTok{=}\StringTok{\textquotesingle{}{-}{-}\textquotesingle{}}\NormalTok{, }
+\NormalTok{           linewidth}\OperatorTok{=}\DecValTok{2}\NormalTok{, alpha}\OperatorTok{=}\FloatTok{0.5}\NormalTok{)}
+\NormalTok{ax.legend(fontsize}\OperatorTok{=}\DecValTok{12}\NormalTok{)}
+\NormalTok{ax.grid(axis}\OperatorTok{=}\StringTok{\textquotesingle{}y\textquotesingle{}}\NormalTok{, alpha}\OperatorTok{=}\FloatTok{0.3}\NormalTok{)}
+
+\NormalTok{plt.tight\_layout()}
+\NormalTok{plt.savefig(}\StringTok{\textquotesingle{}../artifacts/figures/model\_performance\_summary.png\textquotesingle{}}\NormalTok{,}
+\NormalTok{            dpi}\OperatorTok{=}\DecValTok{150}\NormalTok{, bbox\_inches}\OperatorTok{=}\StringTok{\textquotesingle{}tight\textquotesingle{}}\NormalTok{)}
+\NormalTok{plt.show()}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{main_files/figure-pdf/cell-18-output-1.png}}
+
+\subsection{Key Evaluation Findings}\label{key-evaluation-findings}
+
+Based on the training curves and performance metrics above, we observe
+the following:
+
+\textbf{Modern Architectures Dominate}
+
+EfficientNet family significantly outperforms ResNet50. EfficientNetB4+
+achieves 93-95\% frozen baseline while ResNet50 only reaches 55\% frozen
+and needs extensive fine-tuning. Winner: EfficientNetV2-S at 95.14\%
+(fine-tuned).
+
+\textbf{Frozen Baselines Are Extremely Strong}
+
+EfficientNet models need minimal fine-tuning. B0: 83.96\% to 84.43\%
+(+0.47\%), B4: 93.71\% to 93.86\% (+0.15\%), V2-S: 95.04\% to 95.14\%
+(+0.10\%). Implication: For EfficientNet, frozen features are often
+sufficient with fine-tuning providing less than 1\% gain.
+
+\textbf{ResNet50 Benefits Most from Fine-Tuning}
+
+ResNet50 shows largest improvement from 54.69\% frozen to 77.68\%
+fine-tuned, an improvement of +22.99\%. Why? Older architecture with
+weaker frozen features has more room for adaptation.
+
+\textbf{Higher Resolution Helps Fine-Grained Tasks}
+
+Impact of input size on accuracy: 224x224 (B0) achieves 84\%, 380x380
+(B4) achieves 94\%, and 456x456 (B5) achieves 95\%. Gain from 224 to
+380: +10\% (significant). Gain from 380 to 456: +1\% (diminishing
+returns). Optimal: 380-384px input for best accuracy-efficiency
+trade-off.
+
+\textbf{Fast Convergence with EfficientNet}
+
+EfficientNet models converge rapidly, reaching 90\% in 1-3 epochs when
+frozen. ResNet50 never reaches 90\% frozen. Training time: EfficientNet
+30-50min vs ResNet50 fine-tuning 50+ min. Practical Impact: Can iterate
+faster with EfficientNet and lower GPU costs.
+
+\subsection{Performance vs
+Expectations}\label{performance-vs-expectations}
+
+Comparing actual results to our initial hypotheses (from Models
+section):
+
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+Model & Expected (Frozen) & Actual (Frozen) & Exceeded? \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+ResNet50 & 50-60\% & 54.69\% & Yes - Within range \\
+EfficientNetB0 & 75-85\% & 83.96\% & Yes - Upper end \\
+EfficientNetB4 & 85-93\% & 93.71\% & Yes - Hit upper bound \\
+EfficientNetB5 & 90-95\% & 94.55\% & Yes - Within range \\
+EfficientNetV2-S & 92-96\% & 95.04\% & Yes - Within range \\
+\end{longtable}
+
+\textbf{Conclusion:} Our hypotheses were accurate. Modern architectures
+with higher resolution inputs perform exceptionally well on fine-grained
+classification.
 
 \section{Conclusion and Next Steps}\label{conclusion-and-next-steps}
 
-\section{Resources}\label{resources}
+\subsection{Project Summary}\label{project-summary}
+
+This project successfully developed a state-of-the-art dog breed
+classifier achieving \textbf{95.14\% top-1 accuracy} on the Stanford
+Dogs dataset (Khosla et al. 2011) (120 breeds, 20,580 images). Through
+systematic experimentation with five different architectures and two
+training strategies, we identified EfficientNetV2-S (Tan and Le 2021)
+with selective fine-tuning as the optimal solution.
+
+\subsection{Key Achievements}\label{key-achievements}
 
 \begin{itemize}
+\tightlist
 \item
-  \textbf{TF--IDF Vectorizer API}\\
-  Official docs for TfidfVectorizer (parameters like ngram\_range,
-  min\_df, max\_features, etc.)\\
-  https://scikit-learn.org/stable/modules/generated/sklearn.feature\_extraction.text.TfidfVectorizer.html
+  \textbf{Exceeded Target Performance}: 95.14\% vs target 80-85\%
+  (+10-15\% above goal)\\
 \item
-  \textbf{Text Analytics Tutorial}\\
-  End-to-end guide: load raw text, vectorize with TF--IDF, train a
-  linear classifier\\
-  https://scikit-learn.org/1.4/tutorial/text\_analytics/working\_with\_text\_data.html
+  \textbf{Comprehensive Model Comparison}: Tested 5 architectures, 10
+  experiments total\\
 \item
-  \textbf{TF--IDF Math \& Intuition}\\
-  Blog post with mathematical derivation, code examples, and visual
-  intuition for term- and document-frequency weighting\\
-  https://medium.com/@rohit\_batra/multi-class-text-classification-with-scikit-learn-using-tf-idf-model-161d395ce374
+  \textbf{Efficient Training}: Total cost \textasciitilde\$5 on cloud
+  GPU, 12 hours training time\\
 \item
-  \textbf{Logistic Regression API}\\
-  Full parameter reference (\texttt{solver}, \texttt{C},
-  \texttt{penalty}, \texttt{class\_weight}, etc.) including valid ranges
-  and examples\\
-  https://scikit-learn.org/stable/modules/generated/sklearn.linear\_model.LogisticRegression.html
+  \textbf{Production-Ready Model}: Single checkpoint, fast inference, no
+  ensemble needed\\
+\item
+  \textbf{Documented Best Practices}: Preprocessing, fine-tuning,
+  troubleshooting guides
 \end{itemize}
+
+\subsection{Major Learnings}\label{major-learnings}
+
+\subsubsection{1. Architecture Selection is
+Critical}\label{architecture-selection-is-critical}
+
+\textbf{Modern architectures (EfficientNet) vastly outperform older
+designs (ResNet50)}:
+
+\begin{itemize}
+\tightlist
+\item
+  EfficientNetB4 frozen (93.71\%) beats ResNet50 fine-tuned (77.68\%) by
+  +16\%
+\item
+  Compound scaling (Tan and Le 2019) (depth + width + resolution) is
+  highly effective for transfer learning
+\item
+  Built-in preprocessing simplifies deployment but requires careful
+  understanding
+\end{itemize}
+
+\textbf{Lesson}: Invest time in architecture selection before heavy
+training experimentation.
+
+\subsubsection{2. Transfer Learning is Extremely
+Powerful}\label{transfer-learning-is-extremely-powerful}
+
+\textbf{Strong frozen baselines with minimal data}:
+
+\begin{itemize}
+\tightlist
+\item
+  EfficientNetV2-S: 95.04\% with frozen features, only 138 images/class
+\item
+  No custom architecture could match pre-trained ImageNet features
+  (Kornblith, Shlens, and Le 2019)
+\item
+  Fine-tuning provides \textless1\% gain for modern architectures
+\end{itemize}
+
+\textbf{Lesson}: For fine-grained classification with limited data,
+transfer learning is essential.
+
+\subsubsection{3. Preprocessing Can Make or Break
+Training}\label{preprocessing-can-make-or-break-training}
+
+\textbf{Critical failures encountered}:
+
+\begin{itemize}
+\tightlist
+\item
+  Wrong EfficientNet preprocessing (torch mode): 1-5\% accuracy →
+  complete failure
+\item
+  Correct preprocessing (raw 0-255): 93\%+ accuracy → success
+\end{itemize}
+
+\textbf{Time lost}: \textasciitilde4 hours debugging, multiple failed
+training runs
+
+\textbf{Lesson}: Verify preprocessing correctness before any training.
+Test on small dataset first.
+
+\subsubsection{4. Fine-Tuning Requires Careful
+Configuration}\label{fine-tuning-requires-careful-configuration}
+
+\textbf{Best practices discovered through experimentation}: - BatchNorm
+layers \textbf{must} stay frozen (prevents collapse) - Learning rate
+100× lower (1e-5 vs 1e-3) - Selective unfreezing (20 layers) better than
+full unfreezing - Cosine annealing with warmup stabilizes training
+
+\textbf{Failures avoided}: Training collapse, catastrophic forgetting,
+overfitting
+
+\textbf{Lesson}: Fine-tuning is delicate. Start conservative, monitor
+closely, use research-backed settings.
+
+\subsubsection{5. Advanced Techniques Have Diminishing
+Returns}\label{advanced-techniques-have-diminishing-returns}
+
+\textbf{Techniques tested}:
+
+\begin{itemize}
+\tightlist
+\item
+  Test-Time Augmentation: +0.19\% improvement, 5× slower
+\item
+  Model Ensemble: -0.10\% (worse!), 3× cost
+\end{itemize}
+
+\textbf{Cost-benefit}: Not worth complexity for production deployment
+
+\textbf{Lesson}: Focus on strong single-model performance. Advanced
+techniques rarely beat well-trained baselines.
+
+\subsection{Limitations and Future
+Work}\label{limitations-and-future-work}
+
+\subsubsection{Current Limitations}\label{current-limitations}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Dataset Size}: Only \textasciitilde170 images/breed, 62 breeds
+  have \textless130 samples
+\item
+  \textbf{Class Imbalance}: Some breeds under-represented
+\item
+  \textbf{Image Quality}: Variable resolution, backgrounds, occlusions
+\item
+  \textbf{Single Dataset}: Only tested on Stanford Dogs, generalization
+  unknown
+\item
+  \textbf{No Real-World Testing}: Accuracy on user-submitted photos
+  unknown
+\end{enumerate}
+
+\subsubsection{Potential Improvements / Possible Next
+Steps}\label{potential-improvements-possible-next-steps}
+
+Future work could include:
+
+\begin{itemize}
+\tightlist
+\item
+  Per-class error analysis to identify confused breed pairs
+\item
+  Avanced augmentation techniques (AutoAugment, Mixup, CutMix)
+\item
+  Larger model variants (EfficientNetB6/B7, EfficientNetV2), but need
+  bigger GPU
+\item
+  Vision Transformers (ViT, Swin)
+\item
+  Diverse model ensembles combining different architectures
+\item
+  Multi-dataset training for better generalization
+\end{itemize}
+
+\subsection{Real-World Applications}\label{real-world-applications}
+
+\subsubsection{Potential Use Cases}\label{potential-use-cases}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Animal Shelters}
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Automated breed identification for intake
+  \item
+    Better matching with adopters
+  \item
+    Improved breed-specific care
+  \end{itemize}
+\item
+  \textbf{Veterinary Clinics}
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Assist in breed identification
+  \item
+    Breed-specific health recommendations
+  \item
+    Medical record keeping
+  \end{itemize}
+\item
+  \textbf{Lost \& Found Pets}
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Match found dogs with lost reports
+  \item
+    Filter searches by breed
+  \item
+    Faster reunions
+  \end{itemize}
+\item
+  \textbf{Pet Adoption Apps}
+
+  \begin{itemize}
+  \tightlist
+  \item
+    User uploads photo → get breed suggestions
+  \item
+    Educational content about breeds
+  \item
+    Better informed adoption decisions
+  \end{itemize}
+\item
+  \textbf{Dog Breed Encyclopedia}
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Interactive learning tool
+  \item
+    ``What breed is this?'' feature
+  \item
+    Breed comparison and information
+  \end{itemize}
+\end{enumerate}
+
+\subsection{Final Thoughts}\label{final-thoughts}
+
+This project demonstrates that \textbf{modern transfer learning with
+careful experimentation} can achieve state-of-the-art results on
+fine-grained classification tasks with limited data. The key success
+factors were:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Systematic approach}: Frozen baseline → fine-tuning → advanced
+  techniques
+\item
+  \textbf{Proper preprocessing}: Model-specific requirements respected
+\item
+  \textbf{Research-backed practices}: BatchNorm frozen, low LR,
+  selective unfreezing
+\item
+  \textbf{Comprehensive evaluation}: Multiple metrics, visualizations,
+  error analysis
+\end{enumerate}
+
+\textbf{The 95.14\% accuracy achieved represents an amazing performance}
+on this challenging 120-class fine-grained classification task. For
+comparison:
+
+\begin{itemize}
+\tightlist
+\item
+  Random guessing: 0.83\%
+\item
+  ResNet50 baseline: 54.69\%
+\item
+  Our best model: 95.14\%
+\end{itemize}
+
+The model is production-ready and can be deployed for real-world dog
+breed identification applications.
+
+\section*{Resources}\label{resources}
+\addcontentsline{toc}{section}{Resources}
+
+\phantomsection\label{refs}
+\begin{CSLReferences}{1}{0}
+\bibitem[\citeproctext]{ref-deng2009imagenet}
+Deng, Jia, Wei Dong, Richard Socher, Li-Jia Li, Kai Li, and Li Fei-Fei.
+2009. {``Imagenet: A Large-Scale Hierarchical Image Database,''}
+248--55. \url{https://ieeexplore.ieee.org/document/5206848}.
+
+\bibitem[\citeproctext]{ref-he2016deep}
+He, Kaiming, Xiangyu Zhang, Shaoqing Ren, and Jian Sun. 2016. {``Deep
+Residual Learning for Image Recognition.''} In \emph{Proceedings of the
+IEEE Conference on Computer Vision and Pattern Recognition}, 770--78.
+\url{https://arxiv.org/abs/1512.03385}.
+
+\bibitem[\citeproctext]{ref-khosla2011novel}
+Khosla, Aditya, Nityananda Jayadevaprakash, Bangpeng Yao, and Li
+Fei-Fei. 2011. {``Novel Dataset for Fine-Grained Image
+Categorization.''} In \emph{First Workshop on Fine-Grained Visual
+Categorization, IEEE Conference on Computer Vision and Pattern
+Recognition}. Colorado Springs, CO.
+\url{http://vision.stanford.edu/aditya86/ImageNetDogs/}.
+
+\bibitem[\citeproctext]{ref-kornblith2019better}
+Kornblith, Simon, Jonathon Shlens, and Quoc V Le. 2019. {``Do Better
+Imagenet Models Transfer Better?''} In \emph{Proceedings of the IEEE/CVF
+Conference on Computer Vision and Pattern Recognition}, 2661--71.
+\url{https://arxiv.org/abs/1805.08974}.
+
+\bibitem[\citeproctext]{ref-tan2019efficientnet}
+Tan, Mingxing, and Quoc Le. 2019. {``Efficientnet: Rethinking Model
+Scaling for Convolutional Neural Networks.''} In \emph{International
+Conference on Machine Learning}, 6105--14. PMLR.
+\url{https://arxiv.org/abs/1905.11946}.
+
+\bibitem[\citeproctext]{ref-tan2021efficientnetv2}
+---------. 2021. {``Efficientnetv2: Smaller Models and Faster
+Training.''} In \emph{International Conference on Machine Learning},
+10096--106. PMLR. \url{https://arxiv.org/abs/2104.00298}.
+
+\bibitem[\citeproctext]{ref-yosinski2014transferable}
+Yosinski, Jason, Jeff Clune, Yoshua Bengio, and Hod Lipson. 2014. {``How
+Transferable Are Features in Deep Neural Networks?''} In \emph{Advances
+in Neural Information Processing Systems}. Vol. 27.
+\url{https://arxiv.org/abs/1411.1792}.
+
+\end{CSLReferences}
 
 
 

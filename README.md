@@ -73,39 +73,36 @@ cat artifacts/results.csv
 
 ---
 
-## Available Models
+## Models Tested
 
-The template includes common sklearn/xgboost models with sensible defaults:
+This project tested multiple CNN architectures for dog breed classification:
 
-| Model Name | Algorithm | Use Case |
-|------------|-----------|----------|
-| `logreg_baseline` | Logistic Regression | Baseline, interpretable |
-| `logreg_l1` | Logistic Regression (L1) | Feature selection |
-| `logreg_l2` | Logistic Regression (L2) | Regularization |
-| `random_forest` | Random Forest | Robust, non-linear |
-| `xgboost` | XGBoost | High performance |
+### Baseline Training (Frozen Base)
+| Architecture | Top-1 Accuracy | Top-5 Accuracy | Image Size |
+|-------------|----------------|----------------|------------|
+| ResNet50 | 54.69% | 89.54% | 224×224 |
+| EfficientNetB0 | 83.96% | 97.62% | 224×224 |
+| EfficientNetB4 | 93.71% | 99.63% | 380×380 |
+| EfficientNetB5 | 94.55% | 99.71% | 456×456 |
+| **EfficientNetV2-S** | **95.04%** | **99.53%** | **384×384** |
 
-### Model Configuration
+### Fine-Tuning (20 Layers Unfrozen)
+| Architecture | Top-1 Accuracy | Top-5 Accuracy | Improvement |
+|-------------|----------------|----------------|-------------|
+| ResNet50 | 77.68% | 95.24% | +22.99% |
+| EfficientNetB0 | 84.43% | 97.86% | +0.47% |
+| EfficientNetB4 | 93.86% | 99.63% | +0.15% |
+| **EfficientNetV2-S** | **95.14%** | **99.51%** | **+0.10%** |
 
-Configure models in your `configs/exp_*.yaml`:
+### Advanced Techniques
+| Technique | Top-1 Accuracy | Top-5 Accuracy | Notes |
+|-----------|----------------|----------------|-------|
+| Test-Time Augmentation (5 aug) | 95.33% | 99.53% | +0.19%, 5× slower |
+| 3-Model Ensemble | 95.04% | 99.68% | Worse than single best model |
 
-```yaml
-train:
-  model: "random_forest"
-  model_args:
-    n_estimators: 300
-    max_depth: 10
-```
+**Best Model:** EfficientNetV2-S Fine-tuned (95.14% top-1, 99.51% top-5)
 
-**Adding New Models:**
-Simply add to the `MODELS` dictionary in [train.py](src/yourproj/train.py):
-
-```python
-MODELS = {
-    'my_custom_model': lambda **kw: MyModelClass(**kw),
-    ...
-}
-```
+See [EXPERIMENT_RESULTS_2025_10_08.md](docs/EXPERIMENT_RESULTS_2025_10_08.md) for full details.
 
 ---
 

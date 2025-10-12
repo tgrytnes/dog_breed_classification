@@ -67,3 +67,4 @@ execute:
 metadata:
   title: "Fine-Grained Dog Breed Classification: A Deep Learning Approach"
   subtitle: "Building State-of-the-Art CNN Models for 120-Class Visual Recognition"
+  bibliography: ../docs/bibliography.bib
